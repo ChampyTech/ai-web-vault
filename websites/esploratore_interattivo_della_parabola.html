@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esploratore Interattivo della Parabola | y = ax² + bx + c</title>
+    <!-- Caricamento Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & JetBrains Mono per formule matematiche -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151f32',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Personalizzazione slider range per estetica moderna */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #334155;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #6366f1;
+            border: 2px solid #e0e7ff;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #818cf8;
+        }
+        /* Colori specifici per i 3 parametri */
+        #slider-a::-webkit-slider-thumb { background: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.6); }
+        #slider-b::-webkit-slider-thumb { background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.6); }
+        #slider-c::-webkit-slider-thumb { background: #34d399; box-shadow: 0 0 10px rgba(52, 211, 153, 0.6); }
+
+        /* Scrollbar sottile */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Prevenzione selezione testo durante trascinamento canvas */
+        canvas {
+            touch-action: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- Header superiore -->
+    <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <!-- Icona Parabola SVG -->
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M4 4 Q12 22 20 4" />
+                        <line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="2 2" stroke-width="1.5" opacity="0.7"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg tracking-tight text-white leading-tight">Laboratorio Parabola</h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Analisi interattiva della funzione quadratica</p>
+                </div>
+            </div>
+
+            <!-- Badge Equazione Live -->
+            <div class="flex items-center gap-2 bg-slate-950/90 border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-inner">
+                <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold hidden md:inline">Equazione:</span>
+                <div id="live-equation" class="font-mono text-sm sm:text-base md:text-lg font-bold tracking-tight text-indigo-300">
+                    y = x²
+                </div>
+            </div>
+
+            <!-- Pulsante Reset Rapido -->
+            <button id="btn-reset-all" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700/80 transition flex items-center gap-1.5 shrink-0" title="Ripristina valori e vista">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="hidden sm:inline">Reset</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Layout Principale a Due Colonne su Desktop -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- COLONNA SINISTRA: Controlli, Analisi e Teoria (5 colonne su 12) -->
+        <section class="lg:col-span-5 flex flex-col gap-5 order-2 lg:order-1">
+
+            <!-- Card 1: Controlli Parametri a, b, c -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        Parametri dell'Equazione
+                    </h2>
+                    <span class="text-xs font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md">y = ax² + bx + c</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Parametro a -->
+                    <div id="card-param-a" class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 transition-all duration-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="slider-a" class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 font-mono font-bold flex items-center justify-center border border-sky-500/30">a</span>
+                                <span>Coefficiente quadratico</span>
+                            </label>
+                            <input type="number" id="input-a" step="0.1" min="-10" max="10" value="1"
+                                class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-right font-mono text-sm text-sky-400 font-semibold focus:outline-none focus:border-sky-500">
+                        </div>
+                        <input type="range" id="slider-a" min="-5" max="5" step="0.1" value="1" class="w-full">
+                        <div class="flex justify-between text-[11px] font-mono text-slate-500 mt-1">
+                            <span>-5</span>
+                            <span>0 (Retta)</span>
+                            <span>+5</span>
+                        </div>
+                    </div>
+
+                    <!-- Parametro b -->
+                    <div id="card-param-b" class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 transition-all duration-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="slider-b" class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 font-mono font-bold flex items-center justify-center border border-purple-500/30">b</span>
+                                <span>Coefficiente lineare</span>
+                            </label>
+                            <input type="number" id="input-b" step="0.1" min="-20" max="20" value="0"
+                                class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-right font-mono text-sm text-purple-400 font-semibold focus:outline-none focus:border-purple-500">
+                        </div>
+                        <input type="range" id="slider-b" min="-10" max="10" step="0.1" value="0" class="w-full">
+                        <div class="flex justify-between text-[11px] font-mono text-slate-500 mt-1">
+                            <span>-10</span>
+                            <span>0 (Simmetrica)</span>
+                            <span>+10</span>
+                        </div>
+                    </div>
+
+                    <!-- Parametro c -->
+                    <div id="card-param-c" class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 transition-all duration-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="slider-c" class="flex items-center gap-2 text-sm font-medium text-slate-200">
+                                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-mono font-bold flex items-center justify-center border border-emerald-500/30">c</span>
+                                <span>Termine noto (Intercetta Y)</span>
+                            </label>
+                            <input type="number" id="input-c" step="0.1" min="-20" max="20" value="0"
+                                class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-right font-mono text-sm text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <input type="range" id="slider-c" min="-10" max="10" step="0.1" value="0" class="w-full">
+                        <div class="flex justify-between text-[11px] font-mono text-slate-500 mt-1">
+                            <span>-10</span>
+                            <span>0 (Origine)</span>
+                            <span>+10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preset Rapidi -->
+                <div class="mt-5 pt-4 border-t border-slate-800">
+                    <p class="text-xs font-medium text-slate-400 mb-2.5">Configurazioni Rapide (Preset):</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button data-preset="base" class="preset-btn text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 border border-slate-700/70 transition text-xs">
+                            <div class="font-semibold text-slate-200">Parabola Base</div>
+                            <div class="font-mono text-[11px] text-slate-400">y = x²</div>
+                        </button>
+                        <button data-preset="downward" class="preset-btn text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 border border-slate-700/70 transition text-xs">
+                            <div class="font-semibold text-slate-200">Concavità Basso</div>
+                            <div class="font-mono text-[11px] text-slate-400">y = -0.5x² + 2x + 3</div>
+                        </button>
+                        <button data-preset="no-roots" class="preset-btn text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 border border-slate-700/70 transition text-xs">
+                            <div class="font-semibold text-slate-200">Nessuno Zero (Δ &lt; 0)</div>
+                            <div class="font-mono text-[11px] text-slate-400">y = x² - 2x + 3</div>
+                        </button>
+                        <button data-preset="vertex-y" class="preset-btn text-left px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 border border-slate-700/70 transition text-xs">
+                            <div class="font-semibold text-slate-200">Vertice su Asse Y</div>
+                            <div class="font-mono text-[11px] text-slate-400">y = 0.8x² - 4 (b = 0)</div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Pannello Analitico in Tempo Reale -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2 mb-4">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    Analisi Matematica Live
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <!-- Concavità -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Concavità e Apertura</div>
+                        <div id="info-concavity" class="font-semibold text-sky-400 flex items-center gap-1.5">
+                            Verso l'alto (a &gt; 0)
+                        </div>
+                    </div>
+
+                    <!-- Discriminante Delta -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Discriminante (Δ = b² - 4ac)</div>
+                        <div id="info-delta" class="font-mono font-semibold text-slate-200">
+                            Δ = 0.00
+                        </div>
+                        <div id="info-delta-desc" class="text-[11px] text-amber-400 mt-0.5">
+                            1 intersezione (tangente)
+                        </div>
+                    </div>
+
+                    <!-- Vertice V -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Vertice V(-b/2a, -Δ/4a)</div>
+                        <div id="info-vertex" class="font-mono font-semibold text-rose-400">
+                            V(0.00, 0.00)
+                        </div>
+                    </div>
+
+                    <!-- Asse di Simmetria -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Asse di Simmetria</div>
+                        <div id="info-axis" class="font-mono font-semibold text-indigo-400">
+                            x = 0.00
+                        </div>
+                    </div>
+
+                    <!-- Intersezione Asse Y -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Intersezione Asse Y</div>
+                        <div id="info-y-intercept" class="font-mono font-semibold text-emerald-400">
+                            P(0, 0.00)
+                        </div>
+                    </div>
+
+                    <!-- Zeri (Intersezioni Asse X) -->
+                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="text-xs text-slate-400 mb-1">Zeri (Intersezioni Asse X)</div>
+                        <div id="info-roots" class="font-mono font-semibold text-amber-300 text-xs sm:text-sm">
+                            x₁ = x₂ = 0.00
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Box Fuoco e Direttrice (visibile quando attivo il toggle o sempre consultabile) -->
+                <div id="focus-directrix-panel" class="mt-3 p-3 rounded-xl bg-indigo-950/30 border border-indigo-500/20 flex flex-wrap justify-between gap-2 text-xs">
+                    <div>
+                        <span class="text-slate-400">Fuoco F:</span>
+                        <span id="info-focus" class="font-mono font-semibold text-cyan-300 ml-1">F(0.00, 0.25)</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400">Direttrice d:</span>
+                        <span id="info-directrix" class="font-mono font-semibold text-fuchsia-300 ml-1">y = -0.25</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Guida Didattica Dinamica -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-900/70 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Ruolo dei Parametri
+                    </h2>
+                    <span id="active-param-badge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Panoramica</span>
+                </div>
+
+                <div class="space-y-2.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                    <div id="guide-a" class="p-2.5 rounded-xl border border-transparent transition-all duration-200">
+                        <strong class="text-sky-400 font-mono">a (Concavità e Apertura):</strong> Determina verso dove "guarda" la parabola. Se <span class="font-mono text-sky-300">a &gt; 0</span> è rivolta verso l'alto; se <span class="font-mono text-sky-300">a &lt; 0</span> verso il basso. Maggiore è <span class="font-mono">|a|</span>, più la parabola è stretta; se <span class="font-mono">a = 0</span> diventa una retta!
+                    </div>
+                    <div id="guide-b" class="p-2.5 rounded-xl border border-transparent transition-all duration-200">
+                        <strong class="text-purple-400 font-mono">b (Spostamento Orizzontale e Pendenza):</strong> Controlla la posizione orizzontale del vertice (<span class="font-mono">xᵥ = -b / 2a</span>) e rappresenta la <em>pendenza della tangente</em> nel punto in cui la parabola attraversa l'asse Y. Se <span class="font-mono">b = 0</span>, il vertice giace sull'asse Y.
+                    </div>
+                    <div id="guide-c" class="p-2.5 rounded-xl border border-transparent transition-all duration-200">
+                        <strong class="text-emerald-400 font-mono">c (Traslazione Verticale):</strong> Indica la quota esatta in cui la parabola interseca l'asse Y nel punto <span class="font-mono">(0, c)</span>. Modificare <span class="font-mono">c</span> sposta rigidamente l'intera curva in alto o in basso senza alterarne la forma.
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COLONNA DESTRA: Piano Cartesiano Interattivo (7 colonne su 12) -->
+        <section class="lg:col-span-7 flex flex-col gap-4 order-1 lg:order-2">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-2xl flex flex-col h-[460px] sm:h-[580px] lg:h-[calc(100vh-7.5rem)] lg:min-h-[620px] relative overflow-hidden">
+
+                <!-- Barra Strumenti Sopra il Grafico -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3 z-10">
+                    <!-- Toggle Elementi Geometrici -->
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 select-none">
+                            <input type="checkbox" id="toggle-points" checked class="rounded text-indigo-500 focus:ring-0 bg-slate-800 border-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>Punti Chiave</span>
+                        </label>
+
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 select-none">
+                            <input type="checkbox" id="toggle-symmetry" checked class="rounded text-indigo-500 focus:ring-0 bg-slate-800 border-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                            <span>Asse Simmetria</span>
+                        </label>
+
+                        <label class="cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 select-none">
+                            <input type="checkbox" id="toggle-focus" class="rounded text-cyan-500 focus:ring-0 bg-slate-800 border-slate-600">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                            <span>Fuoco e Direttrice</span>
+                        </label>
+                    </div>
+
+                    <!-- Controlli Zoom e Pan -->
+                    <div class="flex items-center gap-1 bg-slate-950/90 border border-slate-800 p-1 rounded-xl">
+                        <button id="btn-zoom-out" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 transition" title="Riduci Zoom (-)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        </button>
+                        <span id="zoom-level" class="text-xs font-mono text-slate-400 px-1.5 min-w-[46px] text-center">100%</span>
+                        <button id="btn-zoom-in" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 transition" title="Aumenta Zoom (+)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                        <div class="w-px h-4 bg-slate-800 mx-0.5"></div>
+                        <button id="btn-center-view" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-indigo-400 transition" title="Centra l'origine">
+                            Centra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenitore Canvas -->
+                <div id="canvas-container" class="relative flex-1 w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/90 cursor-grab active:cursor-grabbing">
+                    <canvas id="parabola-canvas" class="block w-full h-full"></canvas>
+
+                    <!-- Legenda Flottante in Basso a Sinistra -->
+                    <div class="absolute bottom-3 left-3 bg-slate-900/85 backdrop-blur-md border border-slate-800/90 rounded-xl px-3 py-2 text-[11px] text-slate-300 pointer-events-none flex flex-wrap gap-x-3 gap-y-1 shadow-lg">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Vertice V</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>Intercetta Y</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Zeri (X₁, X₂)</span>
+                        <span id="legend-focus" class="hidden items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>Fuoco F</span>
+                    </div>
+
+                    <!-- Coordinate Puntatore Mouse in Basso a Destra -->
+                    <div id="cursor-coords" class="absolute bottom-3 right-3 bg-slate-900/85 backdrop-blur-md border border-slate-800/90 rounded-xl px-2.5 py-1.5 font-mono text-[11px] text-slate-400 pointer-events-none hidden sm:block">
+                        x: 0.0, y: 0.0
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * Laboratorio Interattivo della Parabola
+         * Gestione completa del rendering matematico su Canvas, calcolo analitico e interazione utente.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATO DELL'APPLICAZIONE ---
+            const state = {
+                a: 1,
+                b: 0,
+                c: 0,
+                // Parametri della vista cartesiana
+                offsetX: 0,      // Spostamento in pixel dal centro del canvas
+                offsetY: 0,
+                scale: 45,       // Pixel per unità cartesiana (default 45px = 1 unità)
+                baseScale: 45,
+                // Opzioni di visualizzazione
+                showPoints: true,
+                showSymmetry: true,
+                showFocus: false,
+                // Stato interazione mouse/touch
+                isDragging: false,
+                dragStartX: 0,
+                dragStartY: 0,
+                hoverPoint: null,
+                mousePos: null
+            };
+
+            // --- RIFERIMENTI ELEMENTI DOM ---
+            const canvas = document.getElementById('parabola-canvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('canvas-container');
+
+            const sliderA = document.getElementById('slider-a');
+            const sliderB = document.getElementById('slider-b');
+            const sliderC = document.getElementById('slider-c');
+            const inputA = document.getElementById('input-a');
+            const inputB = document.getElementById('input-b');
+            const inputC = document.getElementById('input-c');
+
+            const liveEquationEl = document.getElementById('live-equation');
+            const infoConcavity = document.getElementById('info-concavity');
+            const infoDelta = document.getElementById('info-delta');
+            const infoDeltaDesc = document.getElementById('info-delta-desc');
+            const infoVertex = document.getElementById('info-vertex');
+            const infoAxis = document.getElementById('info-axis');
+            const infoYIntercept = document.getElementById('info-y-intercept');
+            const infoRoots = document.getElementById('info-roots');
+            const infoFocus = document.getElementById('info-focus');
+            const infoDirectrix = document.getElementById('info-directrix');
+
+            const togglePoints = document.getElementById('toggle-points');
+            const toggleSymmetry = document.getElementById('toggle-symmetry');
+            const toggleFocus = document.getElementById('toggle-focus');
+            const legendFocus = document.getElementById('legend-focus');
+            const zoomLevelEl = document.getElementById('zoom-level');
+            const cursorCoordsEl = document.getElementById('cursor-coords');
+
+            // --- FUNZIONI DI UTILITÀ MATEMATICA ---
+            const formatNum = (n) => {
+                if (Math.abs(n) < 1e-9) return "0";
+                // Rimuove gli zeri finali inutili dopo 2 decimali
+                return parseFloat(n.toFixed(2)).toString();
+            };
+
+            const formatNumFixed = (n) => {
+                if (Math.abs(n) < 1e-9) return "0.00";
+                return n.toFixed(2);
+            };
+
+            // Costruisce la stringa formattata dell'equazione y = ax² + bx + c
+            function buildEquationString(a, b, c) {
+                if (Math.abs(a) < 1e-9 && Math.abs(b) < 1e-9 && Math.abs(c) < 1e-9) {
+                    return "y = 0";
+                }
+
+                let parts = [];
+
+                // Termine ax²
+                if (Math.abs(a) >= 1e-9) {
+                    if (a === 1) parts.push("x²");
+                    else if (a === -1) parts.push("-x²");
+                    else parts.push(`${formatNum(a)}x²`);
+                }
+
+                // Termine bx
+                if (Math.abs(b) >= 1e-9) {
+                    const absB = Math.abs(b);
+                    const bStr = absB === 1 ? "x" : `${formatNum(absB)}x`;
+                    if (parts.length === 0) {
+                        parts.push(b < 0 ? `-${bStr}` : bStr);
+                    } else {
+                        parts.push(b < 0 ? `- ${bStr}` : `+ ${bStr}`);
+                    }
+                }
+
+                // Termine c
+                if (Math.abs(c) >= 1e-9) {
+                    const absC = Math.abs(c);
+                    const cStr = formatNum(absC);
+                    if (parts.length === 0) {
+                        parts.push(c < 0 ? `-${cStr}` : cStr);
+                    } else {
+                        parts.push(c < 0 ? `- ${cStr}` : `+ ${cStr}`);
+                    }
+                }
+
+                return "y = " + parts.join(" ");
+            }
+
+            // Calcola tutte le proprietà geometriche della parabola corrente
+            function calculateProperties() {
+                const { a, b, c } = state;
+                const isDegenerate = Math.abs(a) < 1e-6;
+
+                if (isDegenerate) {
+                    // Caso retta y = bx + c
+                    let root = null;
+                    if (Math.abs(b) >= 1e-6) {
+                        root = -c / b;
+                    }
+                    return {
+                        isDegenerate: true,
+                        yIntercept: { x: 0, y: c },
+                        roots: root !== null ? [root] : []
+                    };
+                }
+
+                const delta = b * b - 4 * a * c;
+                const vx = -b / (2 * a);
+                const vy = -delta / (4 * a);
+                const focusY = (1 - delta) / (4 * a);
+                const directrixY = (-1 - delta) / (4 * a);
+
+                let roots = [];
+                if (delta > 1e-7) {
+                    const sqrtD = Math.sqrt(delta);
+                    const x1 = (-b - sqrtD) / (2 * a);
+                    const x2 = (-b + sqrtD) / (2 * a);
+                    roots = [Math.min(x1, x2), Math.max(x1, x2)];
+                } else if (Math.abs(delta) <= 1e-7) {
+                    roots = [vx];
+                }
+
+                return {
+                    isDegenerate: false,
+                    delta,
+                    vertex: { x: vx, y: vy },
+                    axisX: vx,
+                    yIntercept: { x: 0, y: c },
+                    roots,
+                    focus: { x: vx, y: focusY },
+                    directrixY
+                };
+            }
+
+            // --- AGGIORNAMENTO INTERFACCIA ANALITICA ---
+            function updateAnalyticsUI() {
+                const { a, b, c } = state;
+                liveEquationEl.textContent = buildEquationString(a, b, c);
+                const props = calculateProperties();
+
+                if (props.isDegenerate) {
+                    infoConcavity.innerHTML = `<span class="text-amber-400">Retta degenere (a = 0)</span>`;
+                    infoDelta.textContent = "Non applicabile";
+                    infoDeltaDesc.textContent = "Equazione di 1° grado";
+                    infoDeltaDesc.className = "text-[11px] text-slate-400 mt-0.5";
+                    infoVertex.textContent = "Nessun vertice";
+                    infoAxis.textContent = "Nessun asse";
+                    infoYIntercept.textContent = `P(0, ${formatNumFixed(c)})`;
+
+                    if (props.roots.length === 1) {
+                        infoRoots.textContent = `x = ${formatNumFixed(props.roots[0])}`;
+                    } else {
+                        infoRoots.textContent = Math.abs(c) < 1e-6 ? "Infiniti (asse X)" : "Nessuna (parallela X)";
+                    }
+                    infoFocus.textContent = "N/D";
+                    infoDirectrix.textContent = "N/D";
+                    return;
+                }
+
+                // Concavità
+                if (a > 0) {
+                    const widthLabel = a > 1.5 ? "stretta" : (a < 0.5 ? "ampia" : "media");
+                    infoConcavity.innerHTML = `<span class="text-sky-400">▲ Verso l'alto (${widthLabel})</span>`;
+                } else {
+                    const widthLabel = Math.abs(a) > 1.5 ? "stretta" : (Math.abs(a) < 0.5 ? "ampia" : "media");
+                    infoConcavity.innerHTML = `<span class="text-rose-400">▼ Verso il basso (${widthLabel})</span>`;
+                }
+
+                // Discriminante
+                infoDelta.textContent = `Δ = ${formatNumFixed(props.delta)}`;
+                if (props.delta > 1e-7) {
+                    infoDeltaDesc.textContent = "2 intersezioni reali distinte";
+                    infoDeltaDesc.className = "text-[11px] text-emerald-400 mt-0.5";
+                } else if (Math.abs(props.delta) <= 1e-7) {
+                    infoDeltaDesc.textContent = "1 intersezione (tangente all'asse X)";
+                    infoDeltaDesc.className = "text-[11px] text-amber-400 mt-0.5";
+                } else {
+                    infoDeltaDesc.textContent = "0 intersezioni reali (non tocca X)";
+                    infoDeltaDesc.className = "text-[11px] text-rose-400 mt-0.5";
+                }
+
+                // Vertice e Asse
+                infoVertex.textContent = `V(${formatNumFixed(props.vertex.x)}, ${formatNumFixed(props.vertex.y)})`;
+                infoAxis.textContent = `x = ${formatNumFixed(props.axisX)}`;
+
+                // Intercetta Y
+                infoYIntercept.textContent = `P(0, ${formatNumFixed(props.yIntercept.y)})`;
+
+                // Zeri
+                if (props.roots.length === 2) {
+                    infoRoots.textContent = `x₁ = ${formatNumFixed(props.roots[0])},  x₂ = ${formatNumFixed(props.roots[1])}`;
+                } else if (props.roots.length === 1) {
+                    infoRoots.textContent = `x₁ = x₂ = ${formatNumFixed(props.roots[0])}`;
+                } else {
+                    infoRoots.textContent = "Nessuna radice reale";
+                }
+
+                // Fuoco e Direttrice
+                infoFocus.textContent = `F(${formatNumFixed(props.focus.x)}, ${formatNumFixed(props.focus.y)})`;
+                infoDirectrix.textContent = `y = ${formatNumFixed(props.directrixY)}`;
+            }
+
+            // --- EVIDENZIAZIONE DIDATTICA DEL PARAMETRO ATTIVO ---
+            function highlightParamGuide(param) {
+                const guides = { a: document.getElementById('guide-a'), b: document.getElementById('guide-b'), c: document.getElementById('guide-c') };
+                const cards = { a: document.getElementById('card-param-a'), b: document.getElementById('card-param-b'), c: document.getElementById('card-param-c') };
+                const badge = document.getElementById('active-param-badge');
+
+                Object.keys(guides).forEach(k => {
+                    guides[k].classList.remove('bg-slate-800/90', 'border-sky-500/40', 'border-purple-500/40', 'border-emerald-500/40');
+                    cards[k].classList.remove('border-sky-500/50', 'border-purple-500/50', 'border-emerald-500/50');
+                });
+
+                if (param === 'a') {
+                    guides.a.classList.add('bg-slate-800/90', 'border-sky-500/40');
+                    cards.a.classList.add('border-sky-500/50');
+                    badge.textContent = "Focus: Parametro a";
+                    badge.className = "text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30";
+                } else if (param === 'b') {
+                    guides.b.classList.add('bg-slate-800/90', 'border-purple-500/40');
+                    cards.b.classList.add('border-purple-500/50');
+                    badge.textContent = "Focus: Parametro b";
+                    badge.className = "text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30";
+                } else if (param === 'c') {
+                    guides.c.classList.add('bg-slate-800/90', 'border-emerald-500/40');
+                    cards.c.classList.add('border-emerald-500/50');
+                    badge.textContent = "Focus: Parametro c";
+                    badge.className = "text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+                } else {
+                    badge.textContent = "Panoramica";
+                    badge.className = "text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300";
+                }
+            }
+
+            // --- GESTIONE DIMENSIONAMENTO CANVAS (RETINA / HIDPI READY) ---
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                draw();
+            }
+
+            // Conversione coordinate matematiche <-> coordinate schermo (CSS px)
+            function mathToScreen(mx, my) {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                const originX = width / 2 + state.offsetX;
+                const originY = height / 2 + state.offsetY;
+                return {
+                    x: originX + mx * state.scale,
+                    y: originY - my * state.scale
+                };
+            }
+
+            function screenToMath(sx, sy) {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                const originX = width / 2 + state.offsetX;
+                const originY = height / 2 + state.offsetY;
+                return {
+                    x: (sx - originX) / state.scale,
+                    y: (originY - sy) / state.scale
+                };
+            }
+
+            // Calcola un passo di griglia "pulito" in base allo zoom corrente
+            function getNiceGridStep(scale) {
+                const targetPixels = 65;
+                const rawStep = targetPixels / scale;
+                const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+                const residual = rawStep / magnitude;
+                if (residual > 5) return 10 * magnitude;
+                if (residual > 2) return 5 * magnitude;
+                if (residual > 1) return 2 * magnitude;
+                return magnitude;
+            }
+
+            // --- FUNZIONE DI DISEGNO PRINCIPALE DEL PIANO CARTESIANO ---
+            function draw() {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                if (width === 0 || height === 0) return;
+
+                ctx.clearRect(0, 0, width, height);
+
+                const origin = mathToScreen(0, 0);
+                const step = getNiceGridStep(state.scale);
+                const subStep = step / 5;
+
+                // Intervallo matematico visibile
+                const topLeft = screenToMath(0, 0);
+                const bottomRight = screenToMath(width, height);
+                const minX = Math.floor(topLeft.x / step) * step - step;
+                const maxX = Math.ceil(bottomRight.x / step) * step + step;
+                const minY = Math.floor(bottomRight.y / step) * step - step;
+                const maxY = Math.ceil(topLeft.y / step) * step + step;
+
+                // 1. Sottogriglia leggera
+                if (state.scale > 20) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+                    ctx.lineWidth = 1;
+                    for (let x = minX; x <= maxX; x += subStep) {
+                        const sx = mathToScreen(x, 0).x;
+                        ctx.moveTo(sx, 0);
+                        ctx.lineTo(sx, height);
+                    }
+                    for (let y = minY; y <= maxY; y += subStep) {
+                        const sy = mathToScreen(0, y).y;
+                        ctx.moveTo(0, sy);
+                        ctx.lineTo(width, sy);
+                    }
+                    ctx.stroke();
+                }
+
+                // 2. Griglia principale
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.55)';
+                ctx.lineWidth = 1;
+                for (let x = minX; x <= maxX; x += step) {
+                    if (Math.abs(x) < 1e-9) continue;
+                    const sx = mathToScreen(x, 0).x;
+                    ctx.moveTo(sx, 0);
+                    ctx.lineTo(sx, height);
+                }
+                for (let y = minY; y <= maxY; y += step) {
+                    if (Math.abs(y) < 1e-9) continue;
+                    const sy = mathToScreen(0, y).y;
+                    ctx.moveTo(0, sy);
+                    ctx.lineTo(width, sy);
+                }
+                ctx.stroke();
+
+                // 3. Assi Cartesiani X e Y
+                ctx.beginPath();
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1.75;
+                // Asse X
+                if (origin.y >= 0 && origin.y <= height) {
+                    ctx.moveTo(0, origin.y);
+                    ctx.lineTo(width, origin.y);
+                }
+                // Asse Y
+                if (origin.x >= 0 && origin.x <= width) {
+                    ctx.moveTo(origin.x, 0);
+                    ctx.lineTo(origin.x, height);
+                }
+                ctx.stroke();
+
+                // Frecce sugli assi
+                ctx.fillStyle = '#94a3b8';
+                if (origin.y >= 0 && origin.y <= height) {
+                    ctx.beginPath();
+                    ctx.moveTo(width - 4, origin.y);
+                    ctx.lineTo(width - 12, origin.y - 4);
+                    ctx.lineTo(width - 12, origin.y + 4);
+                    ctx.fill();
+                }
+                if (origin.x >= 0 && origin.x <= width) {
+                    ctx.beginPath();
+                    ctx.moveTo(origin.x, 4);
+                    ctx.lineTo(origin.x - 4, 12);
+                    ctx.lineTo(origin.x + 4, 12);
+                    ctx.fill();
+                }
+
+                // 4. Numeri e Tacche sugli Assi
+                ctx.font = '11px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+
+                const labelYPos = Math.min(Math.max(origin.y + 6, 6), height - 20);
+                for (let x = minX; x <= maxX; x += step) {
+                    if (Math.abs(x) < 1e-9) continue;
+                    const sx = mathToScreen(x, 0).x;
+                    if (sx < 15 || sx > width - 20) continue;
+                    ctx.fillText(formatNum(x), sx, labelYPos);
+                }
+
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const labelXPos = Math.min(Math.max(origin.x - 8, 28), width - 8);
+                for (let y = minY; y <= maxY; y += step) {
+                    if (Math.abs(y) < 1e-9) continue;
+                    const sy = mathToScreen(0, y).y;
+                    if (sy < 15 || sy > height - 15) continue;
+                    ctx.fillText(formatNum(y), labelXPos, sy);
+                }
+
+                // Origine '0'
+                if (origin.x > 12 && origin.x < width - 12 && origin.y > 12 && origin.y < height - 18) {
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText('0', origin.x - 6, origin.y + 5);
+                }
+
+                const props = calculateProperties();
+
+                // 5. Asse di Simmetria (linea tratteggiata)
+                if (state.showSymmetry && !props.isDegenerate) {
+                    const symScreenX = mathToScreen(props.axisX, 0).x;
+                    if (symScreenX >= -10 && symScreenX <= width + 10) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.setLineDash([6, 6]);
+                        ctx.strokeStyle = 'rgba(129, 140, 248, 0.75)';
+                        ctx.lineWidth = 1.75;
+                        ctx.moveTo(symScreenX, 0);
+                        ctx.lineTo(symScreenX, height);
+                        ctx.stroke();
+
+                        // Etichetta Asse in alto
+                        ctx.fillStyle = '#a5b4fc';
+                        ctx.font = '600 11px "JetBrains Mono", monospace';
+                        ctx.textAlign = symScreenX > width - 85 ? 'right' : 'left';
+                        const textOffset = symScreenX > width - 85 ? -8 : 8;
+                        ctx.fillText(`x = ${formatNum(props.axisX)}`, symScreenX + textOffset, 14);
+                        ctx.restore();
+                    }
+                }
+
+                // 6. Direttrice (linea tratteggiata orizzontale)
+                if (state.showFocus && !props.isDegenerate) {
+                    const dirScreenY = mathToScreen(0, props.directrixY).y;
+                    if (dirScreenY >= -10 && dirScreenY <= height + 10) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.setLineDash([5, 5]);
+                        ctx.strokeStyle = 'rgba(232, 121, 249, 0.75)';
+                        ctx.lineWidth = 1.75;
+                        ctx.moveTo(0, dirScreenY);
+                        ctx.lineTo(width, dirScreenY);
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#f0abfc';
+                        ctx.font = '600 11px "JetBrains Mono", monospace';
+                        ctx.textAlign = 'left';
+                        const yLabel = dirScreenY < 24 ? dirScreenY + 14 : dirScreenY - 8;
+                        ctx.fillText(`d: y = ${formatNum(props.directrixY)}`, 12, yLabel);
+                        ctx.restore();
+                    }
+                }
+
+                // 7. Disegno Curva della Parabola y = ax² + bx + c
+                ctx.save();
+                ctx.beginPath();
+                // Bagliore morbido della curva
+                ctx.shadowColor = 'rgba(56, 189, 248, 0.45)';
+                ctx.shadowBlur = 12;
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 3;
+
+                let firstPoint = true;
+                const pixelStep = 2; // Campionamento ogni 2px per fluidità assoluta
+                for (let sx = -10; sx <= width + 10; sx += pixelStep) {
+                    const mx = screenToMath(sx, 0).x;
+                    const my = state.a * mx * mx + state.b * mx + state.c;
+                    const sy = mathToScreen(mx, my).y;
+
+                    // Evita disegni fuori scala eccessivi
+                    if (sy < -2000 || sy > height + 2000) {
+                        firstPoint = true;
+                        continue;
+                    }
+
+                    if (firstPoint) {
+                        ctx.moveTo(sx, sy);
+                        firstPoint = false;
+                    } else {
+                        ctx.lineTo(sx, sy);
+                    }
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // 8. Disegno Punti Chiave con Etichette Intelligenti
+                const keyPoints = [];
+
+                if (state.showPoints) {
+                    // Intersezione Y (0, c)
+                    keyPoints.push({
+                        x: 0,
+                        y: state.c,
+                        color: '#34d399',
+                        label: `C(0, ${formatNum(state.c)})`,
+                        priority: 2
+                    });
+
+                    // Zeri (Intersezioni X)
+                    props.roots.forEach((rx, idx) => {
+                        const labelPrefix = props.roots.length === 1 ? 'X₁,₂' : `X${idx + 1}`;
+                        keyPoints.push({
+                            x: rx,
+                            y: 0,
+                            color: '#fbbf24',
+                            label: `${labelPrefix}(${formatNum(rx)}, 0)`,
+                            priority: 3
+                        });
+                    });
+
+                    // Vertice V
+                    if (!props.isDegenerate) {
+                        keyPoints.push({
+                            x: props.vertex.x,
+                            y: props.vertex.y,
+                            color: '#f43f5e',
+                            label: `V(${formatNum(props.vertex.x)}, ${formatNum(props.vertex.y)})`,
+                            priority: 1
+                        });
+                    }
+                }
+
+                // Fuoco F
+                if (state.showFocus && !props.isDegenerate) {
+                    keyPoints.push({
+                        x: props.focus.x,
+                        y: props.focus.y,
+                        color: '#22d3ee',
+                        label: `F(${formatNum(props.focus.x)}, ${formatNum(props.focus.y)})`,
+                        priority: 2
+                    });
+                }
+
+                // Renderizza i punti chiave evitandone la sovrapposizione eccessiva
+                const drawnLabels = [];
+                keyPoints.sort((p1, p2) => p1.priority - p2.priority).forEach(pt => {
+                    const pos = mathToScreen(pt.x, pt.y);
+                    if (pos.x < -20 || pos.x > width + 20 || pos.y < -20 || pos.y > height + 20) return;
+
+                    // Cerchio esterno luminoso
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = pt.color;
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.stroke();
+
+                    // Posizionamento etichetta
+                    ctx.font = '600 11px "JetBrains Mono", monospace';
+                    const textWidth = ctx.measureText(pt.label).width;
+                    let lx = pos.x + 10;
+                    let ly = pos.y - 10;
+
+                    if (lx + textWidth + 10 > width) lx = pos.x - textWidth - 14;
+                    if (ly < 22) ly = pos.y + 18;
+
+                    // Controllo collisione semplice con etichette già disegnate
+                    for (const prev of drawnLabels) {
+                        if (Math.abs(lx - prev.x) < textWidth && Math.abs(ly - prev.y) < 18) {
+                            ly += 20;
+                        }
+                    }
+                    drawnLabels.push({ x: lx, y: ly });
+
+                    // Sfondo pillola etichetta
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                    ctx.strokeStyle = pt.color;
+                    ctx.lineWidth = 1;
+                    roundRect(ctx, lx - 4, ly - 11, textWidth + 8, 17, 5);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Testo etichetta
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pt.label, lx, ly - 2);
+                });
+            }
+
+            // Helper rettangolo arrotondato su Canvas
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+
+            // --- SINCRONIZZAZIONE CONTROLLI ---
+            function setParameters(newA, newB, newC, activeParam = null) {
+                state.a = parseFloat(newA) || 0;
+                state.b = parseFloat(newB) || 0;
+                state.c = parseFloat(newC) || 0;
+
+                // Aggiorna slider (clamped al range dello slider)
+                sliderA.value = Math.max(-5, Math.min(5, state.a));
+                sliderB.value = Math.max(-10, Math.min(10, state.b));
+                sliderC.value = Math.max(-10, Math.min(10, state.c));
+
+                // Aggiorna input numerici
+                inputA.value = state.a;
+                inputB.value = state.b;
+                inputC.value = state.c;
+
+                highlightParamGuide(activeParam);
+                updateAnalyticsUI();
+                draw();
+            }
+
+            // Event Listener Slider
+            sliderA.addEventListener('input', (e) => setParameters(e.target.value, state.b, state.c, 'a'));
+            sliderB.addEventListener('input', (e) => setParameters(state.a, e.target.value, state.c, 'b'));
+            sliderC.addEventListener('input', (e) => setParameters(state.a, state.b, e.target.value, 'c'));
+
+            // Event Listener Input Numerici
+            inputA.addEventListener('input', (e) => setParameters(e.target.value, state.b, state.c, 'a'));
+            inputB.addEventListener('input', (e) => setParameters(state.a, e.target.value, state.c, 'b'));
+            inputC.addEventListener('input', (e) => setParameters(state.a, state.b, e.target.value, 'c'));
+
+            // Event Listener Toggle Elementi
+            togglePoints.addEventListener('change', (e) => {
+                state.showPoints = e.target.checked;
+                draw();
+            });
+            toggleSymmetry.addEventListener('change', (e) => {
+                state.showSymmetry = e.target.checked;
+                draw();
+            });
+            toggleFocus.addEventListener('change', (e) => {
+                state.showFocus = e.target.checked;
+                if (state.showFocus) {
+                    legendFocus.classList.remove('hidden');
+                    legendFocus.classList.add('flex');
+                } else {
+                    legendFocus.classList.add('hidden');
+                    legendFocus.classList.remove('flex');
+                }
+                draw();
+            });
+
+            // Pulsanti Preset
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.dataset.preset;
+                    if (type === 'base') setParameters(1, 0, 0, null);
+                    else if (type === 'downward') setParameters(-0.5, 2, 3, null);
+                    else if (type === 'no-roots') setParameters(1, -2, 3, null);
+                    else if (type === 'vertex-y') setParameters(0.8, 0, -4, null);
+                });
+            });
+
+            // --- CONTROLLI ZOOM & PAN SUL CANVAS ---
+            function updateZoomDisplay() {
+                const pct = Math.round((state.scale / state.baseScale) * 100);
+                zoomLevelEl.textContent = `${pct}%`;
+            }
+
+            function applyZoom(factor, centerX = container.clientWidth / 2, centerY = container.clientHeight / 2) {
+                const newScale = Math.max(12, Math.min(250, state.scale * factor));
+                const actualFactor = newScale / state.scale;
+
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                const originX = width / 2 + state.offsetX;
+                const originY = height / 2 + state.offsetY;
+
+                state.offsetX = centerX - (centerX - originX) * actualFactor - width / 2;
+                state.offsetY = centerY - (centerY - originY) * actualFactor - height / 2;
+                state.scale = newScale;
+
+                updateZoomDisplay();
+                draw();
+            }
+
+            document.getElementById('btn-zoom-in').addEventListener('click', () => applyZoom(1.25));
+            document.getElementById('btn-zoom-out').addEventListener('click', () => applyZoom(0.8));
+
+            document.getElementById('btn-center-view').addEventListener('click', () => {
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = state.baseScale;
+                updateZoomDisplay();
+                draw();
+            });
+
+            document.getElementById('btn-reset-all').addEventListener('click', () => {
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = state.baseScale;
+                updateZoomDisplay();
+                setParameters(1, 0, 0, null);
+            });
+
+            // Zoom con rotella del mouse
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const factor = e.deltaY < 0 ? 1.12 : 0.89;
+                applyZoom(factor, mouseX, mouseY);
+            }, { passive: false });
+
+            // Pan (Trascinamento) con Mouse
+            canvas.addEventListener('mousedown', (e) => {
+                state.isDragging = true;
+                state.dragStartX = e.clientX - state.offsetX;
+                state.dragStartY = e.clientY - state.offsetY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+
+                if (sx >= 0 && sx <= rect.width && sy >= 0 && sy <= rect.height) {
+                    const mathPos = screenToMath(sx, sy);
+                    cursorCoordsEl.textContent = `x: ${mathPos.x.toFixed(1)}, y: ${mathPos.y.toFixed(1)}`;
+                }
+
+                if (!state.isDragging) return;
+                state.offsetX = e.clientX - state.dragStartX;
+                state.offsetY = e.clientY - state.dragStartY;
+                draw();
+            });
+
+            window.addEventListener('mouseup', () => {
+                state.isDragging = false;
+            });
+
+            // Supporto Touch (Pan e Pinch-to-Zoom su dispositivi mobili)
+            let initialPinchDist = null;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    state.isDragging = true;
+                    state.dragStartX = e.touches[0].clientX - state.offsetX;
+                    state.dragStartY = e.touches[0].clientY - state.offsetY;
+                } else if (e.touches.length === 2) {
+                    state.isDragging = false;
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    initialPinchDist = Math.hypot(dx, dy);
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && state.isDragging) {
+                    state.offsetX = e.touches[0].clientX - state.dragStartX;
+                    state.offsetY = e.touches[0].clientY - state.dragStartY;
+                    draw();
+                } else if (e.touches.length === 2 && initialPinchDist) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.hypot(dx, dy);
+                    const factor = dist / initialPinchDist;
+                    initialPinchDist = dist;
+
+                    const rect = canvas.getBoundingClientRect();
+                    const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+                    const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                    applyZoom(factor, midX, midY);
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchend', () => {
+                state.isDragging = false;
+                initialPinchDist = null;
+            });
+
+            // Ridimensionamento finestra
+            window.addEventListener('resize', resizeCanvas);
+
+            // Inizializzazione
+            updateAnalyticsUI();
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>

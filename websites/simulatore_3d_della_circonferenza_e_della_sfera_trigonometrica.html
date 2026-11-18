@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulatore 3D della Circonferenza e della Sfera Trigonometrica</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js & OrbitControls via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050811;
+        }
+
+        /* Stile vetro satinato (Glassmorphism) */
+        .glass-panel {
+            background: rgba(11, 17, 32, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Slider personalizzati */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(51, 65, 85, 0.8);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #818cf8;
+            border: 2px solid #ffffff;
+            margin-top: -6px;
+            box-shadow: 0 0 12px rgba(129, 140, 248, 0.8);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+        }
+        #slider-theta::-webkit-slider-thumb {
+            background: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+        }
+        #slider-phi::-webkit-slider-thumb {
+            background: #f472b6;
+            box-shadow: 0 0 12px rgba(244, 114, 182, 0.8);
+        }
+
+        /* Etichette 2D proiettate dallo spazio 3D */
+        .label-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: opacity 0.15s ease;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+            user-select: none;
+        }
+
+        /* Scrollbar sottile */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 999px; }
+    </style>
+</head>
+<body class="text-slate-100 font-sans antialiased select-none">
+
+    <!-- Contenitore Canvas WebGL a schermo intero -->
+    <div id="webgl-container" class="fixed inset-0 w-full h-full z-0"></div>
+
+    <!-- Layer per Etichette 2D Proiettate nello Spazio 3D -->
+    <div id="labels-layer" class="fixed inset-0 w-full h-full pointer-events-none z-10 overflow-hidden"></div>
+
+    <!-- Header Flottante Superiore -->
+    <header class="fixed top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- Titolo e Brand -->
+        <div class="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-3 pointer-events-auto">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="8" stroke-opacity="0.6"/>
+                    <path d="M12 12L17.6 6.4M12 4v16M4 12h16" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm sm:text-base tracking-tight text-white leading-tight">Trigonometria 3D</h1>
+                <p class="text-[11px] text-slate-400 hidden sm:block">Circonferenza Unitaria, Onde & Sfera</p>
+            </div>
+        </div>
+
+        <!-- Selettore Modalità Principale -->
+        <div class="glass-panel rounded-2xl p-1.5 flex items-center gap-1 pointer-events-auto">
+            <button id="mode-circle" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+                Circonferenza & Onde 3D
+            </button>
+            <button id="mode-sphere" class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60">
+                Sfera Trigonometrica 3D
+            </button>
+        </div>
+
+        <!-- Pulsante Toggle Pannello Mobile -->
+        <button id="btn-toggle-ui" class="glass-panel rounded-2xl p-2.5 text-slate-200 hover:text-white pointer-events-auto lg:hidden" title="Mostra/Nascondi Controlli">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Barra Viste Camera Rapide (In Basso al Centro) -->
+    <div class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 pointer-events-auto max-w-[95vw]">
+        <div class="glass-panel rounded-2xl p-1.5 flex items-center gap-1 overflow-x-auto">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-2 hidden md:inline">Vista:</span>
+            <button data-cam="3d" class="cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-800 text-sky-300 border border-sky-500/40 whitespace-nowrap transition">
+                Prospettiva 3D
+            </button>
+            <button data-cam="xy" class="cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800/80 whitespace-nowrap transition">
+                Frontale XY (Cerchio)
+            </button>
+            <button data-cam="yz" class="cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800/80 whitespace-nowrap transition">
+                Laterale YZ (Onda Seno)
+            </button>
+            <button data-cam="xz" class="cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800/80 whitespace-nowrap transition">
+                Alto XZ (Onda Coseno)
+            </button>
+        </div>
+    </div>
+
+    <!-- Pannello Controlli Sinistro -->
+    <aside id="left-panel" class="fixed top-20 left-3 sm:left-4 bottom-16 w-[calc(100vw-1.5rem)] sm:w-80 z-20 flex flex-col gap-3 overflow-y-auto pr-1 transition-transform duration-300 pointer-events-none">
+
+        <!-- Card 1: Controllo Angoli e Animazione -->
+        <div class="glass-panel rounded-2xl p-4 pointer-events-auto">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                    Controllo Angoli
+                </h2>
+                <!-- Play / Pausa -->
+                <button id="btn-play" class="px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <span id="play-icon">▶</span>
+                    <span id="play-text">Anima</span>
+                </button>
+            </div>
+
+            <!-- Slider Theta -->
+            <div class="mb-3">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                    <label for="slider-theta" class="font-medium text-slate-300">Angolo <span class="font-mono text-sky-400 font-bold">θ (Theta)</span></label>
+                    <span id="label-theta-val" class="font-mono font-bold text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded-md border border-sky-500/30">45° (π/4)</span>
+                </div>
+                <input type="range" id="slider-theta" min="0" max="360" step="0.5" value="45" class="w-full">
+            </div>
+
+            <!-- Slider Phi (Visibile solo in modalità Sfera 3D) -->
+            <div id="phi-control-group" class="mb-3 hidden pt-2 border-t border-slate-800/80">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                    <label for="slider-phi" class="font-medium text-slate-300">Elevazione <span class="font-mono text-pink-400 font-bold">φ (Phi)</span></label>
+                    <span id="label-phi-val" class="font-mono font-bold text-pink-300 bg-pink-950/60 px-2 py-0.5 rounded-md border border-pink-500/30">30° (π/6)</span>
+                </div>
+                <input type="range" id="slider-phi" min="-90" max="90" step="0.5" value="30" class="w-full">
+            </div>
+
+            <!-- Velocità Animazione -->
+            <div class="flex items-center justify-between text-xs text-slate-400 mb-3 pt-2 border-t border-slate-800/80">
+                <span>Velocità rotazione:</span>
+                <div class="flex gap-1">
+                    <button data-speed="0.4" class="speed-btn px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300">0.5x</button>
+                    <button data-speed="1.0" class="speed-btn px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold">1x</button>
+                    <button data-speed="2.2" class="speed-btn px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300">2x</button>
+                </div>
+            </div>
+
+            <!-- Angoli Notevoli Rapidi -->
+            <div>
+                <div class="text-[11px] font-medium text-slate-400 mb-1.5">Angoli notevoli (θ):</div>
+                <div class="grid grid-cols-4 gap-1.5 font-mono text-xs">
+                    <button data-deg="0" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">0°</button>
+                    <button data-deg="30" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">30°</button>
+                    <button data-deg="45" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">45°</button>
+                    <button data-deg="60" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">60°</button>
+                    <button data-deg="90" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">90°</button>
+                    <button data-deg="135" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">135°</button>
+                    <button data-deg="180" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">180°</button>
+                    <button data-deg="270" class="angle-preset py-1 rounded-lg bg-slate-800/80 hover:bg-sky-500/20 hover:text-sky-300 border border-slate-700/70 transition">270°</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Elementi Visibili (Toggle) -->
+        <div class="glass-panel rounded-2xl p-4 pointer-events-auto">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2 mb-3">
+                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                Livelli & Proiezioni
+            </h2>
+            <div class="space-y-2 text-xs">
+                <label class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-emerald-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        Proiezione Seno (Y)
+                    </span>
+                    <input type="checkbox" id="chk-sin" checked class="rounded text-emerald-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+
+                <label class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-sky-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                        Proiezione Coseno (X)
+                    </span>
+                    <input type="checkbox" id="chk-cos" checked class="rounded text-sky-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+
+                <label id="row-chk-tan" class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-amber-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                        Tangente (x = 1)
+                    </span>
+                    <input type="checkbox" id="chk-tan" checked class="rounded text-amber-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+
+                <label id="row-chk-waves" class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-indigo-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
+                        Onde 3D lungo asse Z
+                    </span>
+                    <input type="checkbox" id="chk-waves" checked class="rounded text-indigo-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+
+                <label class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-slate-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                        Cilindro / Sfera Guida
+                    </span>
+                    <input type="checkbox" id="chk-guide" checked class="rounded text-slate-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+
+                <label class="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80 cursor-pointer hover:border-slate-700">
+                    <span class="flex items-center gap-2 font-medium text-slate-300">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                        Assi, Griglia & Etichette
+                    </span>
+                    <input type="checkbox" id="chk-grid" checked class="rounded text-slate-500 bg-slate-800 border-slate-600 focus:ring-0">
+                </label>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Pannello Dati Matematici Destro (Visibile su Desktop, integrato su mobile) -->
+    <aside id="right-panel" class="fixed top-20 right-3 sm:right-4 w-72 sm:w-80 z-20 hidden lg:flex flex-col gap-3 pointer-events-none">
+        <div class="glass-panel rounded-2xl p-4 pointer-events-auto">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Valori in Tempo Reale
+                </h2>
+                <span id="quadrant-badge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">I Quadrante</span>
+            </div>
+
+            <!-- Valori Modalità Circonferenza -->
+            <div id="math-circle-box" class="space-y-2.5 font-mono text-xs">
+                <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/90 flex justify-between items-center">
+                    <span class="text-slate-400">Angolo θ:</span>
+                    <div class="text-right">
+                        <div id="val-deg" class="text-white font-bold">45.0°</div>
+                        <div id="val-rad" class="text-[11px] text-slate-400">0.785 rad (π/4)</div>
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex justify-between items-center">
+                    <span class="text-emerald-300 font-semibold">sin(θ) [Asse Y]:</span>
+                    <div class="text-right">
+                        <div id="val-sin" class="text-emerald-300 font-bold text-sm">0.7071</div>
+                        <div id="val-sin-exact" class="text-[11px] text-emerald-400/80">√2 / 2</div>
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/30 flex justify-between items-center">
+                    <span class="text-sky-300 font-semibold">cos(θ) [Asse X]:</span>
+                    <div class="text-right">
+                        <div id="val-cos" class="text-sky-300 font-bold text-sm">0.7071</div>
+                        <div id="val-cos-exact" class="text-[11px] text-sky-400/80">√2 / 2</div>
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 flex justify-between items-center">
+                    <span class="text-amber-300 font-semibold">tan(θ) [x = 1]:</span>
+                    <div class="text-right">
+                        <div id="val-tan" class="text-amber-300 font-bold text-sm">1.0000</div>
+                        <div id="val-tan-exact" class="text-[11px] text-amber-400/80">1</div>
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/90 text-[11px] text-slate-400 flex justify-between">
+                    <span>Identità fond.:</span>
+                    <span class="text-slate-200">sin²θ + cos²θ = <strong class="text-indigo-400">1.00</strong></span>
+                </div>
+            </div>
+
+            <!-- Valori Modalità Sfera 3D -->
+            <div id="math-sphere-box" class="space-y-2 font-mono text-xs hidden">
+                <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/90">
+                    <div class="text-slate-400 mb-1">Coordinate Sferiche (r = 1):</div>
+                    <div class="flex justify-between text-white font-semibold">
+                        <span id="sph-theta">θ = 45.0°</span>
+                        <span id="sph-phi" class="text-pink-400">φ = 30.0°</span>
+                    </div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-sky-950/30 border border-sky-500/30 flex justify-between items-center">
+                    <span class="text-sky-300">x = cos(φ)cos(θ)</span>
+                    <span id="sph-x" class="font-bold text-sky-300">0.6124</span>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex justify-between items-center">
+                    <span class="text-emerald-300">y = sin(φ)</span>
+                    <span id="sph-y" class="font-bold text-emerald-300">0.5000</span>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-purple-950/30 border border-purple-500/30 flex justify-between items-center">
+                    <span class="text-purple-300">z = cos(φ)sin(θ)</span>
+                    <span id="sph-z" class="font-bold text-purple-300">0.6124</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spiegazione Didattica Dinamica -->
+        <div class="glass-panel rounded-2xl p-4 pointer-events-auto">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-300 mb-2 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Cosa stai osservando
+            </h3>
+            <p id="didactic-text" class="text-xs text-slate-300 leading-relaxed">
+                Ruota la scena trascinando con il mouse. Lungo l'asse <strong class="text-indigo-300">Z</strong>, il moto circolare uniforme si "srotola" nel tempo generando le onde armoniche di <strong class="text-emerald-400">sin(θ)</strong> sul piano verticale YZ e <strong class="text-sky-400">cos(θ)</strong> sul piano orizzontale XZ.
+            </p>
+        </div>
+    </aside>
+
+    <script>
+        /**
+         * Simulatore 3D della Circonferenza e della Sfera Trigonometrica
+         * Architettura Three.js con rendering reattivo e proiezione etichette 2D.
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            // --- STATO GLOBALE ---
+            const state = {
+                mode: 'circle',       // 'circle' | 'sphere'
+                thetaDeg: 45,         // 0 - 360 gradi
+                phiDeg: 30,           // -90 a +90 gradi (elevazione sfera)
+                isPlaying: false,
+                speed: 1.0,
+                showSin: true,
+                showCos: true,
+                showTan: true,
+                showWaves: true,
+                showGuide: true,
+                showGrid: true,
+                uiVisible: true
+            };
+
+            // Costanti geometriche
+            const R = 2.2;            // Raggio unitario scalato per ottima visibilità 3D
+            const WAVE_LENGTH = 7.5;  // Estensione delle onde lungo Z
+
+            // --- INIZIALIZZAZIONE SCENA THREE.JS ---
+            const container = document.getElementById('webgl-container');
+            const labelsLayer = document.getElementById('labels-layer');
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050811);
+            scene.fog = new THREE.FogExp2(0x050811, 0.032);
+
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(5.4, 3.8, 6.8);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.06;
+            controls.minDistance = 2.5;
+            controls.maxDistance = 22;
+            controls.target.set(0, 0, 1.2);
+
+            // Illuminazione morbida
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xa5b4fc, 0.8);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            // --- HELPER CREAZIONE LINEE SPESSE / CILINDRI E SFERE ---
+            function createDot(color, radius = 0.085) {
+                const geo = new THREE.SphereGeometry(radius, 20, 20);
+                const mat = new THREE.MeshBasicMaterial({ color });
+                return new THREE.Mesh(geo, mat);
+            }
+
+            function createDynamicLine(color, opacity = 1) {
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+                const mat = new THREE.LineBasicMaterial({
+                    color,
+                    transparent: opacity < 1,
+                    opacity
+                });
+                return new THREE.Line(geo, mat);
+            }
+
+            function updateLineSegment(line, p1, p2) {
+                const pos = line.geometry.attributes.position.array;
+                pos[0] = p1.x; pos[1] = p1.y; pos[2] = p1.z;
+                pos[3] = p2.x; pos[4] = p2.y; pos[5] = p2.z;
+                line.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // --- GRUPPO ASSI CARTESIANI E GRIGLIA ---
+            const axesGroup = new THREE.Group();
+            scene.add(axesGroup);
+
+            // Griglia orizzontale XZ
+            const gridXZ = new THREE.GridHelper(14, 14, 0x334155, 0x1e293b);
+            gridXZ.position.y = -R;
+            gridXZ.material.transparent = true;
+            gridXZ.material.opacity = 0.35;
+            axesGroup.add(gridXZ);
+
+            // Assi principali X, Y, Z
+            const axisLen = 4.2;
+            const xAxis = createDynamicLine(0x64748b, 0.7);
+            updateLineSegment(xAxis, new THREE.Vector3(-axisLen, 0, 0), new THREE.Vector3(axisLen, 0, 0));
+            axesGroup.add(xAxis);
+
+            const yAxis = createDynamicLine(0x64748b, 0.7);
+            updateLineSegment(yAxis, new THREE.Vector3(0, -axisLen, 0), new THREE.Vector3(0, axisLen, 0));
+            axesGroup.add(yAxis);
+
+            const zAxis = createDynamicLine(0x6366f1, 0.65);
+            updateLineSegment(zAxis, new THREE.Vector3(0, 0, -2.5), new THREE.Vector3(0, 0, WAVE_LENGTH + 0.5));
+            axesGroup.add(zAxis);
+
+            // --- GRUPPO 1: CIRCONFERENZA & ONDE 3D ---
+            const circleGroup = new THREE.Group();
+            scene.add(circleGroup);
+
+            // Anello circonferenza unitaria sul piano XY (z = 0)
+            const unitCircleGeo = new THREE.RingGeometry(R - 0.025, R + 0.025, 96);
+            const unitCircleMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, side: THREE.DoubleSide });
+            const unitCircleMesh = new THREE.Mesh(unitCircleGeo, unitCircleMat);
+            circleGroup.add(unitCircleMesh);
+
+            // Cilindro guida traslucido lungo Z
+            const cylGeo = new THREE.CylinderGeometry(R, R, WAVE_LENGTH, 48, 1, true);
+            cylGeo.rotateX(Math.PI / 2);
+            const cylMat = new THREE.MeshBasicMaterial({
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.045,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const guideCylinder = new THREE.Mesh(cylGeo, cylMat);
+            guideCylinder.position.z = WAVE_LENGTH / 2;
+            circleGroup.add(guideCylinder);
+
+            // Raggio vettore sul cerchio
+            const radiusLine = createDynamicLine(0xffffff);
+            circleGroup.add(radiusLine);
+
+            // Arco angolo theta sul piano XY
+            const arcMaxPts = 72;
+            const arcGeo = new THREE.BufferGeometry();
+            arcGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array((arcMaxPts + 2) * 3), 3));
+            const arcMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+            const thetaArcMesh = new THREE.Mesh(arcGeo, arcMat);
+            circleGroup.add(thetaArcMesh);
+
+            // Proiezione Coseno (lungo X)
+            const cosLine = createDynamicLine(0x38bdf8);
+            const cosDropLine = createDynamicLine(0x38bdf8, 0.35);
+            circleGroup.add(cosLine, cosDropLine);
+
+            // Proiezione Seno (lungo Y)
+            const sinLine = createDynamicLine(0x34d399);
+            const sinDropLine = createDynamicLine(0x34d399, 0.35);
+            circleGroup.add(sinLine, sinDropLine);
+
+            // Retta tangente verticale in x = R e segmento Tangente
+            const tanAxisLine = createDynamicLine(0xfbbf24, 0.25);
+            updateLineSegment(tanAxisLine, new THREE.Vector3(R, -4.5, 0), new THREE.Vector3(R, 4.5, 0));
+            const tanSegment = createDynamicLine(0xfbbf24);
+            const secantExtension = createDynamicLine(0xfbbf24, 0.45);
+            circleGroup.add(tanAxisLine, tanSegment, secantExtension);
+
+            // Punti chiave sul cerchio
+            const pointP = createDot(0xffffff, 0.1);
+            const pointCos = createDot(0x38bdf8, 0.075);
+            const pointSin = createDot(0x34d399, 0.075);
+            const pointTan = createDot(0xfbbf24, 0.08);
+            circleGroup.add(pointP, pointCos, pointSin, pointTan);
+
+            // Onde 3D lungo l'asse Z (Seno su YZ, Coseno su XZ)
+            const WAVE_SAMPLES = 220;
+            const sinWaveGeo = new THREE.BufferGeometry();
+            sinWaveGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(WAVE_SAMPLES * 3), 3));
+            const sinWaveLine = new THREE.Line(sinWaveGeo, new THREE.LineBasicMaterial({ color: 0x34d399 }));
+
+            const cosWaveGeo = new THREE.BufferGeometry();
+            cosWaveGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(WAVE_SAMPLES * 3), 3));
+            const cosWaveLine = new THREE.Line(cosWaveGeo, new THREE.LineBasicMaterial({ color: 0x38bdf8 }));
+
+            // Elica 3D combinata (cos(t), sin(t), z) che collega cerchio e onde
+            const helixGeo = new THREE.BufferGeometry();
+            helixGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(WAVE_SAMPLES * 3), 3));
+            const helixLine = new THREE.Line(helixGeo, new THREE.LineBasicMaterial({ color: 0x818cf8, transparent: true, opacity: 0.45 }));
+
+            // Linee di collegamento tra punto P e inizio delle onde
+            const linkSinWave = createDynamicLine(0x34d399, 0.5);
+            const linkCosWave = createDynamicLine(0x38bdf8, 0.5);
+
+            circleGroup.add(sinWaveLine, cosWaveLine, helixLine, linkSinWave, linkCosWave);
+
+            // --- GRUPPO 2: SFERA TRIGONOMETRICA 3D ---
+            const sphereGroup = new THREE.Group();
+            sphereGroup.visible = false;
+            scene.add(sphereGroup);
+
+            // Sfera wireframe + superficie traslucida
+            const sphereGeo = new THREE.SphereGeometry(R, 32, 24);
+            const sphereMat = new THREE.MeshPhongMaterial({
+                color: 0x6366f1,
+                transparent: true,
+                opacity: 0.12,
+                shininess: 80,
+                depthWrite: false
+            });
+            const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+
+            const wireMat = new THREE.MeshBasicMaterial({
+                color: 0x475569,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.22
+            });
+            const sphereWire = new THREE.Mesh(sphereGeo, wireMat);
+            sphereGroup.add(sphereMesh, sphereWire);
+
+            // Cerchio equatoriale sul piano XZ
+            const equatorGeo = new THREE.RingGeometry(R - 0.02, R + 0.02, 80);
+            equatorGeo.rotateX(Math.PI / 2);
+            const equatorMesh = new THREE.Mesh(equatorGeo, new THREE.MeshBasicMaterial({ color: 0x94a3b8, side: THREE.DoubleSide }));
+            sphereGroup.add(equatorMesh);
+
+            // Vettori e proiezioni sferiche
+            const sphRadiusLine = createDynamicLine(0xffffff);
+            const sphShadowLine = createDynamicLine(0xf472b6, 0.85); // Proiezione r*cos(phi) sul piano equatoriale XZ
+            const sphElevLine = createDynamicLine(0x34d399);          // Altezza Y = r*sin(phi)
+            const sphXLine = createDynamicLine(0x38bdf8);             // Componente X
+            const sphZLine = createDynamicLine(0xc084fc);             // Componente Z
+            const sphPointP = createDot(0xffffff, 0.11);
+            const sphPointShadow = createDot(0xf472b6, 0.08);
+
+            sphereGroup.add(sphRadiusLine, sphShadowLine, sphElevLine, sphXLine, sphZLine, sphPointP, sphPointShadow);
+
+            // --- SISTEMA ETICHETTE HTML 2D PROIETTATE DAL 3D ---
+            const labelsData = [
+                { id: 'lbl-x', text: 'X (cos)', color: '#38bdf8', pos: new THREE.Vector3(axisLen + 0.25, 0, 0), group: 'grid' },
+                { id: 'lbl-y', text: 'Y (sin)', color: '#34d399', pos: new THREE.Vector3(0, axisLen + 0.25, 0), group: 'grid' },
+                { id: 'lbl-z', text: 'Z (fase / tempo)', color: '#a5b4fc', pos: new THREE.Vector3(0, 0, WAVE_LENGTH + 0.65), group: 'grid' },
+                { id: 'lbl-p', text: 'P(cos θ, sin θ)', color: '#ffffff', pos: new THREE.Vector3(), group: 'circle' },
+                { id: 'lbl-tan', text: 'tan(θ)', color: '#fbbf24', pos: new THREE.Vector3(), group: 'tan' },
+                { id: 'lbl-sph-p', text: 'P(x, y, z)', color: '#ffffff', pos: new THREE.Vector3(), group: 'sphere' }
+            ];
+
+            const labelElements = {};
+            labelsData.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'label-3d bg-slate-950/80 border border-slate-700/70';
+                el.style.color = item.color;
+                el.textContent = item.text;
+                labelsLayer.appendChild(el);
+                labelElements[item.id] = { el, data: item };
+            });
+
+            function updateProjectedLabels() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                Object.values(labelElements).forEach(({ el, data }) => {
+                    // Gestione visibilità per modalità e toggle
+                    let visible = state.showGrid;
+                    if (data.group === 'circle') visible = visible && state.mode === 'circle';
+                    if (data.group === 'tan') visible = visible && state.mode === 'circle' && state.showTan;
+                    if (data.group === 'sphere') visible = visible && state.mode === 'sphere';
+                    if (data.id === 'lbl-z' && state.mode === 'sphere') {
+                        el.textContent = 'Z';
+                    } else if (data.id === 'lbl-z') {
+                        el.textContent = 'Z (fase / tempo)';
+                    }
+
+                    if (!visible) {
+                        el.style.opacity = '0';
+                        return;
+                    }
+
+                    const projected = data.pos.clone().project(camera);
+                    if (projected.z > 1) {
+                        el.style.opacity = '0';
+                        return;
+                    }
+
+                    const sx = (projected.x * 0.5 + 0.5) * width;
+                    const sy = (-(projected.y * 0.5) + 0.5) * height;
+                    el.style.opacity = '1';
+                    el.style.transform = `translate(-50%, -50%) translate(${sx}px, ${sy}px)`;
+                });
+            }
+
+            // --- FORMATTAZIONE VALORI ESATTI NOTE ---
+            function getExactTrigLabel(deg) {
+                const norm = ((Math.round(deg) % 360) + 360) % 360;
+                const isExactInt = Math.abs(deg - Math.round(deg)) < 0.05;
+                if (!isExactInt) return { rad: '', sin: '', cos: '', tan: '' };
+
+                const table = {
+                    0:   { rad: '0',      sin: '0',      cos: '1',      tan: '0' },
+                    30:  { rad: 'π/6',    sin: '1/2',    cos: '√3/2',   tan: '√3/3' },
+                    45:  { rad: 'π/4',    sin: '√2/2',   cos: '√2/2',   tan: '1' },
+                    60:  { rad: 'π/3',    sin: '√3/2',   cos: '1/2',    tan: '√3' },
+                    90:  { rad: 'π/2',    sin: '1',      cos: '0',      tan: '±∞ (asintoto)' },
+                    120: { rad: '2π/3',   sin: '√3/2',   cos: '-1/2',   tan: '-√3' },
+                    135: { rad: '3π/4',   sin: '√2/2',   cos: '-√2/2',  tan: '-1' },
+                    150: { rad: '5π/6',   sin: '1/2',    cos: '-√3/2',  tan: '-√3/3' },
+                    180: { rad: 'π',      sin: '0',      cos: '-1',     tan: '0' },
+                    210: { rad: '7π/6',   sin: '-1/2',   cos: '-√3/2',  tan: '√3/3' },
+                    225: { rad: '5π/4',   sin: '-√2/2',  cos: '-√2/2',  tan: '1' },
+                    240: { rad: '4π/3',   sin: '-√3/2',  cos: '-1/2',   tan: '√3' },
+                    270: { rad: '3π/2',   sin: '-1',     cos: '0',      tan: '±∞ (asintoto)' },
+                    300: { rad: '5π/3',   sin: '-√3/2',  cos: '1/2',    tan: '-√3' },
+                    315: { rad: '7π/4',   sin: '-√2/2',  cos: '√2/2',   tan: '-1' },
+                    330: { rad: '11π/6',  sin: '-1/2',   cos: '√3/2',   tan: '-√3/3' },
+                    360: { rad: '2π',     sin: '0',      cos: '1',      tan: '0' }
+                };
+                return table[norm] || { rad: '', sin: '', cos: '', tan: '' };
+            }
+
+            // --- AGGIORNAMENTO GEOMETRIA 3D E INTERFACCIA MATEMATICA ---
+            function updateSimulation() {
+                const thetaRad = (state.thetaDeg * Math.PI) / 180;
+                const phiRad = (state.phiDeg * Math.PI) / 180;
+
+                const cosT = Math.cos(thetaRad);
+                const sinT = Math.sin(thetaRad);
+
+                // Aggiorna visibilità livelli
+                axesGroup.visible = state.showGrid;
+                guideCylinder.visible = state.showGuide;
+                sphereMesh.visible = state.showGuide;
+                sphereWire.visible = state.showGuide;
+
+                // --- MODALITÀ 1: CIRCONFERENZA & ONDE 3D ---
+                if (state.mode === 'circle') {
+                    circleGroup.visible = true;
+                    sphereGroup.visible = false;
+
+                    const px = R * cosT;
+                    const py = R * sinT;
+                    const origin = new THREE.Vector3(0, 0, 0);
+                    const pVec = new THREE.Vector3(px, py, 0);
+                    const cosVec = new THREE.Vector3(px, 0, 0);
+                    const sinVec = new THREE.Vector3(0, py, 0);
+
+                    // Raggio e punti
+                    updateLineSegment(radiusLine, origin, pVec);
+                    pointP.position.copy(pVec);
+                    labelElements['lbl-p'].data.pos.set(px * 1.16, py * 1.16, 0);
+
+                    // Coseno
+                    cosLine.visible = state.showCos;
+                    cosDropLine.visible = state.showCos;
+                    pointCos.visible = state.showCos;
+                    updateLineSegment(cosLine, origin, cosVec);
+                    updateLineSegment(cosDropLine, pVec, cosVec);
+                    pointCos.position.copy(cosVec);
+
+                    // Seno
+                    sinLine.visible = state.showSin;
+                    sinDropLine.visible = state.showSin;
+                    pointSin.visible = state.showSin;
+                    updateLineSegment(sinLine, origin, sinVec);
+                    updateLineSegment(sinDropLine, pVec, sinVec);
+                    pointSin.position.copy(sinVec);
+
+                    // Tangente (sul bordo destro x = R)
+                    const isAsymptote = Math.abs(cosT) < 0.015;
+                    const showTanNow = state.showTan && !isAsymptote;
+                    tanAxisLine.visible = state.showTan;
+                    tanSegment.visible = showTanNow;
+                    secantExtension.visible = showTanNow;
+                    pointTan.visible = showTanNow;
+
+                    if (showTanNow) {
+                        const tanVal = Math.tan(thetaRad);
+                        const clampedTanY = Math.max(-5.5, Math.min(5.5, R * tanVal));
+                        const tanAnchor = new THREE.Vector3(R, 0, 0);
+                        const tanTip = new THREE.Vector3(R, clampedTanY, 0);
+                        updateLineSegment(tanSegment, tanAnchor, tanTip);
+                        updateLineSegment(secantExtension, origin, tanTip);
+                        pointTan.position.copy(tanTip);
+                        labelElements['lbl-tan'].data.pos.set(R + 0.45, clampedTanY * 0.5, 0);
+                    }
+
+                    // Settore circolare angolo theta
+                    const arcPos = thetaArcMesh.geometry.attributes.position.array;
+                    const arcRadius = R * 0.28;
+                    const steps = Math.max(1, Math.floor((state.thetaDeg / 360) * arcMaxPts));
+                    let idx = 0;
+                    for (let i = 0; i < arcMaxPts; i++) {
+                        const t = (Math.min(i, steps) / arcMaxPts) * (Math.PI * 2);
+                        const tNext = (Math.min(i + 1, steps) / arcMaxPts) * (Math.PI * 2);
+                        // Triangolo (0,0,0) -> p1 -> p2
+                        arcPos[idx++] = 0; arcPos[idx++] = 0; arcPos[idx++] = 0.01;
+                        arcPos[idx++] = arcRadius * Math.cos(t); arcPos[idx++] = arcRadius * Math.sin(t); arcPos[idx++] = 0.01;
+                        arcPos[idx++] = arcRadius * Math.cos(tNext); arcPos[idx++] = arcRadius * Math.sin(tNext); arcPos[idx++] = 0.01;
+                    }
+                    thetaArcMesh.geometry.attributes.position.needsUpdate = true;
+
+                    // Onde 3D lungo l'asse Z
+                    sinWaveLine.visible = state.showWaves && state.showSin;
+                    cosWaveLine.visible = state.showWaves && state.showCos;
+                    helixLine.visible = state.showWaves;
+                    linkSinWave.visible = state.showWaves && state.showSin;
+                    linkCosWave.visible = state.showWaves && state.showCos;
+
+                    if (state.showWaves) {
+                        const sinArr = sinWaveLine.geometry.attributes.position.array;
+                        const cosArr = cosWaveLine.geometry.attributes.position.array;
+                        const helArr = helixLine.geometry.attributes.position.array;
+
+                        for (let i = 0; i < WAVE_SAMPLES; i++) {
+                            const frac = i / (WAVE_SAMPLES - 1);
+                            const z = frac * WAVE_LENGTH;
+                            const phase = thetaRad - frac * Math.PI * 3; // 1.5 cicli completi visibili
+                            const wy = R * Math.sin(phase);
+                            const wx = R * Math.cos(phase);
+
+                            // Onda Seno sul piano YZ (x = 0)
+                            sinArr[i * 3] = 0;
+                            sinArr[i * 3 + 1] = wy;
+                            sinArr[i * 3 + 2] = z;
+
+                            // Onda Coseno sul piano XZ (y = -R per chiarezza visiva sul pavimento)
+                            cosArr[i * 3] = wx;
+                            cosArr[i * 3 + 1] = -R;
+                            cosArr[i * 3 + 2] = z;
+
+                            // Elica 3D sulla superficie del cilindro
+                            helArr[i * 3] = wx;
+                            helArr[i * 3 + 1] = wy;
+                            helArr[i * 3 + 2] = z;
+                        }
+                        sinWaveLine.geometry.attributes.position.needsUpdate = true;
+                        cosWaveLine.geometry.attributes.position.needsUpdate = true;
+                        helixLine.geometry.attributes.position.needsUpdate = true;
+
+                        // Collegamenti dal punto P all'inizio delle onde (z = 0)
+                        updateLineSegment(linkSinWave, pVec, new THREE.Vector3(0, py, 0));
+                        updateLineSegment(linkCosWave, pVec, new THREE.Vector3(px, -R, 0));
+                    }
+                }
+                // --- MODALITÀ 2: SFERA TRIGONOMETRICA 3D ---
+                else {
+                    circleGroup.visible = false;
+                    sphereGroup.visible = true;
+
+                    const cosP = Math.cos(phiRad);
+                    const sinP = Math.sin(phiRad);
+
+                    const sx = R * cosP * cosT;
+                    const sy = R * sinP;
+                    const sz = R * cosP * sinT;
+
+                    const origin = new THREE.Vector3(0, 0, 0);
+                    const pVec = new THREE.Vector3(sx, sy, sz);
+                    const shadowVec = new THREE.Vector3(sx, 0, sz);
+
+                    updateLineSegment(sphRadiusLine, origin, pVec);
+                    updateLineSegment(sphShadowLine, origin, shadowVec);
+                    updateLineSegment(sphElevLine, shadowVec, pVec);
+                    updateLineSegment(sphXLine, new THREE.Vector3(0, 0, sz), shadowVec);
+                    updateLineSegment(sphZLine, new THREE.Vector3(sx, 0, 0), shadowVec);
+
+                    sphElevLine.visible = state.showSin;
+                    sphXLine.visible = state.showCos;
+                    sphZLine.visible = state.showCos;
+
+                    sphPointP.position.copy(pVec);
+                    sphPointShadow.position.copy(shadowVec);
+                    labelElements['lbl-sph-p'].data.pos.set(sx * 1.16, sy * 1.16 + 0.12, sz * 1.16);
+                }
+
+                updateMathPanel(thetaRad, phiRad, sinT, cosT);
+            }
+
+            // --- AGGIORNAMENTO PANNELLO DATI MATEMATICI ---
+            function updateMathPanel(thetaRad, phiRad, sinT, cosT) {
+                const exact = getExactTrigLabel(state.thetaDeg);
+                const degStr = `${state.thetaDeg.toFixed(1)}°`;
+                const radStr = `${thetaRad.toFixed(3)} rad${exact.rad ? ` (${exact.rad})` : ''}`;
+
+                document.getElementById('label-theta-val').textContent = `${Math.round(state.thetaDeg)}°${exact.rad ? ` (${exact.rad})` : ''}`;
+                document.getElementById('val-deg').textContent = degStr;
+                document.getElementById('val-rad').textContent = radStr;
+
+                // Quadrante
+                const d = ((state.thetaDeg % 360) + 360) % 360;
+                let quad = 'Asse';
+                if (d > 0 && d < 90) quad = 'I Quadrante';
+                else if (d > 90 && d < 180) quad = 'II Quadrante';
+                else if (d > 180 && d < 270) quad = 'III Quadrante';
+                else if (d > 270 && d < 360) quad = 'IV Quadrante';
+                document.getElementById('quadrant-badge').textContent = quad;
+
+                // Valori Circonferenza
+                document.getElementById('val-sin').textContent = sinT.toFixed(4);
+                document.getElementById('val-sin-exact').textContent = exact.sin || '—';
+
+                document.getElementById('val-cos').textContent = cosT.toFixed(4);
+                document.getElementById('val-cos-exact').textContent = exact.cos || '—';
+
+                if (Math.abs(cosT) < 0.005) {
+                    document.getElementById('val-tan').textContent = 'Non definita';
+                    document.getElementById('val-tan-exact').textContent = '±∞ (cos θ = 0)';
+                } else {
+                    const tanT = Math.tan(thetaRad);
+                    document.getElementById('val-tan').textContent = tanT.toFixed(4);
+                    document.getElementById('val-tan-exact').textContent = exact.tan || '—';
+                }
+
+                // Valori Sfera
+                const cosP = Math.cos(phiRad);
+                const sinP = Math.sin(phiRad);
+                document.getElementById('label-phi-val').textContent = `${Math.round(state.phiDeg)}°`;
+                document.getElementById('sph-theta').textContent = `θ = ${state.thetaDeg.toFixed(1)}°`;
+                document.getElementById('sph-phi').textContent = `φ = ${state.phiDeg.toFixed(1)}°`;
+                document.getElementById('sph-x').textContent = (cosP * cosT).toFixed(4);
+                document.getElementById('sph-y').textContent = sinP.toFixed(4);
+                document.getElementById('sph-z').textContent = (cosP * sinT).toFixed(4);
+            }
+
+            // --- EVENTI CONTROLLI INTERFACCIA ---
+            const sliderTheta = document.getElementById('slider-theta');
+            const sliderPhi = document.getElementById('slider-phi');
+
+            sliderTheta.addEventListener('input', (e) => {
+                state.thetaDeg = parseFloat(e.target.value);
+                updateSimulation();
+            });
+
+            sliderPhi.addEventListener('input', (e) => {
+                state.phiDeg = parseFloat(e.target.value);
+                updateSimulation();
+            });
+
+            // Pulsanti Angoli Notevoli
+            document.querySelectorAll('.angle-preset').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.thetaDeg = parseFloat(btn.dataset.deg);
+                    sliderTheta.value = state.thetaDeg;
+                    updateSimulation();
+                });
+            });
+
+            // Play / Pausa Animazione
+            const btnPlay = document.getElementById('btn-play');
+            const playIcon = document.getElementById('play-icon');
+            const playText = document.getElementById('play-text');
+
+            btnPlay.addEventListener('click', () => {
+                state.isPlaying = !state.isPlaying;
+                if (state.isPlaying) {
+                    playIcon.textContent = '⏸';
+                    playText.textContent = 'Pausa';
+                    btnPlay.className = 'px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold flex items-center gap-1.5 transition';
+                } else {
+                    playIcon.textContent = '▶';
+                    playText.textContent = 'Anima';
+                    btnPlay.className = 'px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold flex items-center gap-1.5 transition';
+                }
+            });
+
+            // Velocità animazione
+            document.querySelectorAll('.speed-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.speed = parseFloat(btn.dataset.speed);
+                    document.querySelectorAll('.speed-btn').forEach(b => {
+                        b.className = 'speed-btn px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300';
+                    });
+                    btn.className = 'speed-btn px-2 py-0.5 rounded-md bg-indigo-600 text-white font-semibold';
+                });
+            });
+
+            // Selettore Modalità (Circonferenza vs Sfera)
+            const btnModeCircle = document.getElementById('mode-circle');
+            const btnModeSphere = document.getElementById('mode-sphere');
+            const phiGroup = document.getElementById('phi-control-group');
+            const mathCircleBox = document.getElementById('math-circle-box');
+            const mathSphereBox = document.getElementById('math-sphere-box');
+            const rowChkTan = document.getElementById('row-chk-tan');
+            const rowChkWaves = document.getElementById('row-chk-waves');
+            const didacticText = document.getElementById('didactic-text');
+
+            btnModeCircle.addEventListener('click', () => {
+                state.mode = 'circle';
+                btnModeCircle.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30';
+                btnModeSphere.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60';
+                phiGroup.classList.add('hidden');
+                mathCircleBox.classList.remove('hidden');
+                mathSphereBox.classList.add('hidden');
+                rowChkTan.classList.remove('hidden');
+                rowChkWaves.classList.remove('hidden');
+                controls.target.set(0, 0, 1.2);
+                didacticText.innerHTML = 'Ruota la scena trascinando con il mouse. Lungo l\'asse <strong class="text-indigo-300">Z</strong>, il moto circolare uniforme si "srotola" nel tempo generando le onde armoniche di <strong class="text-emerald-400">sin(θ)</strong> sul piano verticale YZ e <strong class="text-sky-400">cos(θ)</strong> sul piano orizzontale XZ.';
+                updateSimulation();
+            });
+
+            btnModeSphere.addEventListener('click', () => {
+                state.mode = 'sphere';
+                btnModeSphere.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30';
+                btnModeCircle.className = 'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-300 hover:text-white hover:bg-slate-800/60';
+                phiGroup.classList.remove('hidden');
+                mathCircleBox.classList.add('hidden');
+                mathSphereBox.classList.remove('hidden');
+                rowChkTan.classList.add('hidden');
+                rowChkWaves.classList.add('hidden');
+                controls.target.set(0, 0, 0);
+                didacticText.innerHTML = 'In coordinate sferiche (r = 1), l\'angolo di elevazione <strong class="text-pink-400">φ</strong> determina l\'altezza <strong class="text-emerald-400">y = sin(φ)</strong> e riduce il raggio orizzontale a <strong class="text-pink-300">cos(φ)</strong>, che viene poi proiettato su X e Z tramite l\'azimut <strong class="text-sky-400">θ</strong>.';
+                updateSimulation();
+            });
+
+            // Checkbox Toggle Livelli
+            document.getElementById('chk-sin').addEventListener('change', (e) => { state.showSin = e.target.checked; updateSimulation(); });
+            document.getElementById('chk-cos').addEventListener('change', (e) => { state.showCos = e.target.checked; updateSimulation(); });
+            document.getElementById('chk-tan').addEventListener('change', (e) => { state.showTan = e.target.checked; updateSimulation(); });
+            document.getElementById('chk-waves').addEventListener('change', (e) => { state.showWaves = e.target.checked; updateSimulation(); });
+            document.getElementById('chk-guide').addEventListener('change', (e) => { state.showGuide = e.target.checked; updateSimulation(); });
+            document.getElementById('chk-grid').addEventListener('change', (e) => { state.showGrid = e.target.checked; updateSimulation(); });
+
+            // Viste Camera Rapide con transizione fluida
+            let targetCamPos = null;
+            let targetControlsLookAt = null;
+
+            document.querySelectorAll('.cam-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.cam-btn').forEach(b => {
+                        b.className = 'cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:bg-slate-800/80 whitespace-nowrap transition';
+                    });
+                    btn.className = 'cam-btn px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-800 text-sky-300 border border-sky-500/40 whitespace-nowrap transition';
+
+                    const view = btn.dataset.cam;
+                    if (view === '3d') {
+                        targetCamPos = new THREE.Vector3(5.4, 3.8, 6.8);
+                        targetControlsLookAt = new THREE.Vector3(0, 0, state.mode === 'circle' ? 1.2 : 0);
+                    } else if (view === 'xy') {
+                        targetCamPos = new THREE.Vector3(0, 0, 7.8);
+                        targetControlsLookAt = new THREE.Vector3(0, 0, 0);
+                    } else if (view === 'yz') {
+                        targetCamPos = new THREE.Vector3(8.5, 0, 3.2);
+                        targetControlsLookAt = new THREE.Vector3(0, 0, 3.2);
+                    } else if (view === 'xz') {
+                        targetCamPos = new THREE.Vector3(0, 9.2, 3.2);
+                        targetControlsLookAt = new THREE.Vector3(0, 0, 3.2);
+                    }
+                });
+            });
+
+            // Interrompi transizione camera automatica se l'utente trascina manualmente
+            controls.addEventListener('start', () => {
+                targetCamPos = null;
+                targetControlsLookAt = null;
+            });
+
+            // Toggle pannello mobile
+            const leftPanel = document.getElementById('left-panel');
+            document.getElementById('btn-toggle-ui').addEventListener('click', () => {
+                state.uiVisible = !state.uiVisible;
+                leftPanel.style.transform = state.uiVisible ? 'translateX(0)' : 'translateX(-115%)';
+            });
+
+            // Resize finestra
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // --- LOOP DI ANIMAZIONE PRINCIPALE ---
+            let lastTime = performance.now();
+
+            function animate(now) {
+                requestAnimationFrame(animate);
+                const dt = (now - lastTime) / 1000;
+                lastTime = now;
+
+                // Rotazione continua se attiva
+                if (state.isPlaying) {
+                    state.thetaDeg = (state.thetaDeg + dt * 45 * state.speed) % 360;
+                    sliderTheta.value = state.thetaDeg;
+                    updateSimulation();
+                }
+
+                // Interpolazione camera fluida
+                if (targetCamPos && targetControlsLookAt) {
+                    camera.position.lerp(targetCamPos, 0.08);
+                    controls.target.lerp(targetControlsLookAt, 0.08);
+                    if (camera.position.distanceTo(targetCamPos) < 0.03) {
+                        targetCamPos = null;
+                        targetControlsLookAt = null;
+                    }
+                }
+
+                controls.update();
+                updateProjectedLabels();
+                renderer.render(scene, camera);
+            }
+
+            // Avvio iniziale
+            updateSimulation();
+            animate(performance.now());
+        });
+    </script>
+</body>
+</html>

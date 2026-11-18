@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio Interattivo delle Sezioni Coniche</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Stile slider range personalizzato per coerenza visiva */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 17px;
+            width: 17px;
+            border-radius: 50%;
+            background: #6366f1;
+            border: 2px solid #e0e7ff;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.65);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #818cf8;
+        }
+
+        /* Accenti slider per parametri specifici */
+        .slider-cyan::-webkit-slider-thumb { background: #22d3ee !important; box-shadow: 0 0 10px rgba(34, 211, 238, 0.6) !important; }
+        .slider-emerald::-webkit-slider-thumb { background: #34d399 !important; box-shadow: 0 0 10px rgba(52, 211, 153, 0.6) !important; }
+        .slider-amber::-webkit-slider-thumb { background: #fbbf24 !important; box-shadow: 0 0 10px rgba(251, 191, 36, 0.6) !important; }
+        .slider-rose::-webkit-slider-thumb { background: #fb7185 !important; box-shadow: 0 0 10px rgba(251, 113, 133, 0.6) !important; }
+
+        /* Scrollbar sottile */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        canvas {
+            touch-action: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- HEADER SUPERIORE CON SELETTORE A SCHEDE (TABS) -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-[1640px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Titolo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-cyan-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <ellipse cx="12" cy="12" rx="9" ry="5" transform="rotate(-25 12 12)"/>
+                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg tracking-tight text-white leading-tight">Sezioni Coniche</h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Geometria analitica e proprietà focali interattive</p>
+                </div>
+            </div>
+
+            <!-- Tabs Selettore 4 Coniche -->
+            <nav class="flex items-center bg-slate-950/90 border border-slate-800 p-1 rounded-2xl overflow-x-auto max-w-full" role="tablist" aria-label="Scegli sezione conica">
+                <button data-tab="circle" class="tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+                    <span class="w-2 h-2 rounded-full bg-cyan-300"></span>
+                    Circonferenza
+                </button>
+                <button data-tab="ellipse" class="tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-slate-200">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Ellisse
+                </button>
+                <button data-tab="parabola" class="tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-slate-200">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    Parabola
+                </button>
+                <button data-tab="hyperbola" class="tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-slate-200">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    Iperbole
+                </button>
+            </nav>
+
+            <!-- Azione Reset -->
+            <button id="btn-reset-all" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700/80 transition flex items-center gap-1.5 shrink-0" title="Ripristina parametri e vista">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span class="hidden md:inline">Ripristina</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- LAYOUT PRINCIPALE SPLIT-SCREEN: CANVAS A SINISTRA (7 col), PANNELLO A DESTRA (5 col) -->
+    <main class="flex-1 max-w-[1640px] w-full mx-auto p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- COLONNA SINISTRA: PIANO CARTESIANO INTERATTIVO -->
+        <section class="lg:col-span-7 flex flex-col gap-3">
+            <div class="bg-slate-900/85 border border-slate-800 rounded-2xl p-3 sm:p-4 shadow-2xl flex flex-col h-[460px] sm:h-[580px] lg:h-[calc(100vh-6.75rem)] lg:min-h-[640px] relative">
+
+                <!-- Barra Superiore Strumenti Grafico -->
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <!-- Badge Proprietà Focale Live del Punto P -->
+                    <div id="focal-property-badge" class="flex items-center gap-2 bg-slate-950/90 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-mono text-indigo-200 shadow-inner">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                        <span id="focal-law-text">CP = r = 3.00</span>
+                    </div>
+
+                    <!-- Controlli Zoom & Centra -->
+                    <div class="flex items-center gap-1 bg-slate-950/90 border border-slate-800 p-1 rounded-xl">
+                        <button id="btn-zoom-out" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 transition" title="Riduci Zoom">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        </button>
+                        <span id="zoom-display" class="text-xs font-mono text-slate-400 px-1.5 min-w-[46px] text-center">100%</span>
+                        <button id="btn-zoom-in" class="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 transition" title="Aumenta Zoom">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        </button>
+                        <div class="w-px h-4 bg-slate-800 mx-0.5"></div>
+                        <button id="btn-center-view" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-indigo-400 transition">
+                            Centra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenitore Canvas 2D -->
+                <div id="canvas-container" class="relative flex-1 w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800/90 cursor-grab">
+                    <canvas id="conic-canvas" class="block w-full h-full"></canvas>
+
+                    <!-- Suggerimento Interazione in Alto a Sinistra -->
+                    <div class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md border border-slate-800/80 rounded-xl px-2.5 py-1.5 text-[11px] text-slate-300 pointer-events-none flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-white inline-block"></span>
+                        <span>Trascina il punto <strong class="font-mono text-white">P</strong> sulla curva o sposta il piano</span>
+                    </div>
+
+                    <!-- Legenda Colori in Basso a Sinistra -->
+                    <div class="absolute bottom-3 left-3 bg-slate-900/85 backdrop-blur-md border border-slate-800/90 rounded-xl px-3 py-1.5 text-[11px] text-slate-300 pointer-events-none flex flex-wrap gap-x-3 gap-y-1 shadow-lg">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>Fuochi (F)</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>Vertici (V)</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span>Centro (C)</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-white inline-block"></span>Punto P</span>
+                    </div>
+
+                    <!-- Coordinate Cursore in Basso a Destra -->
+                    <div id="cursor-coords" class="absolute bottom-3 right-3 bg-slate-900/85 backdrop-blur-md border border-slate-800/90 rounded-xl px-2.5 py-1.5 font-mono text-[11px] text-slate-400 pointer-events-none hidden sm:block">
+                        x: 0.00, y: 0.00
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLONNA DESTRA: EQUAZIONI, PARAMETRI, PROPRIETÀ E DIDATTICA -->
+        <section class="lg:col-span-5 flex flex-col gap-4 lg:h-[calc(100vh-6.75rem)] lg:overflow-y-auto lg:pr-1">
+
+            <!-- CARD 1: EQUAZIONE DINAMICA -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-2.5">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <span id="conic-dot-indicator" class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        Equazione della Conica
+                    </h2>
+                    <span id="conic-tag" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">Circonferenza</span>
+                </div>
+
+                <!-- Forma Generale Parametrica -->
+                <div class="text-xs font-mono text-slate-400 mb-1.5" id="eq-parametric">
+                    (x - x₀)² + (y - y₀)² = r²
+                </div>
+
+                <!-- Equazione Numerica Sostituita Live -->
+                <div class="p-3 rounded-xl bg-slate-950/90 border border-slate-800/90 font-mono text-sm sm:text-base font-bold text-indigo-300 overflow-x-auto whitespace-nowrap" id="eq-numeric">
+                    x² + y² = 9
+                </div>
+
+                <!-- Seconda Forma (Espansa / Standard) -->
+                <div class="mt-2.5 pt-2.5 border-t border-slate-800/80 flex flex-col gap-1">
+                    <span class="text-[11px] text-slate-400" id="eq-secondary-label">Forma canonica espansa (x² + y² + ax + by + c = 0):</span>
+                    <div class="font-mono text-xs sm:text-sm text-slate-200 overflow-x-auto whitespace-nowrap" id="eq-secondary">
+                        x² + y² - 9 = 0
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: CONTROLLI PARAMETRI & PRESET -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3.5">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Parametri & Punto Mobile</h2>
+                    <!-- Toggle Orientamento Iperbole (visibile solo per Iperbole) -->
+                    <div id="hyperbola-orientation-box" class="hidden items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5 text-[11px]">
+                        <button id="hyp-axis-x" class="px-2 py-1 rounded-md bg-rose-600 text-white font-semibold transition">Fuochi su X</button>
+                        <button id="hyp-axis-y" class="px-2 py-1 rounded-md text-slate-400 hover:text-white transition">Fuochi su Y</button>
+                    </div>
+                </div>
+
+                <!-- Contenitore Dinamico Slider Parametri -->
+                <div id="sliders-container" class="space-y-3.5"></div>
+
+                <!-- Slider dedicato al Punto Mobile P -->
+                <div class="mt-4 pt-3.5 border-t border-slate-800/90">
+                    <div class="flex items-center justify-between text-xs mb-1.5">
+                        <label for="slider-point-t" class="font-medium text-slate-200 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-white inline-block"></span>
+                            Posizione Punto <span class="font-mono font-bold text-white">P</span> sulla curva
+                        </label>
+                        <span id="point-p-coords-badge" class="font-mono text-[11px] text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-500/30">
+                            P(2.12, 2.12)
+                        </span>
+                    </div>
+                    <input type="range" id="slider-point-t" min="0" max="360" step="1" value="45" class="w-full">
+                </div>
+
+                <!-- Pulsanti Preset Rapidi -->
+                <div class="mt-4 pt-3.5 border-t border-slate-800/90">
+                    <div class="text-[11px] font-medium text-slate-400 mb-2">Configurazioni Rapide (Preset):</div>
+                    <div id="presets-container" class="grid grid-cols-3 gap-2"></div>
+                </div>
+            </div>
+
+            <!-- CARD 3: TOGGLE ELEMENTI GRAFICI -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Elementi Visibili sul Grafico</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-foci" checked class="rounded text-rose-500 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span class="text-rose-300 font-medium">Fuochi (F)</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-vertices" checked class="rounded text-emerald-500 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span class="text-emerald-300 font-medium">Vertici (V)</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-center" checked class="rounded text-cyan-500 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span class="text-cyan-300 font-medium">Centro (C)</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-aux" checked class="rounded text-amber-500 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span id="lbl-chk-aux" class="text-amber-300 font-medium">Asintoti / Dir.</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-focal-rays" checked class="rounded text-indigo-500 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span class="text-indigo-300 font-medium">Raggi Focali</span>
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 select-none">
+                        <input type="checkbox" id="chk-point-p" checked class="rounded text-slate-300 bg-slate-800 border-slate-600 focus:ring-0">
+                        <span class="text-slate-200 font-medium">Punto P</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- CARD 4: PROPRIETÀ GEOMETRICHE CALCOLATE -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    Proprietà Geometriche Live
+                </h2>
+                <div id="properties-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs"></div>
+            </div>
+
+            <!-- CARD 5: DEFINIZIONE GEOMETRICA E SPIEGAZIONE DIDATTICA -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-900/70 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-amber-300 mb-2 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Definizione Geometrica & Proprietà
+                </h2>
+                <p id="didactic-explanation" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * Laboratorio Interattivo delle Sezioni Coniche
+         * Gestione unificata di Circonferenza, Ellisse, Parabola e Iperbole su HTML5 Canvas.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATO GLOBALE DELL'APPLICAZIONE ---
+            const state = {
+                activeTab: 'circle', // 'circle' | 'ellipse' | 'parabola' | 'hyperbola'
+                params: {
+                    circle:    { x0: 0, y0: 0, r: 3 },
+                    ellipse:   { x0: 0, y0: 0, a: 4, b: 2.5 },
+                    parabola:  { a: 0.5, xv: 0, yv: -2 },
+                    hyperbola: { x0: 0, y0: 0, a: 2.5, b: 2, axis: 'x' } // axis: 'x' | 'y'
+                },
+                pointParam: 45, // Parametro angolare (0..360) o coordinata relativa per P
+                // Toggle livelli visivi
+                showFoci: true,
+                showVertices: true,
+                showCenter: true,
+                showAux: true,
+                showFocalRays: true,
+                showPointP: true,
+                // Stato vista piano cartesiano
+                offsetX: 0,
+                offsetY: 0,
+                scale: 46,
+                baseScale: 46,
+                // Interazione utente
+                isPanning: false,
+                isDraggingP: false,
+                dragStartX: 0,
+                dragStartY: 0
+            };
+
+            // --- CONFIGURAZIONI E PRESET DELLE 4 CONICHE ---
+            const CONIC_CONFIG = {
+                circle: {
+                    name: 'Circonferenza',
+                    color: '#22d3ee',
+                    dotClass: 'bg-cyan-400',
+                    auxLabel: 'Raggio r',
+                    sliders: [
+                        { key: 'x0', label: 'Centro x₀', min: -8, max: 8, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'y0', label: 'Centro y₀', min: -8, max: 8, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'r',  label: 'Raggio r',  min: 0.5, max: 8, step: 0.25, accent: 'slider-emerald' }
+                    ],
+                    presets: [
+                        { label: 'Unitaria', desc: 'C(0,0), r=1', values: { x0: 0, y0: 0, r: 1 } },
+                        { label: 'Centrata', desc: 'C(0,0), r=3.5', values: { x0: 0, y0: 0, r: 3.5 } },
+                        { label: 'Traslata', desc: 'C(2,-1), r=3', values: { x0: 2, y0: -1, r: 3 } }
+                    ],
+                    didactic: 'La <strong class="text-cyan-300">circonferenza</strong> è il luogo geometrico dei punti <span class="font-mono">P(x, y)</span> del piano equidistanti da un punto fisso detto <strong class="text-cyan-300">centro C(x₀, y₀)</strong>. La distanza costante è il <strong class="text-emerald-300">raggio r</strong>. È un caso particolare di ellisse con semiassi uguali (<span class="font-mono">a = b = r</span>) ed eccentricità <span class="font-mono text-indigo-300">e = 0</span>.'
+                },
+                ellipse: {
+                    name: 'Ellisse',
+                    color: '#34d399',
+                    dotClass: 'bg-emerald-400',
+                    auxLabel: 'Assi / Rettangolo',
+                    sliders: [
+                        { key: 'x0', label: 'Centro x₀', min: -6, max: 6, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'y0', label: 'Centro y₀', min: -6, max: 6, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'a',  label: 'Semiasse orizz. a', min: 0.5, max: 8, step: 0.25, accent: 'slider-emerald' },
+                        { key: 'b',  label: 'Semiasse vert. b',  min: 0.5, max: 8, step: 0.25, accent: 'slider-amber' }
+                    ],
+                    presets: [
+                        { label: 'Orizzontale', desc: 'a=4.5, b=2.5', values: { x0: 0, y0: 0, a: 4.5, b: 2.5 } },
+                        { label: 'Verticale', desc: 'a=2, b=4.5', values: { x0: 0, y0: 0, a: 2, b: 4.5 } },
+                        { label: 'Quasi circolare', desc: 'a=3.5, b=3.2', values: { x0: 0, y0: 0, a: 3.5, b: 3.2 } }
+                    ],
+                    didactic: 'L\'<strong class="text-emerald-300">ellisse</strong> è il luogo dei punti <span class="font-mono">P</span> per cui è costante la <strong class="text-indigo-300">somma delle distanze</strong> da due punti fissi detti <strong class="text-rose-400">fuochi F₁ e F₂</strong> (<span class="font-mono">PF₁ + PF₂ = 2·max(a,b)</span>). L\'<strong class="text-amber-300">eccentricità e = c / a</strong> varia tra <span class="font-mono">0</span> (circonferenza) e <span class="font-mono">1</span> (ellisse sempre più schiacciata).'
+                },
+                parabola: {
+                    name: 'Parabola',
+                    color: '#fbbf24',
+                    dotClass: 'bg-amber-400',
+                    auxLabel: 'Direttrice & Asse',
+                    sliders: [
+                        { key: 'a',  label: 'Apertura a', min: -2.5, max: 2.5, step: 0.1, accent: 'slider-amber' },
+                        { key: 'xv', label: 'Vertice xᵥ', min: -7, max: 7, step: 0.5, accent: 'slider-emerald' },
+                        { key: 'yv', label: 'Vertice yᵥ', min: -7, max: 7, step: 0.5, accent: 'slider-emerald' }
+                    ],
+                    presets: [
+                        { label: 'Classica', desc: 'y = 0.5x² - 2', values: { a: 0.5, xv: 0, yv: -2 } },
+                        { label: 'Rovesciata', desc: 'y = -0.4(x-1)²+3', values: { a: -0.4, xv: 1, yv: 3 } },
+                        { label: 'Stretta', desc: 'y = 1.5x² - 3', values: { a: 1.5, xv: 0, yv: -3 } }
+                    ],
+                    didactic: 'La <strong class="text-amber-300">parabola</strong> è il luogo geometrico dei punti <span class="font-mono">P</span> equidistanti da un punto fisso detto <strong class="text-rose-400">fuoco F</strong> e da una retta fissa detta <strong class="text-amber-300">direttrice d</strong> (<span class="font-mono">PF = dist(P, d)</span>). Ogni parabola ha eccentricità esattamente uguale a <span class="font-mono text-indigo-300">e = 1</span>.'
+                },
+                hyperbola: {
+                    name: 'Iperbole',
+                    color: '#fb7185',
+                    dotClass: 'bg-rose-400',
+                    auxLabel: 'Asintoti',
+                    sliders: [
+                        { key: 'x0', label: 'Centro x₀', min: -5, max: 5, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'y0', label: 'Centro y₀', min: -5, max: 5, step: 0.5, accent: 'slider-cyan' },
+                        { key: 'a',  label: 'Parametro a', min: 0.5, max: 6, step: 0.25, accent: 'slider-rose' },
+                        { key: 'b',  label: 'Parametro b', min: 0.5, max: 6, step: 0.25, accent: 'slider-amber' }
+                    ],
+                    presets: [
+                        { label: 'Fuochi su X', desc: 'a=2.5, b=2', values: { x0: 0, y0: 0, a: 2.5, b: 2, axis: 'x' } },
+                        { label: 'Fuochi su Y', desc: 'a=2, b=2.5', values: { x0: 0, y0: 0, a: 2, b: 2.5, axis: 'y' } },
+                        { label: 'Equilatera', desc: 'a=2.5, b=2.5', values: { x0: 0, y0: 0, a: 2.5, b: 2.5, axis: 'x' } }
+                    ],
+                    didactic: 'L\'<strong class="text-rose-400">iperbole</strong> è il luogo dei punti <span class="font-mono">P</span> per cui è costante la <strong class="text-indigo-300">differenza in valore assoluto delle distanze</strong> dai due <strong class="text-rose-400">fuochi F₁ e F₂</strong> (<span class="font-mono">|PF₁ - PF₂| = 2a</span> oppure <span class="font-mono">2b</span>). I due rami si avvicinano indefinitamente agli <strong class="text-amber-300">asintoti</strong> e l\'eccentricità è sempre <span class="font-mono text-indigo-300">e &gt; 1</span>.'
+                }
+            };
+
+            // --- RIFERIMENTI DOM ---
+            const canvas = document.getElementById('conic-canvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('canvas-container');
+            const slidersContainer = document.getElementById('sliders-container');
+            const presetsContainer = document.getElementById('presets-container');
+            const propertiesGrid = document.getElementById('properties-grid');
+            const sliderPointT = document.getElementById('slider-point-t');
+
+            // --- UTILITY FORMATTAZIONE NUMERICA E ALGEBRICA ---
+            const fmt = (n) => {
+                if (Math.abs(n) < 1e-8) return '0';
+                return parseFloat(n.toFixed(2)).toString();
+            };
+            const fmt2 = (n) => (Math.abs(n) < 1e-8 ? '0.00' : n.toFixed(2));
+
+            // Formatta (x - h)^2 in modo pulito: x², (x - 2)², (x + 3)²
+            function fmtShiftSq(varName, h) {
+                if (Math.abs(h) < 1e-8) return `${varName}²`;
+                return h > 0 ? `(${varName} - ${fmt(h)})²` : `(${varName} + ${fmt(Math.abs(h))})²`;
+            }
+
+            // Formatta termine lineare con segno: + 4x, - 2x, oppure vuoto se 0
+            function fmtLinearTerm(coeff, varName, isFirst = false) {
+                if (Math.abs(coeff) < 1e-8) return '';
+                const absC = Math.abs(coeff);
+                const cStr = Math.abs(absC - 1) < 1e-8 && varName ? '' : fmt(absC);
+                if (isFirst) return coeff < 0 ? `-${cStr}${varName}` : `${cStr}${varName}`;
+                return coeff < 0 ? ` - ${cStr}${varName}` : ` + ${cStr}${varName}`;
+            }
+
+            // --- CALCOLO ANALITICO DELLA CONICA ATTIVA ---
+            function computeConicData() {
+                const tab = state.activeTab;
+
+                if (tab === 'circle') {
+                    const { x0, y0, r } = state.params.circle;
+                    // Forma espansa: x² + y² - 2x0*x - 2y0*y + (x0² + y0² - r²) = 0
+                    const aCoeff = -2 * x0;
+                    const bCoeff = -2 * y0;
+                    const cCoeff = x0 * x0 + y0 * y0 - r * r;
+
+                    const eqNumeric = `${fmtShiftSq('x', x0)} + ${fmtShiftSq('y', y0)} = ${fmt(r * r)}`;
+                    const eqSecondary = `x² + y²${fmtLinearTerm(aCoeff, 'x')}${fmtLinearTerm(bCoeff, 'y')}${fmtLinearTerm(cCoeff, '')} = 0`;
+
+                    // Punto P(theta)
+                    const rad = (state.pointParam * Math.PI) / 180;
+                    const px = x0 + r * Math.cos(rad);
+                    const py = y0 + r * Math.sin(rad);
+
+                    return {
+                        eqParametric: '(x - x₀)² + (y - y₀)² = r²',
+                        eqNumeric,
+                        eqSecondaryLabel: 'Forma canonica espansa (x² + y² + ax + by + c = 0):',
+                        eqSecondary,
+                        center: { x: x0, y: y0 },
+                        foci: [{ x: x0, y: y0, label: 'F ≡ C' }],
+                        vertices: [
+                            { x: x0 + r, y: y0, label: 'V₁' },
+                            { x: x0 - r, y: y0, label: 'V₂' },
+                            { x: x0, y: y0 + r, label: 'V₃' },
+                            { x: x0, y: y0 - r, label: 'V₄' }
+                        ],
+                        pointP: { x: px, y: py },
+                        focalLawText: `CP = r = ${fmt2(r)}`,
+                        properties: [
+                            { label: 'Centro C(x₀, y₀)', value: `C(${fmt(x0)}, ${fmt(y0)})`, color: 'text-cyan-300' },
+                            { label: 'Raggio r', value: `r = ${fmt2(r)}`, color: 'text-emerald-300' },
+                            { label: 'Diametro (2r)', value: `d = ${fmt2(2 * r)}`, color: 'text-slate-200' },
+                            { label: 'Eccentricità (e)', value: 'e = 0', color: 'text-indigo-300' },
+                            { label: 'Circonferenza (2πr)', value: `${fmt2(2 * Math.PI * r)}`, color: 'text-slate-200' },
+                            { label: 'Area (πr²)', value: `${fmt2(Math.PI * r * r)}`, color: 'text-slate-200' }
+                        ]
+                    };
+                }
+
+                if (tab === 'ellipse') {
+                    const { x0, y0, a, b } = state.params.ellipse;
+                    const isHorizontal = a >= b;
+                    const major = Math.max(a, b);
+                    const minor = Math.min(a, b);
+                    const c = Math.sqrt(Math.max(0, major * major - minor * minor));
+                    const ecc = major > 0 ? c / major : 0;
+
+                    const foci = isHorizontal
+                        ? [{ x: x0 - c, y: y0, label: 'F₁' }, { x: x0 + c, y: y0, label: 'F₂' }]
+                        : [{ x: x0, y: y0 - c, label: 'F₁' }, { x: x0, y: y0 + c, label: 'F₂' }];
+
+                    const vertices = [
+                        { x: x0 - a, y: y0, label: 'V₁' },
+                        { x: x0 + a, y: y0, label: 'V₂' },
+                        { x: x0, y: y0 + b, label: 'B₁' },
+                        { x: x0, y: y0 - b, label: 'B₂' }
+                    ];
+
+                    const rad = (state.pointParam * Math.PI) / 180;
+                    const px = x0 + a * Math.cos(rad);
+                    const py = y0 + b * Math.sin(rad);
+
+                    const d1 = Math.hypot(px - foci[0].x, py - foci[0].y);
+                    const d2 = Math.hypot(px - foci[1].x, py - foci[1].y);
+
+                    const eqNumeric = `${fmtShiftSq('x', x0)} / ${fmt(a * a)} + ${fmtShiftSq('y', y0)} / ${fmt(b * b)} = 1`;
+                    const eqSecondary = `x = ${fmt(x0)} + ${fmt(a)}·cos(t),   y = ${fmt(y0)} + ${fmt(b)}·sin(t)`;
+
+                    return {
+                        eqParametric: '(x - x₀)² / a² + (y - y₀)² / b² = 1',
+                        eqNumeric,
+                        eqSecondaryLabel: 'Equazioni parametriche (t ∈ [0, 2π]):',
+                        eqSecondary,
+                        center: { x: x0, y: y0 },
+                        foci,
+                        vertices,
+                        pointP: { x: px, y: py },
+                        focalLawText: `PF₁ + PF₂ = ${fmt2(d1)} + ${fmt2(d2)} = ${fmt2(2 * major)} (2${isHorizontal ? 'a' : 'b'})`,
+                        properties: [
+                            { label: 'Centro C(x₀, y₀)', value: `C(${fmt(x0)}, ${fmt(y0)})`, color: 'text-cyan-300' },
+                            { label: 'Semidistanza focale c', value: `c = √|a²-b²| = ${fmt2(c)}`, color: 'text-rose-300' },
+                            { label: 'Fuoco F₁', value: `F₁(${fmt2(foci[0].x)}, ${fmt2(foci[0].y)})`, color: 'text-rose-400' },
+                            { label: 'Fuoco F₂', value: `F₂(${fmt2(foci[1].x)}, ${fmt2(foci[1].y)})`, color: 'text-rose-400' },
+                            { label: 'Eccentricità (e = c/max)', value: `e = ${fmt2(ecc)}`, color: 'text-indigo-300' },
+                            { label: 'Somma raggi focali', value: `2${isHorizontal ? 'a' : 'b'} = ${fmt2(2 * major)}`, color: 'text-emerald-300' }
+                        ]
+                    };
+                }
+
+                if (tab === 'parabola') {
+                    let { a, xv, yv } = state.params.parabola;
+                    // Evita a = 0 esattamente per non degenerare la parabola
+                    if (Math.abs(a) < 0.05) a = a >= 0 ? 0.05 : -0.05;
+
+                    // Forma standard: y = ax² + bx + c
+                    const bStd = -2 * a * xv;
+                    const cStd = a * xv * xv + yv;
+
+                    // Fuoco F(xv, yv + 1/(4a)), Direttrice y = yv - 1/(4a)
+                    const pFocal = 1 / (4 * a);
+                    const fy = yv + pFocal;
+                    const dirY = yv - pFocal;
+
+                    // Punto P mappato dallo slider (0..360 -> t in [-4.5, +4.5])
+                    const tOffset = ((state.pointParam - 180) / 180) * 4.5;
+                    const px = xv + tOffset;
+                    const py = a * (px - xv) * (px - xv) + yv;
+
+                    const distFocus = Math.hypot(px - xv, py - fy);
+
+                    const aStr = Math.abs(a - 1) < 1e-8 ? '' : (Math.abs(a + 1) < 1e-8 ? '-' : fmt(a));
+                    const eqNumeric = `y = ${aStr}${fmtShiftSq('x', xv)}${fmtLinearTerm(yv, '')}`;
+                    const eqSecondary = `y = ${fmtLinearTerm(a, 'x²', true)}${fmtLinearTerm(bStd, 'x')}${fmtLinearTerm(cStd, '')}`;
+
+                    return {
+                        eqParametric: 'y = a(x - xᵥ)² + yᵥ',
+                        eqNumeric,
+                        eqSecondaryLabel: 'Forma polinomiale standard (y = ax² + bx + c):',
+                        eqSecondary,
+                        center: { x: xv, y: yv },
+                        foci: [{ x: xv, y: fy, label: 'F' }],
+                        vertices: [{ x: xv, y: yv, label: 'V' }],
+                        directrixY: dirY,
+                        pointP: { x: px, y: py },
+                        focalLawText: `PF = dist(P, d) = ${fmt2(distFocus)}`,
+                        properties: [
+                            { label: 'Vertice V(xᵥ, yᵥ)', value: `V(${fmt(xv)}, ${fmt(yv)})`, color: 'text-emerald-300' },
+                            { label: 'Fuoco F', value: `F(${fmt(xv)}, ${fmt2(fy)})`, color: 'text-rose-400' },
+                            { label: 'Direttrice (d)', value: `y = ${fmt2(dirY)}`, color: 'text-amber-300' },
+                            { label: 'Asse di simmetria', value: `x = ${fmt(xv)}`, color: 'text-cyan-300' },
+                            { label: 'Eccentricità (e)', value: 'e = 1 (costante)', color: 'text-indigo-300' },
+                            { label: 'Distanza focale |p|', value: `1/(4|a|) = ${fmt2(Math.abs(pFocal))}`, color: 'text-slate-200' }
+                        ]
+                    };
+                }
+
+                if (tab === 'hyperbola') {
+                    const { x0, y0, a, b, axis } = state.params.hyperbola;
+                    const c = Math.sqrt(a * a + b * b);
+                    const isAxisX = axis === 'x';
+                    const ecc = isAxisX ? c / a : c / b;
+
+                    const foci = isAxisX
+                        ? [{ x: x0 - c, y: y0, label: 'F₁' }, { x: x0 + c, y: y0, label: 'F₂' }]
+                        : [{ x: x0, y: y0 - c, label: 'F₁' }, { x: x0, y: y0 + c, label: 'F₂' }];
+
+                    const vertices = isAxisX
+                        ? [{ x: x0 - a, y: y0, label: 'V₁' }, { x: x0 + a, y: y0, label: 'V₂' }]
+                        : [{ x: x0, y: y0 - b, label: 'V₁' }, { x: x0, y: y0 + b, label: 'V₂' }];
+
+                    // Punto P sui due rami dell'iperbole tramite parametro iperbolico u
+                    // Slider 0..179 -> ramo positivo, 180..360 -> ramo negativo
+                    const isBranch1 = state.pointParam < 180;
+                    const localNorm = isBranch1
+                        ? ((state.pointParam - 90) / 90) * 1.45
+                        : ((state.pointParam - 270) / 90) * 1.45;
+                    const sign = isBranch1 ? 1 : -1;
+
+                    let px, py;
+                    if (isAxisX) {
+                        px = x0 + sign * a * Math.cosh(localNorm);
+                        py = y0 + b * Math.sinh(localNorm);
+                    } else {
+                        px = x0 + a * Math.sinh(localNorm);
+                        py = y0 + sign * b * Math.cosh(localNorm);
+                    }
+
+                    const d1 = Math.hypot(px - foci[0].x, py - foci[0].y);
+                    const d2 = Math.hypot(px - foci[1].x, py - foci[1].y);
+                    const diff = Math.abs(d1 - d2);
+                    const transverse = isAxisX ? 2 * a : 2 * b;
+
+                    const eqParametric = isAxisX
+                        ? '(x - x₀)² / a² - (y - y₀)² / b² = 1'
+                        : '(y - y₀)² / b² - (x - x₀)² / a² = 1';
+
+                    const eqNumeric = isAxisX
+                        ? `${fmtShiftSq('x', x0)} / ${fmt(a * a)} - ${fmtShiftSq('y', y0)} / ${fmt(b * b)} = 1`
+                        : `${fmtShiftSq('y', y0)} / ${fmt(b * b)} - ${fmtShiftSq('x', x0)} / ${fmt(a * a)} = 1`;
+
+                    const slope = b / a;
+                    const eqSecondary = `y = ${fmt(y0)} ± (${fmt(b)}/${fmt(a)})${Math.abs(x0) < 1e-8 ? 'x' : `(x ${x0 > 0 ? '-' : '+'} ${fmt(Math.abs(x0))})`}`;
+
+                    return {
+                        eqParametric,
+                        eqNumeric,
+                        eqSecondaryLabel: 'Equazioni degli asintoti (y - y₀ = ±(b/a)(x - x₀)):',
+                        eqSecondary,
+                        center: { x: x0, y: y0 },
+                        foci,
+                        vertices,
+                        asymptoteSlope: slope,
+                        pointP: { x: px, y: py },
+                        focalLawText: `|PF₁ - PF₂| = |${fmt2(d1)} - ${fmt2(d2)}| = ${fmt2(diff)} (2${isAxisX ? 'a' : 'b'})`,
+                        properties: [
+                            { label: 'Centro C(x₀, y₀)', value: `C(${fmt(x0)}, ${fmt(y0)})`, color: 'text-cyan-300' },
+                            { label: 'Semidistanza focale c', value: `c = √(a²+b²) = ${fmt2(c)}`, color: 'text-rose-300' },
+                            { label: 'Fuochi F₁, F₂', value: isAxisX ? `(${fmt(x0)} ± ${fmt2(c)}, ${fmt(y0)})` : `(${fmt(x0)}, ${fmt(y0)} ± ${fmt2(c)})`, color: 'text-rose-400' },
+                            { label: 'Vertici reali', value: isAxisX ? `(${fmt(x0)} ± ${fmt(a)}, ${fmt(y0)})` : `(${fmt(x0)}, ${fmt(y0)} ± ${fmt(b)})`, color: 'text-emerald-300' },
+                            { label: 'Eccentricità (e > 1)', value: `e = ${fmt2(ecc)}`, color: 'text-indigo-300' },
+                            { label: 'Pendenza asintoti', value: `m = ±${fmt2(slope)}`, color: 'text-amber-300' }
+                        ]
+                    };
+                }
+            }
+
+            // --- RENDERING UI DINAMICA PER LA SCHEDA ATTIVA ---
+            function buildTabControls() {
+                const tab = state.activeTab;
+                const cfg = CONIC_CONFIG[tab];
+                const currentParams = state.params[tab];
+
+                // Aggiorna badge e titoli scheda
+                document.getElementById('conic-tag').textContent = cfg.name;
+                document.getElementById('conic-dot-indicator').className = `w-2 h-2 rounded-full ${cfg.dotClass}`;
+                document.getElementById('lbl-chk-aux').textContent = cfg.auxLabel;
+                document.getElementById('didactic-explanation').innerHTML = cfg.didactic;
+
+                // Mostra/Nascondi selettore orientamento Iperbole
+                const hypOrientBox = document.getElementById('hyperbola-orientation-box');
+                if (tab === 'hyperbola') {
+                    hypOrientBox.classList.remove('hidden');
+                    hypOrientBox.classList.add('flex');
+                    updateHyperbolaAxisButtons();
+                } else {
+                    hypOrientBox.classList.add('hidden');
+                    hypOrientBox.classList.remove('flex');
+                }
+
+                // Genera Slider sincronizzati con input numerici
+                slidersContainer.innerHTML = '';
+                cfg.sliders.forEach(s => {
+                    const val = currentParams[s.key];
+                    const row = document.createElement('div');
+                    row.className = 'p-3 rounded-xl bg-slate-950/65 border border-slate-800/80';
+                    row.innerHTML = `
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-medium text-slate-200">${s.label}</label>
+                            <input type="number" data-key="${s.key}" step="${s.step}" min="${s.min}" max="${s.max}" value="${val}"
+                                class="param-num w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 text-right font-mono text-xs text-indigo-300 font-semibold focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <input type="range" data-key="${s.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${val}" class="param-slider w-full ${s.accent}">
+                    `;
+                    slidersContainer.appendChild(row);
+                });
+
+                // Collega eventi slider & input numerici
+                slidersContainer.querySelectorAll('.param-slider').forEach(slider => {
+                    slider.addEventListener('input', (e) => {
+                        const key = e.target.dataset.key;
+                        let val = parseFloat(e.target.value);
+                        if (tab === 'parabola' && key === 'a' && Math.abs(val) < 0.05) {
+                            val = val >= 0 ? 0.1 : -0.1;
+                        }
+                        state.params[tab][key] = val;
+                        const numInput = slidersContainer.querySelector(`.param-num[data-key="${key}"]`);
+                        if (numInput) numInput.value = val;
+                        refreshAll();
+                    });
+                });
+
+                slidersContainer.querySelectorAll('.param-num').forEach(numInput => {
+                    numInput.addEventListener('input', (e) => {
+                        const key = e.target.dataset.key;
+                        let val = parseFloat(e.target.value);
+                        if (isNaN(val)) return;
+                        if (tab === 'parabola' && key === 'a' && Math.abs(val) < 0.05) {
+                            val = val >= 0 ? 0.1 : -0.1;
+                        }
+                        state.params[tab][key] = val;
+                        const slider = slidersContainer.querySelector(`.param-slider[data-key="${key}"]`);
+                        if (slider) slider.value = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), val));
+                        refreshAll();
+                    });
+                });
+
+                // Genera Preset Rapidi
+                presetsContainer.innerHTML = '';
+                cfg.presets.forEach(preset => {
+                    const btn = document.createElement('button');
+                    btn.className = 'text-left px-2.5 py-2 rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/50 border border-slate-700/70 transition';
+                    btn.innerHTML = `
+                        <div class="font-semibold text-xs text-slate-200 truncate">${preset.label}</div>
+                        <div class="font-mono text-[10px] text-slate-400 truncate">${preset.desc}</div>
+                    `;
+                    btn.addEventListener('click', () => {
+                        Object.assign(state.params[tab], preset.values);
+                        buildTabControls();
+                        refreshAll();
+                    });
+                    presetsContainer.appendChild(btn);
+                });
+            }
+
+            function updateHyperbolaAxisButtons() {
+                const isX = state.params.hyperbola.axis === 'x';
+                const btnX = document.getElementById('hyp-axis-x');
+                const btnY = document.getElementById('hyp-axis-y');
+                btnX.className = isX
+                    ? 'px-2 py-1 rounded-md bg-rose-600 text-white font-semibold transition'
+                    : 'px-2 py-1 rounded-md text-slate-400 hover:text-white transition';
+                btnY.className = !isX
+                    ? 'px-2 py-1 rounded-md bg-rose-600 text-white font-semibold transition'
+                    : 'px-2 py-1 rounded-md text-slate-400 hover:text-white transition';
+            }
+
+            // --- AGGIORNAMENTO TESTI EQUAZIONI E PROPRIETÀ ---
+            function refreshAll() {
+                const data = computeConicData();
+
+                document.getElementById('eq-parametric').textContent = data.eqParametric;
+                document.getElementById('eq-numeric').textContent = data.eqNumeric;
+                document.getElementById('eq-secondary-label').textContent = data.eqSecondaryLabel;
+                document.getElementById('eq-secondary').textContent = data.eqSecondary;
+                document.getElementById('focal-law-text').textContent = data.focalLawText;
+                document.getElementById('point-p-coords-badge').textContent = `P(${fmt2(data.pointP.x)}, ${fmt2(data.pointP.y)})`;
+
+                // Popola griglia proprietà
+                propertiesGrid.innerHTML = '';
+                data.properties.forEach(prop => {
+                    const card = document.createElement('div');
+                    card.className = 'p-2.5 rounded-xl bg-slate-950/75 border border-slate-800/80';
+                    card.innerHTML = `
+                        <div class="text-[11px] text-slate-400 mb-0.5">${prop.label}</div>
+                        <div class="font-mono font-semibold ${prop.color}">${prop.value}</div>
+                    `;
+                    propertiesGrid.appendChild(card);
+                });
+
+                drawCanvas(data);
+            }
+
+            // --- SISTEMA DI COORDINATE CANVAS (HIDPI READY) ---
+            function resizeCanvas() {
+                const rect = container.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                refreshAll();
+            }
+
+            function mathToScreen(mx, my) {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                return {
+                    x: w / 2 + state.offsetX + mx * state.scale,
+                    y: h / 2 + state.offsetY - my * state.scale
+                };
+            }
+
+            function screenToMath(sx, sy) {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                return {
+                    x: (sx - (w / 2 + state.offsetX)) / state.scale,
+                    y: ((h / 2 + state.offsetY) - sy) / state.scale
+                };
+            }
+
+            function getNiceGridStep(scale) {
+                const rawStep = 65 / scale;
+                const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+                const res = rawStep / mag;
+                if (res > 5) return 10 * mag;
+                if (res > 2) return 5 * mag;
+                if (res > 1) return 2 * mag;
+                return mag;
+            }
+
+            // --- DISEGNO PRINCIPALE SU HTML5 CANVAS ---
+            function drawCanvas(data) {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                if (width === 0 || height === 0) return;
+
+                ctx.clearRect(0, 0, width, height);
+
+                const origin = mathToScreen(0, 0);
+                const step = getNiceGridStep(state.scale);
+                const subStep = step / 5;
+
+                const topLeft = screenToMath(0, 0);
+                const bottomRight = screenToMath(width, height);
+                const minX = Math.floor(topLeft.x / step) * step - step;
+                const maxX = Math.ceil(bottomRight.x / step) * step + step;
+                const minY = Math.floor(bottomRight.y / step) * step - step;
+                const maxY = Math.ceil(topLeft.y / step) * step + step;
+
+                // 1. Sottogriglia
+                if (state.scale > 22) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(30, 41, 59, 0.45)';
+                    ctx.lineWidth = 1;
+                    for (let x = minX; x <= maxX; x += subStep) {
+                        const sx = mathToScreen(x, 0).x;
+                        ctx.moveTo(sx, 0); ctx.lineTo(sx, height);
+                    }
+                    for (let y = minY; y <= maxY; y += subStep) {
+                        const sy = mathToScreen(0, y).y;
+                        ctx.moveTo(0, sy); ctx.lineTo(width, sy);
+                    }
+                    ctx.stroke();
+                }
+
+                // 2. Griglia principale
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.55)';
+                ctx.lineWidth = 1;
+                for (let x = minX; x <= maxX; x += step) {
+                    if (Math.abs(x) < 1e-9) continue;
+                    const sx = mathToScreen(x, 0).x;
+                    ctx.moveTo(sx, 0); ctx.lineTo(sx, height);
+                }
+                for (let y = minY; y <= maxY; y += step) {
+                    if (Math.abs(y) < 1e-9) continue;
+                    const sy = mathToScreen(0, y).y;
+                    ctx.moveTo(0, sy); ctx.lineTo(width, sy);
+                }
+                ctx.stroke();
+
+                // 3. Assi Cartesiani X e Y
+                ctx.beginPath();
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 1.6;
+                if (origin.y >= 0 && origin.y <= height) {
+                    ctx.moveTo(0, origin.y); ctx.lineTo(width, origin.y);
+                }
+                if (origin.x >= 0 && origin.x <= width) {
+                    ctx.moveTo(origin.x, 0); ctx.lineTo(origin.x, height);
+                }
+                ctx.stroke();
+
+                // Etichette numeriche sugli assi
+                ctx.font = '11px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const labelYPos = Math.min(Math.max(origin.y + 6, 6), height - 20);
+                for (let x = minX; x <= maxX; x += step) {
+                    if (Math.abs(x) < 1e-9) continue;
+                    const sx = mathToScreen(x, 0).x;
+                    if (sx > 15 && sx < width - 20) ctx.fillText(fmt(x), sx, labelYPos);
+                }
+
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const labelXPos = Math.min(Math.max(origin.x - 8, 28), width - 8);
+                for (let y = minY; y <= maxY; y += step) {
+                    if (Math.abs(y) < 1e-9) continue;
+                    const sy = mathToScreen(0, y).y;
+                    if (sy > 15 && sy < height - 15) ctx.fillText(fmt(y), labelXPos, sy);
+                }
+
+                if (origin.x > 12 && origin.x < width - 12 && origin.y > 12 && origin.y < height - 18) {
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText('0', origin.x - 6, origin.y + 5);
+                }
+
+                const tab = state.activeTab;
+                const conicColor = CONIC_CONFIG[tab].color;
+
+                // 4. ELEMENTI AUSILIARI (Asintoti, Direttrice, Rettangolo Fondamentale, Assi)
+                if (state.showAux) {
+                    ctx.save();
+                    ctx.setLineDash([6, 6]);
+                    ctx.lineWidth = 1.5;
+
+                    if (tab === 'parabola') {
+                        // Direttrice orizzontale y = dirY
+                        const dirScreenY = mathToScreen(0, data.directrixY).y;
+                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+                        ctx.beginPath();
+                        ctx.moveTo(0, dirScreenY);
+                        ctx.lineTo(width, dirScreenY);
+                        ctx.stroke();
+
+                        // Etichetta direttrice
+                        ctx.fillStyle = '#fcd34d';
+                        ctx.font = '600 11px "JetBrains Mono", monospace';
+                        ctx.textAlign = 'left';
+                        ctx.fillText(`d: y = ${fmt2(data.directrixY)}`, 12, dirScreenY < 24 ? dirScreenY + 14 : dirScreenY - 10);
+
+                        // Asse di simmetria verticale
+                        const symScreenX = mathToScreen(data.center.x, 0).x;
+                        ctx.strokeStyle = 'rgba(129, 140, 248, 0.55)';
+                        ctx.beginPath();
+                        ctx.moveTo(symScreenX, 0);
+                        ctx.lineTo(symScreenX, height);
+                        ctx.stroke();
+                    }
+
+                    if (tab === 'hyperbola') {
+                        const { x0, y0, a, b } = state.params.hyperbola;
+                        const m = b / a;
+                        // Asintoti y - y0 = ±m(x - x0)
+                        ctx.strokeStyle = 'rgba(251, 191, 36, 0.75)';
+                        const xLeft = topLeft.x - 2;
+                        const xRight = bottomRight.x + 2;
+
+                        const p1Start = mathToScreen(xLeft, y0 + m * (xLeft - x0));
+                        const p1End = mathToScreen(xRight, y0 + m * (xRight - x0));
+                        const p2Start = mathToScreen(xLeft, y0 - m * (xLeft - x0));
+                        const p2End = mathToScreen(xRight, y0 - m * (xRight - x0));
+
+                        ctx.beginPath();
+                        ctx.moveTo(p1Start.x, p1Start.y); ctx.lineTo(p1End.x, p1End.y);
+                        ctx.moveTo(p2Start.x, p2Start.y); ctx.lineTo(p2End.x, p2End.y);
+                        ctx.stroke();
+
+                        // Rettangolo centrale (2a x 2b)
+                        const rectTL = mathToScreen(x0 - a, y0 + b);
+                        const rectBR = mathToScreen(x0 + a, y0 - b);
+                        ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+                        ctx.strokeRect(rectTL.x, rectTL.y, rectBR.x - rectTL.x, rectBR.y - rectTL.y);
+                    }
+
+                    if (tab === 'ellipse') {
+                        const { x0, y0, a, b } = state.params.ellipse;
+                        const pLeft = mathToScreen(x0 - a, y0);
+                        const pRight = mathToScreen(x0 + a, y0);
+                        const pTop = mathToScreen(x0, y0 + b);
+                        const pBot = mathToScreen(x0, y0 - b);
+
+                        ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+                        ctx.beginPath();
+                        ctx.moveTo(pLeft.x, pLeft.y); ctx.lineTo(pRight.x, pRight.y);
+                        ctx.moveTo(pTop.x, pTop.y); ctx.lineTo(pBot.x, pBot.y);
+                        ctx.stroke();
+                    }
+
+                    ctx.restore();
+                }
+
+                // 5. DISEGNO DELLA CURVA CONICA PRINCIPALE
+                ctx.save();
+                ctx.strokeStyle = conicColor;
+                ctx.lineWidth = 3;
+                ctx.shadowColor = conicColor;
+                ctx.shadowBlur = 12;
+
+                if (tab === 'circle') {
+                    const { x0, y0, r } = state.params.circle;
+                    const cScreen = mathToScreen(x0, y0);
+                    ctx.beginPath();
+                    ctx.arc(cScreen.x, cScreen.y, r * state.scale, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (tab === 'ellipse') {
+                    const { x0, y0, a, b } = state.params.ellipse;
+                    const cScreen = mathToScreen(x0, y0);
+                    ctx.beginPath();
+                    ctx.ellipse(cScreen.x, cScreen.y, a * state.scale, b * state.scale, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                if (tab === 'parabola') {
+                    let { a, xv, yv } = state.params.parabola;
+                    if (Math.abs(a) < 0.05) a = a >= 0 ? 0.05 : -0.05;
+                    ctx.beginPath();
+                    let started = false;
+                    for (let sx = -10; sx <= width + 10; sx += 2) {
+                        const mx = screenToMath(sx, 0).x;
+                        const my = a * (mx - xv) * (mx - xv) + yv;
+                        const sy = mathToScreen(mx, my).y;
+                        if (sy < -1500 || sy > height + 1500) {
+                            started = false;
+                            continue;
+                        }
+                        if (!started) { ctx.moveTo(sx, sy); started = true; }
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.stroke();
+                }
+
+                if (tab === 'hyperbola') {
+                    const { x0, y0, a, b, axis } = state.params.hyperbola;
+                    const isAxisX = axis === 'x';
+                    const uMax = 2.8;
+                    const steps = 180;
+
+                    // Disegna entrambi i rami (+1 e -1)
+                    [1, -1].forEach(branchSign => {
+                        ctx.beginPath();
+                        let started = false;
+                        for (let i = 0; i <= steps; i++) {
+                            const u = -uMax + (2 * uMax * i) / steps;
+                            const mx = isAxisX ? x0 + branchSign * a * Math.cosh(u) : x0 + a * Math.sinh(u);
+                            const my = isAxisX ? y0 + b * Math.sinh(u) : y0 + branchSign * b * Math.cosh(u);
+                            const pt = mathToScreen(mx, my);
+
+                            if (pt.x < -500 || pt.x > width + 500 || pt.y < -500 || pt.y > height + 500) {
+                                started = false;
+                                continue;
+                            }
+                            if (!started) { ctx.moveTo(pt.x, pt.y); started = true; }
+                            else ctx.lineTo(pt.x, pt.y);
+                        }
+                        ctx.stroke();
+                    });
+                }
+                ctx.restore();
+
+                // 6. RAGGI FOCALI DEL PUNTO MOBILE P
+                if (state.showPointP && state.showFocalRays) {
+                    const pScreen = mathToScreen(data.pointP.x, data.pointP.y);
+                    ctx.save();
+                    ctx.strokeStyle = '#818cf8';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+
+                    if (tab === 'circle') {
+                        const cScreen = mathToScreen(data.center.x, data.center.y);
+                        ctx.beginPath();
+                        ctx.moveTo(cScreen.x, cScreen.y);
+                        ctx.lineTo(pScreen.x, pScreen.y);
+                        ctx.stroke();
+                    } else if (tab === 'parabola') {
+                        // Segmento PF e segmento perpendicolare P -> Direttrice
+                        const fScreen = mathToScreen(data.foci[0].x, data.foci[0].y);
+                        const dirProjScreen = mathToScreen(data.pointP.x, data.directrixY);
+
+                        ctx.beginPath();
+                        ctx.moveTo(fScreen.x, fScreen.y);
+                        ctx.lineTo(pScreen.x, pScreen.y);
+                        ctx.stroke();
+
+                        ctx.strokeStyle = '#fbbf24';
+                        ctx.beginPath();
+                        ctx.moveTo(pScreen.x, pScreen.y);
+                        ctx.lineTo(dirProjScreen.x, dirProjScreen.y);
+                        ctx.stroke();
+
+                        // Punto proiezione sulla direttrice
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.beginPath();
+                        ctx.arc(dirProjScreen.x, dirProjScreen.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        // Ellisse e Iperbole: segmenti PF1 e PF2
+                        data.foci.forEach(f => {
+                            const fScreen = mathToScreen(f.x, f.y);
+                            ctx.beginPath();
+                            ctx.moveTo(fScreen.x, fScreen.y);
+                            ctx.lineTo(pScreen.x, pScreen.y);
+                            ctx.stroke();
+                        });
+                    }
+                    ctx.restore();
+                }
+
+                // 7. PUNTI NOTEVOLI (Centro, Vertici, Fuochi, Punto P)
+                const pointsToDraw = [];
+
+                if (state.showCenter && tab !== 'parabola') {
+                    pointsToDraw.push({ x: data.center.x, y: data.center.y, color: '#22d3ee', label: 'C', radius: 5.5 });
+                }
+
+                if (state.showVertices) {
+                    data.vertices.forEach(v => {
+                        pointsToDraw.push({ x: v.x, y: v.y, color: '#34d399', label: v.label, radius: 5 });
+                    });
+                }
+
+                if (state.showFoci && tab !== 'circle') {
+                    data.foci.forEach(f => {
+                        pointsToDraw.push({ x: f.x, y: f.y, color: '#f43f5e', label: f.label, radius: 6 });
+                    });
+                }
+
+                if (state.showPointP) {
+                    pointsToDraw.push({
+                        x: data.pointP.x,
+                        y: data.pointP.y,
+                        color: '#ffffff',
+                        label: `P(${fmt(data.pointP.x)}, ${fmt(data.pointP.y)})`,
+                        radius: 7,
+                        isHero: true
+                    });
+                }
+
+                pointsToDraw.forEach(pt => {
+                    const pos = mathToScreen(pt.x, pt.y);
+                    if (pos.x < -30 || pos.x > width + 30 || pos.y < -30 || pos.y > height + 30) return;
+
+                    if (pt.isHero) {
+                        // Alone luminoso attorno al punto trascinabile P
+                        ctx.beginPath();
+                        ctx.arc(pos.x, pos.y, 13, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(129, 140, 248, 0.25)';
+                        ctx.fill();
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, pt.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = pt.color;
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#090d16';
+                    ctx.stroke();
+
+                    // Etichetta pillola
+                    ctx.font = '600 11px "JetBrains Mono", monospace';
+                    const tw = ctx.measureText(pt.label).width;
+                    let lx = pos.x + 10;
+                    let ly = pos.y - 10;
+                    if (lx + tw + 10 > width) lx = pos.x - tw - 14;
+                    if (ly < 22) ly = pos.y + 18;
+
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                    ctx.strokeStyle = pt.color;
+                    ctx.lineWidth = 1;
+                    roundRect(ctx, lx - 4, ly - 10, tw + 8, 16, 5);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(pt.label, lx, ly - 2);
+                });
+            }
+
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+
+            // --- PROIEZIONE DEL CURSORE SULLA CONICA QUANDO SI TRASCINA IL PUNTO P ---
+            function updatePointPFromMouse(mathX, mathY) {
+                const tab = state.activeTab;
+
+                if (tab === 'circle') {
+                    const { x0, y0 } = state.params.circle;
+                    let deg = (Math.atan2(mathY - y0, mathX - x0) * 180) / Math.PI;
+                    if (deg < 0) deg += 360;
+                    state.pointParam = Math.round(deg);
+                } else if (tab === 'ellipse') {
+                    const { x0, y0, a, b } = state.params.ellipse;
+                    let deg = (Math.atan2((mathY - y0) / b, (mathX - x0) / a) * 180) / Math.PI;
+                    if (deg < 0) deg += 360;
+                    state.pointParam = Math.round(deg);
+                } else if (tab === 'parabola') {
+                    const { xv } = state.params.parabola;
+                    const clampedOffset = Math.max(-4.5, Math.min(4.5, mathX - xv));
+                    state.pointParam = Math.round(180 + (clampedOffset / 4.5) * 180);
+                } else if (tab === 'hyperbola') {
+                    const { x0, y0, a, b, axis } = state.params.hyperbola;
+                    if (axis === 'x') {
+                        const isPosBranch = mathX >= x0;
+                        const sinhVal = Math.max(-2, Math.min(2, (mathY - y0) / b));
+                        const u = Math.asinh(sinhVal);
+                        const norm = Math.max(-1, Math.min(1, u / 1.45));
+                        state.pointParam = Math.round(isPosBranch ? 90 + norm * 90 : 270 + norm * 90);
+                    } else {
+                        const isPosBranch = mathY >= y0;
+                        const sinhVal = Math.max(-2, Math.min(2, (mathX - x0) / a));
+                        const u = Math.asinh(sinhVal);
+                        const norm = Math.max(-1, Math.min(1, u / 1.45));
+                        state.pointParam = Math.round(isPosBranch ? 90 + norm * 90 : 270 + norm * 90);
+                    }
+                }
+
+                sliderPointT.value = state.pointParam;
+                refreshAll();
+            }
+
+            // --- EVENTI NAVIGAZIONE SCHEDE (TABS) ---
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.activeTab = btn.dataset.tab;
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.className = 'tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap text-slate-400 hover:text-slate-200';
+                    });
+                    btn.className = 'tab-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap bg-indigo-600 text-white shadow-md shadow-indigo-600/30';
+
+                    buildTabControls();
+                    refreshAll();
+                });
+            });
+
+            // Orientamento Iperbole (Fuochi su X / Fuochi su Y)
+            document.getElementById('hyp-axis-x').addEventListener('click', () => {
+                state.params.hyperbola.axis = 'x';
+                updateHyperbolaAxisButtons();
+                refreshAll();
+            });
+            document.getElementById('hyp-axis-y').addEventListener('click', () => {
+                state.params.hyperbola.axis = 'y';
+                updateHyperbolaAxisButtons();
+                refreshAll();
+            });
+
+            // Slider Punto P
+            sliderPointT.addEventListener('input', (e) => {
+                state.pointParam = parseFloat(e.target.value);
+                refreshAll();
+            });
+
+            // Toggle Elementi Visivi
+            document.getElementById('chk-foci').addEventListener('change', (e) => { state.showFoci = e.target.checked; refreshAll(); });
+            document.getElementById('chk-vertices').addEventListener('change', (e) => { state.showVertices = e.target.checked; refreshAll(); });
+            document.getElementById('chk-center').addEventListener('change', (e) => { state.showCenter = e.target.checked; refreshAll(); });
+            document.getElementById('chk-aux').addEventListener('change', (e) => { state.showAux = e.target.checked; refreshAll(); });
+            document.getElementById('chk-focal-rays').addEventListener('change', (e) => { state.showFocalRays = e.target.checked; refreshAll(); });
+            document.getElementById('chk-point-p').addEventListener('change', (e) => { state.showPointP = e.target.checked; refreshAll(); });
+
+            // --- CONTROLLI ZOOM, PAN E TRASCINAMENTO PUNTO P ---
+            function applyZoom(factor, cx = container.clientWidth / 2, cy = container.clientHeight / 2) {
+                const newScale = Math.max(15, Math.min(220, state.scale * factor));
+                const ratio = newScale / state.scale;
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                const ox = w / 2 + state.offsetX;
+                const oy = h / 2 + state.offsetY;
+
+                state.offsetX = cx - (cx - ox) * ratio - w / 2;
+                state.offsetY = cy - (cy - oy) * ratio - h / 2;
+                state.scale = newScale;
+
+                document.getElementById('zoom-display').textContent = `${Math.round((state.scale / state.baseScale) * 100)}%`;
+                refreshAll();
+            }
+
+            document.getElementById('btn-zoom-in').addEventListener('click', () => applyZoom(1.25));
+            document.getElementById('btn-zoom-out').addEventListener('click', () => applyZoom(0.8));
+
+            document.getElementById('btn-center-view').addEventListener('click', () => {
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = state.baseScale;
+                document.getElementById('zoom-display').textContent = '100%';
+                refreshAll();
+            });
+
+            document.getElementById('btn-reset-all').addEventListener('click', () => {
+                state.params = {
+                    circle:    { x0: 0, y0: 0, r: 3 },
+                    ellipse:   { x0: 0, y0: 0, a: 4, b: 2.5 },
+                    parabola:  { a: 0.5, xv: 0, yv: -2 },
+                    hyperbola: { x0: 0, y0: 0, a: 2.5, b: 2, axis: 'x' }
+                };
+                state.pointParam = 45;
+                sliderPointT.value = 45;
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = state.baseScale;
+                document.getElementById('zoom-display').textContent = '100%';
+                buildTabControls();
+                refreshAll();
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                applyZoom(e.deltaY < 0 ? 1.12 : 0.89, e.clientX - rect.left, e.clientY - rect.top);
+            }, { passive: false });
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+
+                // Controlla se l'utente ha cliccato vicino al Punto P
+                const data = computeConicData();
+                const pScreen = mathToScreen(data.pointP.x, data.pointP.y);
+                if (state.showPointP && Math.hypot(sx - pScreen.x, sy - pScreen.y) <= 18) {
+                    state.isDraggingP = true;
+                    container.style.cursor = 'pointer';
+                    return;
+                }
+
+                state.isPanning = true;
+                container.style.cursor = 'grabbing';
+                state.dragStartX = e.clientX - state.offsetX;
+                state.dragStartY = e.clientY - state.offsetY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+
+                if (sx >= 0 && sx <= rect.width && sy >= 0 && sy <= rect.height) {
+                    const m = screenToMath(sx, sy);
+                    document.getElementById('cursor-coords').textContent = `x: ${m.x.toFixed(2)}, y: ${m.y.toFixed(2)}`;
+
+                    if (!state.isPanning && !state.isDraggingP && state.showPointP) {
+                        const data = computeConicData();
+                        const pScreen = mathToScreen(data.pointP.x, data.pointP.y);
+                        container.style.cursor = Math.hypot(sx - pScreen.x, sy - pScreen.y) <= 18 ? 'pointer' : 'grab';
+                    }
+                }
+
+                if (state.isDraggingP) {
+                    const m = screenToMath(sx, sy);
+                    updatePointPFromMouse(m.x, m.y);
+                    return;
+                }
+
+                if (state.isPanning) {
+                    state.offsetX = e.clientX - state.dragStartX;
+                    state.offsetY = e.clientY - state.dragStartY;
+                    refreshAll();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                state.isPanning = false;
+                state.isDraggingP = false;
+                container.style.cursor = 'grab';
+            });
+
+            // Supporto Touch (Trascinamento Punto P, Pan e Pinch-to-Zoom)
+            let initialPinch = null;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    const rect = canvas.getBoundingClientRect();
+                    const sx = e.touches[0].clientX - rect.left;
+                    const sy = e.touches[0].clientY - rect.top;
+                    const data = computeConicData();
+                    const pScreen = mathToScreen(data.pointP.x, data.pointP.y);
+
+                    if (state.showPointP && Math.hypot(sx - pScreen.x, sy - pScreen.y) <= 24) {
+                        state.isDraggingP = true;
+                        return;
+                    }
+                    state.isPanning = true;
+                    state.dragStartX = e.touches[0].clientX - state.offsetX;
+                    state.dragStartY = e.touches[0].clientY - state.offsetY;
+                } else if (e.touches.length === 2) {
+                    state.isPanning = false;
+                    state.isDraggingP = false;
+                    initialPinch = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    const rect = canvas.getBoundingClientRect();
+                    const sx = e.touches[0].clientX - rect.left;
+                    const sy = e.touches[0].clientY - rect.top;
+
+                    if (state.isDraggingP) {
+                        const m = screenToMath(sx, sy);
+                        updatePointPFromMouse(m.x, m.y);
+                    } else if (state.isPanning) {
+                        state.offsetX = e.touches[0].clientX - state.dragStartX;
+                        state.offsetY = e.touches[0].clientY - state.dragStartY;
+                        refreshAll();
+                    }
+                } else if (e.touches.length === 2 && initialPinch) {
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const factor = dist / initialPinch;
+                    initialPinch = dist;
+                    const rect = canvas.getBoundingClientRect();
+                    const mx = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+                    const my = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                    applyZoom(factor, mx, my);
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchend', () => {
+                state.isPanning = false;
+                state.isDraggingP = false;
+                initialPinch = null;
+            });
+
+            window.addEventListener('resize', resizeCanvas);
+
+            // --- AVVIO INIZIALE ---
+            buildTabControls();
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>
