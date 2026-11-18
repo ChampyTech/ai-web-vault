@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatrice Codici Colore Resistori | 4, 5 e 6 Bande (IEC 60062)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Slider temperatura personalizzato */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #38bdf8 0%, #34d399 42%, #fbbf24 72%, #f43f5e 100%);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #0f172a;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* Animazioni fluide per le bande SVG */
+        .resistor-band {
+            transition: x 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                        width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                        fill 0.25s ease,
+                        opacity 0.25s ease,
+                        filter 0.2s ease;
+            cursor: pointer;
+        }
+        .resistor-band:hover {
+            filter: brightness(1.18) drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+        }
+
+        /* Effetto metallizzato/ceramico per le anteprime colore */
+        .swatch-gold {
+            background: linear-gradient(135deg, #fde047 0%, #ca8a04 50%, #fef08a 100%);
+        }
+        .swatch-silver {
+            background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 50%, #e2e8f0 100%);
+        }
+
+        /* Scrollbar sottile */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* Evidenziazione colonna selezionata */
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.65); }
+            50% { box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2); }
+        }
+        .column-highlight {
+            animation: pulseBorder 1.1s ease-in-out 2;
+            border-color: #38bdf8 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- HEADER MODERNO -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            <!-- Brand & Titolo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+                    <!-- Icona Simbolo Resistore -->
+                    <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12h4l1.5-4 3 8 3-8 3 8 1.5-4h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg tracking-tight text-white leading-tight">Calcolatrice Codici Colore Resistori</h1>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Decodifica bidirezionale, tolleranze e deriva termica (Standard IEC 60062)</p>
+                </div>
+            </div>
+
+            <!-- Selettore Rapido Modalità 4 / 5 / 6 Bande -->
+            <div class="flex items-center bg-slate-950/90 border border-slate-800 p-1 rounded-2xl" role="tablist" aria-label="Numero di bande del resistore">
+                <button data-bands="4" class="band-mode-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30">
+                    4 Bande
+                </button>
+                <button data-bands="5" class="band-mode-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-slate-200">
+                    5 Bande
+                </button>
+                <button data-bands="6" class="band-mode-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-slate-200">
+                    6 Bande
+                </button>
+            </div>
+
+            <!-- Azioni Rapide Header -->
+            <div class="flex items-center gap-2">
+                <button id="btn-random" class="px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-medium border border-slate-700/80 transition flex items-center gap-1.5" title="Genera un resistore casuale per esercitarti">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Casuale</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENUTO PRINCIPALE -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 space-y-6">
+
+        <!-- SEZIONE SUPERIORE: VISUALIZZAZIONE RESISTORE SVG + RISULTATI ANALITICI -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- COLONNA SINISTRA (7 col): RESISTORE INTERATTIVO SVG + CALCOLO INVERSO + PRESET -->
+            <section class="lg:col-span-7 flex flex-col gap-5">
+
+                <!-- Card Visualizzazione Resistore 3D/SVG -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span id="body-type-dot" class="w-2.5 h-2.5 rounded-full bg-amber-300"></span>
+                            <span id="body-type-label" class="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                                Corpo Ceramico / Impasto (4 Bande)
+                            </span>
+                        </div>
+                        <span class="text-[11px] text-slate-400 bg-slate-950/80 border border-slate-800 px-2.5 py-1 rounded-lg">
+                            Clicca su una banda per selezionarla
+                        </span>
+                    </div>
+
+                    <!-- Contenitore SVG del Resistore -->
+                    <div class="relative w-full py-4 sm:py-6 flex items-center justify-center bg-slate-950/70 rounded-xl border border-slate-800/80">
+                        <!-- Griglia decorativa sottile di sfondo -->
+                        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#38bdf8 1px, transparent 1px); background-size: 18px 18px;"></div>
+
+                        <svg id="resistor-svg" viewBox="0 0 760 210" class="w-full max-w-[680px] h-auto select-none overflow-visible z-10">
+                            <defs>
+                                <!-- Gradiente Terminali Metallici -->
+                                <linearGradient id="lead-grad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#94a3b8"/>
+                                    <stop offset="30%" stop-color="#f8fafc"/>
+                                    <stop offset="60%" stop-color="#64748b"/>
+                                    <stop offset="100%" stop-color="#cbd5e1"/>
+                                </linearGradient>
+
+                                <!-- Gradiente Corpo Beige/Ceramico (4 Bande) -->
+                                <linearGradient id="body-beige" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#d6bc94"/>
+                                    <stop offset="22%" stop-color="#f3e5cb"/>
+                                    <stop offset="55%" stop-color="#d8be96"/>
+                                    <stop offset="88%" stop-color="#9c7f56"/>
+                                    <stop offset="100%" stop-color="#b89b72"/>
+                                </linearGradient>
+
+                                <!-- Gradiente Corpo Azzurro Metallizzato (5/6 Bande) -->
+                                <linearGradient id="body-blue" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#2563eb"/>
+                                    <stop offset="22%" stop-color="#7dd3fc"/>
+                                    <stop offset="55%" stop-color="#0284c7"/>
+                                    <stop offset="88%" stop-color="#1e3a8a"/>
+                                    <stop offset="100%" stop-color="#1d4ed8"/>
+                                </linearGradient>
+
+                                <!-- Gradienti Metallici per Bande Oro e Argento -->
+                                <linearGradient id="band-gold" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#b45309"/>
+                                    <stop offset="25%" stop-color="#fef08a"/>
+                                    <stop offset="55%" stop-color="#eab308"/>
+                                    <stop offset="85%" stop-color="#854d0e"/>
+                                    <stop offset="100%" stop-color="#ca8a04"/>
+                                </linearGradient>
+
+                                <linearGradient id="band-silver" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#64748b"/>
+                                    <stop offset="25%" stop-color="#ffffff"/>
+                                    <stop offset="55%" stop-color="#cbd5e1"/>
+                                    <stop offset="85%" stop-color="#475569"/>
+                                    <stop offset="100%" stop-color="#94a3b8"/>
+                                </linearGradient>
+
+                                <!-- Riflesso Cilindrico Superiore -->
+                                <linearGradient id="cyl-highlight" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.38"/>
+                                    <stop offset="45%" stop-color="#ffffff" stop-opacity="0.06"/>
+                                    <stop offset="100%" stop-color="#000000" stop-opacity="0.28"/>
+                                </linearGradient>
+
+                                <!-- Ombra morbida sotto il resistore -->
+                                <filter id="drop-shadow" x="-10%" y="-10%" width="120%" height="130%">
+                                    <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000000" flood-opacity="0.55"/>
+                                </filter>
+
+                                <!-- ClipPath per sagoma realistica a "osso di cane" del resistore -->
+                                <clipPath id="resistor-clip">
+                                    <path d="M 165,52
+                                             C 182,42 212,42 232,54
+                                             L 528,54
+                                             C 548,42 578,42 595,52
+                                             C 608,60 612,80 612,105
+                                             C 612,130 608,150 595,158
+                                             C 578,168 548,168 528,156
+                                             L 232,156
+                                             C 212,168 182,168 165,158
+                                             C 152,150 148,130 148,105
+                                             C 148,80 152,60 165,52 Z"/>
+                                </clipPath>
+                            </defs>
+
+                            <!-- Terminali Metallici Sinistro e Destro -->
+                            <rect x="18" y="97" width="135" height="16" rx="4" fill="url(#lead-grad)"/>
+                            <rect x="607" y="97" width="135" height="16" rx="4" fill="url(#lead-grad)"/>
+
+                            <!-- Gruppo Corpo Resistore con Ombra -->
+                            <g filter="url(#drop-shadow)">
+                                <!-- Base Corpo -->
+                                <path id="resistor-body-path"
+                                      d="M 165,52 C 182,42 212,42 232,54 L 528,54 C 548,42 578,42 595,52 C 608,60 612,80 612,105 C 612,130 608,150 595,158 C 578,168 548,168 528,156 L 232,156 C 212,168 182,168 165,158 C 152,150 148,130 148,105 C 148,80 152,60 165,52 Z"
+                                      fill="url(#body-beige)"/>
+
+                                <!-- Bande Colorate ritagliate esattamente sulla sagoma del resistore -->
+                                <g clip-path="url(#resistor-clip)">
+                                    <rect id="svg-band-0" class="resistor-band" data-band-idx="0" x="192" y="35" width="24" height="140" fill="#eab308"/>
+                                    <rect id="svg-band-1" class="resistor-band" data-band-idx="1" x="255" y="35" width="24" height="140" fill="#9333ea"/>
+                                    <rect id="svg-band-2" class="resistor-band" data-band-idx="2" x="318" y="35" width="24" height="140" fill="#18181b" opacity="0"/>
+                                    <rect id="svg-band-3" class="resistor-band" data-band-idx="3" x="335" y="35" width="24" height="140" fill="#dc2626"/>
+                                    <rect id="svg-band-4" class="resistor-band" data-band-idx="4" x="485" y="35" width="24" height="140" fill="url(#band-gold)"/>
+                                    <rect id="svg-band-5" class="resistor-band" data-band-idx="5" x="556" y="35" width="22" height="140" fill="#92400e" opacity="0"/>
+
+                                    <!-- Strato di ombreggiatura cilindrica sopra tutte le bande -->
+                                    <rect x="140" y="35" width="480" height="140" fill="url(#cyl-highlight)" pointer-events="none"/>
+                                </g>
+                            </g>
+
+                            <!-- Etichette Sotto Ciascuna Banda -->
+                            <g id="svg-labels-group" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="600" text-anchor="middle" fill="#94a3b8">
+                                <text id="svg-lbl-0" x="204" y="192">1ª</text>
+                                <text id="svg-lbl-1" x="267" y="192">2ª</text>
+                                <text id="svg-lbl-2" x="330" y="192" opacity="0">3ª</text>
+                                <text id="svg-lbl-3" x="347" y="192">Molt.</text>
+                                <text id="svg-lbl-4" x="497" y="192">Toll.</text>
+                                <text id="svg-lbl-5" x="567" y="192" opacity="0">TCR</text>
+                            </g>
+                        </svg>
+
+                        <!-- Tooltip Flottante al passaggio del mouse sulle bande -->
+                        <div id="band-tooltip" class="hidden absolute pointer-events-none z-20 bg-slate-900/95 border border-cyan-500/50 text-slate-100 px-3 py-1.5 rounded-xl text-xs shadow-xl backdrop-blur-md">
+                            <div id="tooltip-role" class="font-semibold text-cyan-300">1ª Cifra</div>
+                            <div id="tooltip-val" class="font-mono text-slate-200">Giallo (4)</div>
+                        </div>
+                    </div>
+
+                    <!-- Preset Rapidi di Valori Comuni -->
+                    <div class="mt-4 pt-4 border-t border-slate-800/80">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-medium text-slate-400">Valori Standard Comuni (Preset):</span>
+                            <span class="text-[11px] text-slate-500">Clicca per applicare</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                            <button data-preset-val="220" data-preset-tol="5" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">220 Ω</div>
+                                <div class="text-[10px] text-slate-400 truncate">LED 5V</div>
+                            </button>
+                            <button data-preset-val="1000" data-preset-tol="5" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">1 kΩ</div>
+                                <div class="text-[10px] text-slate-400 truncate">Base / Segnale</div>
+                            </button>
+                            <button data-preset-val="4700" data-preset-tol="5" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">4.7 kΩ</div>
+                                <div class="text-[10px] text-slate-400 truncate">Pull-up I²C</div>
+                            </button>
+                            <button data-preset-val="10000" data-preset-tol="1" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">10 kΩ</div>
+                                <div class="text-[10px] text-slate-400 truncate">Pull-down / Partitore</div>
+                            </button>
+                            <button data-preset-val="100000" data-preset-tol="1" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">100 kΩ</div>
+                                <div class="text-[10px] text-slate-400 truncate">Alta impedenza</div>
+                            </button>
+                            <button data-preset-val="1000000" data-preset-tol="5" class="preset-btn px-2.5 py-2 rounded-xl bg-slate-950/80 hover:bg-cyan-500/15 hover:border-cyan-500/50 border border-slate-800 transition text-left">
+                                <div class="font-mono font-bold text-xs text-cyan-300">1 MΩ</div>
+                                <div class="text-[10px] text-slate-400 truncate">Scarica / Ingresso</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Calcolo Inverso (Valore -> Colore) -->
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Calcolo Inverso: Valore → Colore
+                        </h2>
+                        <span id="inverse-feedback" class="text-[11px] font-mono text-slate-400">Digita un valore per aggiornare le bande</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <!-- Input Numerico Valore -->
+                        <div class="sm:col-span-5">
+                            <label for="inv-value" class="block text-[11px] text-slate-400 mb-1">Resistenza Nominale</label>
+                            <div class="flex">
+                                <input type="number" id="inv-value" step="any" min="0.01" value="4.7"
+                                    class="w-full bg-slate-950 border border-slate-700 rounded-l-xl px-3 py-2 font-mono text-sm text-white font-semibold focus:outline-none focus:border-emerald-500">
+                                <select id="inv-unit" class="bg-slate-800 border border-l-0 border-slate-700 rounded-r-xl px-2.5 py-2 font-mono text-xs text-cyan-300 font-bold focus:outline-none focus:border-emerald-500">
+                                    <option value="1">Ω</option>
+                                    <option value="1000" selected>kΩ</option>
+                                    <option value="1000000">MΩ</option>
+                                    <option value="1000000000">GΩ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Selettore Tolleranza Inversa -->
+                        <div class="sm:col-span-4">
+                            <label for="inv-tol" class="block text-[11px] text-slate-400 mb-1">Tolleranza</label>
+                            <select id="inv-tol" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 font-mono text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                                <option value="1">±1% (Marrone)</option>
+                                <option value="2">±2% (Rosso)</option>
+                                <option value="0.5">±0.5% (Verde)</option>
+                                <option value="0.25">±0.25% (Blu)</option>
+                                <option value="0.1">±0.1% (Viola)</option>
+                                <option value="0.05">±0.05% (Grigio)</option>
+                                <option value="5" selected>±5% (Oro)</option>
+                                <option value="10">±10% (Argento)</option>
+                            </select>
+                        </div>
+
+                        <!-- Selettore TCR Inverso (6 bande) -->
+                        <div class="sm:col-span-3">
+                            <label for="inv-tcr" class="block text-[11px] text-slate-400 mb-1">TCR (6 Bande)</label>
+                            <select id="inv-tcr" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 font-mono text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                                <option value="100" selected>100 ppm/K</option>
+                                <option value="50">50 ppm/K</option>
+                                <option value="15">15 ppm/K</option>
+                                <option value="25">25 ppm/K</option>
+                                <option value="10">10 ppm/K</option>
+                                <option value="5">5 ppm/K</option>
+                                <option value="250">250 ppm/K</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- COLONNA DESTRA (5 col): RISULTATI, ANALISI ELETTRONICA E DERIVA TERMICA -->
+            <section class="lg:col-span-5 flex flex-col gap-5">
+
+                <!-- Card Risultato Principale -->
+                <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/30 border border-slate-800 rounded-2xl p-5 shadow-2xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                            Resistenza Calcolata
+                        </span>
+                        <button id="btn-copy" class="px-3 py-1 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition">
+                            <svg id="copy-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                            </svg>
+                            <span id="copy-text">Copia valore</span>
+                        </button>
+                    </div>
+
+                    <!-- Valore Nominale Grande -->
+                    <div class="my-3 p-4 rounded-2xl bg-slate-950/90 border border-slate-800/90 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                        <div id="res-nominal-formatted" class="font-mono text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                            4.7 kΩ <span class="text-amber-400 text-2xl sm:text-3xl">±5%</span>
+                        </div>
+                        <div id="res-exact-ohms" class="font-mono text-xs sm:text-sm text-slate-400">
+                            4.700 Ω
+                        </div>
+                    </div>
+
+                    <!-- Griglia Intervallo Reale e Serie EIA -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-950/75 border border-slate-800/80">
+                            <div class="text-slate-400 mb-1">Minimo Garantito (R<sub>min</sub>)</div>
+                            <div id="res-min" class="font-mono font-bold text-sm text-sky-300">4.465 kΩ</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950/75 border border-slate-800/80">
+                            <div class="text-slate-400 mb-1">Massimo Garantito (R<sub>max</sub>)</div>
+                            <div id="res-max" class="font-mono font-bold text-sm text-emerald-300">4.935 kΩ</div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-slate-950/75 border border-slate-800/80">
+                            <div class="text-slate-400 mb-1">Serie Standard EIA</div>
+                            <div id="res-eia-series" class="font-mono font-bold text-sm text-indigo-300">Serie E12 / E24</div>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo Bande Attive -->
+                    <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span class="text-slate-400">Sequenza colori:</span>
+                        <div id="res-color-sequence" class="font-mono font-medium text-slate-200 text-right">
+                            Giallo • Viola • Rosso • Oro
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Simulatore Deriva Termica (Attivo e completo per 6 Bande, informativo per 4/5) -->
+                <div id="thermal-card" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl transition-all">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                            Deriva Termica (Coefficiente TCR)
+                        </h2>
+                        <span id="tcr-badge" class="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                            Solo 6 Bande
+                        </span>
+                    </div>
+
+                    <div id="thermal-locked-msg" class="text-xs text-slate-400 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+                        Passa alla modalità <strong class="text-cyan-300">6 Bande</strong> nell'intestazione per simulare la variazione della resistenza al variare della temperatura ambiente (ppm/K).
+                    </div>
+
+                    <div id="thermal-controls" class="hidden space-y-3">
+                        <div class="flex items-center justify-between text-xs">
+                            <label for="temp-slider" class="text-slate-300 font-medium">
+                                Temperatura Ambiente <span class="text-slate-500">(Rif. 25°C)</span>:
+                            </label>
+                            <span id="temp-display" class="font-mono font-bold text-sm text-amber-300 bg-slate-950 px-2.5 py-0.5 rounded-lg border border-slate-800">
+                                25 °C (ΔT = 0 K)
+                            </span>
+                        </div>
+                        <input type="range" id="temp-slider" min="-40" max="125" step="1" value="25" class="w-full">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>-40 °C</span>
+                            <span>25 °C (Nominal)</span>
+                            <span>+125 °C</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5 pt-1 text-xs">
+                            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                                <div class="text-slate-400 text-[11px]">Variazione (ΔR)</div>
+                                <div id="thermal-delta-r" class="font-mono font-bold text-rose-300">0.00 Ω</div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+                                <div class="text-slate-400 text-[11px]">Resistenza a T</div>
+                                <div id="thermal-new-r" class="font-mono font-bold text-emerald-300">4.700 kΩ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- SEZIONE CENTRALE: SELETTORI VISIVI A COLONNE (COLORE -> VALORE) -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        Selettori Bande Colore (Colore → Valore)
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Seleziona il colore di ogni banda per calcolare istantaneamente la resistenza</p>
+                </div>
+                <div class="text-xs font-mono text-slate-400 bg-slate-950/80 border border-slate-800 px-3 py-1 rounded-xl" id="formula-hint">
+                    Formula: (D₁D₂) × Moltiplicatore ± Tolleranza
+                </div>
+            </div>
+
+            <!-- Griglia dinamica delle colonne banda -->
+            <div id="band-selectors-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </section>
+
+        <!-- SEZIONE INFERIORE: TABELLA DI RIFERIMENTO COMPLETA IEC 60062 -->
+        <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                        Tabella di Riferimento Standard IEC 60062
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Guida completa ai valori delle cifre significative, moltiplicatori, tolleranze e coefficienti di temperatura</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 font-semibold uppercase tracking-wider text-[11px]">
+                            <th class="py-3 px-4">Colore</th>
+                            <th class="py-3 px-3 text-center">1ª Cifra</th>
+                            <th class="py-3 px-3 text-center">2ª Cifra</th>
+                            <th class="py-3 px-3 text-center">3ª Cifra (5/6B)</th>
+                            <th class="py-3 px-4">Moltiplicatore</th>
+                            <th class="py-3 px-4">Tolleranza</th>
+                            <th class="py-3 px-4">TCR (6ª Banda)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="iec-reference-tbody" class="divide-y divide-slate-800/70 font-mono"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * Calcolatrice Interattiva Codici Colore Resistori (4, 5 e 6 Bande - IEC 60062)
+         * Gestione bidirezionale Colore <-> Valore, SVG dinamico e simulazione termica.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATABASE STANDARD COLORI IEC 60062 ---
+            const COLORS = [
+                {
+                    id: 'black', name: 'Nero', hex: '#18181b', border: '#52525b', textLight: true,
+                    digit: 0, mult: 1, multLabel: '× 1 Ω', tol: null, tcr: 250
+                },
+                {
+                    id: 'brown', name: 'Marrone', hex: '#78350f', border: '#92400e', textLight: true,
+                    digit: 1, mult: 10, multLabel: '× 10 Ω', tol: 1, tcr: 100
+                },
+                {
+                    id: 'red', name: 'Rosso', hex: '#dc2626', border: '#ef4444', textLight: true,
+                    digit: 2, mult: 100, multLabel: '× 100 Ω', tol: 2, tcr: 50
+                },
+                {
+                    id: 'orange', name: 'Arancione', hex: '#f97316', border: '#fb923c', textLight: false,
+                    digit: 3, mult: 1000, multLabel: '× 1 kΩ', tol: null, tcr: 15
+                },
+                {
+                    id: 'yellow', name: 'Giallo', hex: '#eab308', border: '#facc15', textLight: false,
+                    digit: 4, mult: 10000, multLabel: '× 10 kΩ', tol: null, tcr: 25
+                },
+                {
+                    id: 'green', name: 'Verde', hex: '#16a34a', border: '#22c55e', textLight: true,
+                    digit: 5, mult: 100000, multLabel: '× 100 kΩ', tol: 0.5, tcr: 20
+                },
+                {
+                    id: 'blue', name: 'Blu', hex: '#2563eb', border: '#3b82f6', textLight: true,
+                    digit: 6, mult: 1000000, multLabel: '× 1 MΩ', tol: 0.25, tcr: 10
+                },
+                {
+                    id: 'violet', name: 'Viola', hex: '#9333ea', border: '#a855f7', textLight: true,
+                    digit: 7, mult: 10000000, multLabel: '× 10 MΩ', tol: 0.1, tcr: 5
+                },
+                {
+                    id: 'grey', name: 'Grigio', hex: '#64748b', border: '#94a3b8', textLight: true,
+                    digit: 8, mult: 100000000, multLabel: '× 100 MΩ', tol: 0.05, tcr: 1
+                },
+                {
+                    id: 'white', name: 'Bianco', hex: '#f8fafc', border: '#cbd5e1', textLight: false,
+                    digit: 9, mult: 1000000000, multLabel: '× 1 GΩ', tol: null, tcr: null
+                },
+                {
+                    id: 'gold', name: 'Oro', hex: 'url(#band-gold)', swatchClass: 'swatch-gold', border: '#eab308', textLight: false,
+                    digit: null, mult: 0.1, multLabel: '× 0.1 Ω', tol: 5, tcr: null
+                },
+                {
+                    id: 'silver', name: 'Argento', hex: 'url(#band-silver)', swatchClass: 'swatch-silver', border: '#cbd5e1', textLight: false,
+                    digit: null, mult: 0.01, multLabel: '× 0.01 Ω', tol: 10, tcr: null
+                }
+            ];
+
+            const colorById = Object.fromEntries(COLORS.map(c => [c.id, c]));
+
+            // Serie Standard EIA (valori base normalizzati tra 1.0 e 9.9)
+            const E12_VALUES = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
+            const E24_VALUES = [1.0, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
+
+            // --- STATO DELL'APPLICAZIONE ---
+            const state = {
+                bandCount: 4, // 4 | 5 | 6
+                // Indici nell'array COLORS per i 6 slot possibili:
+                // [0]: 1a cifra, [1]: 2a cifra, [2]: 3a cifra (solo 5/6), [3]: Moltiplicatore, [4]: Tolleranza, [5]: TCR (solo 6)
+                selected: {
+                    0: 'yellow', // 4
+                    1: 'violet', // 7
+                    2: 'black',  // 0
+                    3: 'red',    // x100 -> 4.7 kOhm
+                    4: 'gold',   // ±5%
+                    5: 'brown'   // 100 ppm/K
+                },
+                ambientTemp: 25
+            };
+
+            // --- RIFERIMENTI DOM ---
+            const selectorsGrid = document.getElementById('band-selectors-grid');
+            const tooltipEl = document.getElementById('band-tooltip');
+            const tooltipRole = document.getElementById('tooltip-role');
+            const tooltipVal = document.getElementById('tooltip-val');
+
+            // --- FUNZIONI DI FORMATTAZIONE RESISTENZA ---
+            function formatResistance(ohms) {
+                if (ohms === 0) return '0 Ω';
+                const abs = Math.abs(ohms);
+                const sign = ohms < 0 ? '-' : '';
+                if (abs >= 1e9) return `${sign}${parseFloat((abs / 1e9).toFixed(3))} GΩ`;
+                if (abs >= 1e6) return `${sign}${parseFloat((abs / 1e6).toFixed(3))} MΩ`;
+                if (abs >= 1e3) return `${sign}${parseFloat((abs / 1e3).toFixed(3))} kΩ`;
+                return `${sign}${parseFloat(abs.toFixed(3))} Ω`;
+            }
+
+            function formatExactOhms(ohms) {
+                return `${ohms.toLocaleString('it-IT', { maximumFractionDigits: 3 })} Ω`;
+            }
+
+            // Determina la serie EIA standard più vicina
+            function detectEIASeries(ohms) {
+                if (ohms <= 0) return 'N/D';
+                const exp = Math.floor(Math.log10(ohms));
+                const mantissa = ohms / Math.pow(10, exp);
+                const isE12 = E12_VALUES.some(v => Math.abs(v - mantissa) < 0.03);
+                const isE24 = E24_VALUES.some(v => Math.abs(v - mantissa) < 0.03);
+                if (isE12) return 'Serie E12 / E24';
+                if (isE24) return 'Serie E24';
+                return 'Serie E48 / E96';
+            }
+
+            // --- CALCOLO VALORE DA COLORI SELEZIONATI ---
+            function calculateFromBands() {
+                const c0 = colorById[state.selected[0]];
+                const c1 = colorById[state.selected[1]];
+                const c2 = colorById[state.selected[2]];
+                const cMult = colorById[state.selected[3]];
+                const cTol = colorById[state.selected[4]];
+                const cTcr = colorById[state.selected[5]];
+
+                const significand = state.bandCount === 4
+                    ? (c0.digit * 10 + c1.digit)
+                    : (c0.digit * 100 + c1.digit * 10 + c2.digit);
+
+                const nominalOhms = significand * cMult.mult;
+                const tolPercent = cTol.tol;
+                const minOhms = nominalOhms * (1 - tolPercent / 100);
+                const maxOhms = nominalOhms * (1 + tolPercent / 100);
+                const tcrPpm = cTcr.tcr;
+
+                return {
+                    nominalOhms,
+                    tolPercent,
+                    minOhms,
+                    maxOhms,
+                    tcrPpm,
+                    colors: state.bandCount === 4
+                        ? [c0, c1, cMult, cTol]
+                        : (state.bandCount === 5 ? [c0, c1, c2, cMult, cTol] : [c0, c1, c2, cMult, cTol, cTcr])
+                };
+            }
+
+            // --- AGGIORNAMENTO GRAFICA RESISTORE SVG ---
+            function updateResistorSVG() {
+                const count = state.bandCount;
+                const bodyPath = document.getElementById('resistor-body-path');
+                const bodyLabel = document.getElementById('body-type-label');
+                const bodyDot = document.getElementById('body-type-dot');
+
+                // Corpo beige per 4 bande, azzurro metallizzato per 5/6 bande
+                if (count === 4) {
+                    bodyPath.setAttribute('fill', 'url(#body-beige)');
+                    bodyLabel.textContent = 'Corpo Ceramico / Impasto (4 Bande)';
+                    bodyDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-300';
+                } else {
+                    bodyPath.setAttribute('fill', 'url(#body-blue)');
+                    bodyLabel.textContent = `Corpo Film Metallico di Precisione (${count} Bande)`;
+                    bodyDot.className = 'w-2.5 h-2.5 rounded-full bg-sky-400';
+                }
+
+                // Posizioni X e larghezze delle bande sul resistore SVG (da x=190 a x=580)
+                const b0 = document.getElementById('svg-band-0');
+                const b1 = document.getElementById('svg-band-1');
+                const b2 = document.getElementById('svg-band-2');
+                const b3 = document.getElementById('svg-band-3');
+                const b4 = document.getElementById('svg-band-4');
+                const b5 = document.getElementById('svg-band-5');
+
+                const l0 = document.getElementById('svg-lbl-0');
+                const l1 = document.getElementById('svg-lbl-1');
+                const l2 = document.getElementById('svg-lbl-2');
+                const l3 = document.getElementById('svg-lbl-3');
+                const l4 = document.getElementById('svg-lbl-4');
+                const l5 = document.getElementById('svg-lbl-5');
+
+                // Applica i colori selezionati
+                b0.setAttribute('fill', colorById[state.selected[0]].hex);
+                b1.setAttribute('fill', colorById[state.selected[1]].hex);
+                b2.setAttribute('fill', colorById[state.selected[2]].hex);
+                b3.setAttribute('fill', colorById[state.selected[3]].hex);
+                b4.setAttribute('fill', colorById[state.selected[4]].hex);
+                b5.setAttribute('fill', colorById[state.selected[5]].hex);
+
+                if (count === 4) {
+                    setBandGeometry(b0, l0, 195, 25, 1);
+                    setBandGeometry(b1, l1, 262, 25, 1);
+                    setBandGeometry(b2, l2, 315, 22, 0); // nascosta
+                    setBandGeometry(b3, l3, 332, 25, 1);
+                    setBandGeometry(b4, l4, 495, 25, 1); // tolleranza ben distanziata
+                    setBandGeometry(b5, l5, 558, 22, 0); // nascosta
+                } else if (count === 5) {
+                    setBandGeometry(b0, l0, 188, 22, 1);
+                    setBandGeometry(b1, l1, 245, 22, 1);
+                    setBandGeometry(b2, l2, 302, 22, 1);
+                    setBandGeometry(b3, l3, 359, 22, 1);
+                    setBandGeometry(b4, l4, 505, 22, 1);
+                    setBandGeometry(b5, l5, 558, 20, 0); // nascosta
+                } else {
+                    setBandGeometry(b0, l0, 182, 20, 1);
+                    setBandGeometry(b1, l1, 232, 20, 1);
+                    setBandGeometry(b2, l2, 282, 20, 1);
+                    setBandGeometry(b3, l3, 332, 20, 1);
+                    setBandGeometry(b4, l4, 465, 20, 1);
+                    setBandGeometry(b5, l5, 555, 20, 1); // 6a banda TCR sul cappuccio destro
+                }
+            }
+
+            function setBandGeometry(rectEl, lblEl, x, width, opacity) {
+                rectEl.setAttribute('x', x);
+                rectEl.setAttribute('width', width);
+                rectEl.setAttribute('opacity', opacity);
+                rectEl.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
+
+                lblEl.setAttribute('x', x + width / 2);
+                lblEl.setAttribute('opacity', opacity);
+            }
+
+            // --- RENDERING COLONNE SELETTORI COLORE ---
+            function renderBandSelectors() {
+                const count = state.bandCount;
+
+                // Definizione delle colonne attive
+                const columns = [
+                    { slot: 0, title: '1ª Cifra', badge: 'D₁', filter: c => c.digit !== null, valueText: c => c.digit },
+                    { slot: 1, title: '2ª Cifra', badge: 'D₂', filter: c => c.digit !== null, valueText: c => c.digit }
+                ];
+
+                if (count >= 5) {
+                    columns.push({ slot: 2, title: '3ª Cifra', badge: 'D₃', filter: c => c.digit !== null, valueText: c => c.digit });
+                }
+
+                columns.push(
+                    { slot: 3, title: 'Moltiplicatore', badge: '×10ⁿ', filter: c => c.mult !== null, valueText: c => c.multLabel },
+                    { slot: 4, title: 'Tolleranza', badge: '±%', filter: c => c.tol !== null, valueText: c => `±${c.tol}%` }
+                );
+
+                if (count === 6) {
+                    columns.push({ slot: 5, title: 'Coeff. Temp.', badge: 'ppm/K', filter: c => c.tcr !== null, valueText: c => `${c.tcr} ppm` });
+                }
+
+                // Adatta il numero di colonne su desktop
+                selectorsGrid.className = count === 4
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5'
+                    : (count === 5
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3'
+                        : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3');
+
+                document.getElementById('formula-hint').textContent = count === 4
+                    ? 'Formula: (D₁D₂) × Moltiplicatore ± Tolleranza'
+                    : (count === 5
+                        ? 'Formula: (D₁D₂D₃) × Moltiplicatore ± Tolleranza'
+                        : 'Formula: (D₁D₂D₃) × Molt. ± Toll. | TCR (ppm/K)');
+
+                selectorsGrid.innerHTML = '';
+
+                columns.forEach(col => {
+                    const colCard = document.createElement('div');
+                    colCard.id = `selector-col-${col.slot}`;
+                    colCard.className = 'bg-slate-950/80 border border-slate-800 rounded-xl p-3 flex flex-col transition-all';
+
+                    const activeColor = colorById[state.selected[col.slot]];
+                    colCard.innerHTML = `
+                        <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/90">
+                            <span class="text-xs font-bold text-slate-200">${col.title}</span>
+                            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">${col.badge}</span>
+                        </div>
+                        <div class="space-y-1 flex-1" data-slot="${col.slot}"></div>
+                    `;
+
+                    const listContainer = colCard.querySelector('[data-slot]');
+                    COLORS.filter(col.filter).forEach(color => {
+                        const isSelected = state.selected[col.slot] === color.id;
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = `w-full px-2.5 py-1.5 rounded-lg text-left text-xs flex items-center justify-between gap-2 transition-all border ${
+                            isSelected
+                                ? 'bg-cyan-500/20 border-cyan-400 text-white font-semibold shadow-sm'
+                                : 'bg-slate-900/60 border-transparent hover:bg-slate-800/90 hover:border-slate-700 text-slate-300'
+                        }`;
+
+                        const swatchStyle = color.swatchClass ? '' : `background-color: ${color.hex};`;
+                        btn.innerHTML = `
+                            <span class="flex items-center gap-2 min-w-0">
+                                <span class="w-4 h-4 rounded-md shrink-0 border border-white/25 shadow-inner ${color.swatchClass || ''}" style="${swatchStyle}"></span>
+                                <span class="truncate">${color.name}</span>
+                            </span>
+                            <span class="font-mono text-[11px] ${isSelected ? 'text-cyan-300 font-bold' : 'text-slate-400'} shrink-0">
+                                ${col.valueText(color)}
+                            </span>
+                        `;
+
+                        btn.addEventListener('click', () => {
+                            state.selected[col.slot] = color.id;
+                            syncInverseInputsFromBands();
+                            refreshUI();
+                        });
+
+                        listContainer.appendChild(btn);
+                    });
+
+                    selectorsGrid.appendChild(colCard);
+                });
+            }
+
+            // --- AGGIORNAMENTO PANNELLO RISULTATI E DERIVA TERMICA ---
+            function updateResultsPanel() {
+                const res = calculateFromBands();
+
+                document.getElementById('res-nominal-formatted').innerHTML =
+                    `${formatResistance(res.nominalOhms)} <span class="text-amber-400 text-2xl sm:text-3xl">±${res.tolPercent}%</span>`;
+                document.getElementById('res-exact-ohms').textContent = formatExactOhms(res.nominalOhms);
+                document.getElementById('res-min').textContent = formatResistance(res.minOhms);
+                document.getElementById('res-max').textContent = formatResistance(res.maxOhms);
+                document.getElementById('res-eia-series').textContent = detectEIASeries(res.nominalOhms);
+                document.getElementById('res-color-sequence').textContent = res.colors.map(c => c.name).join(' • ');
+
+                // Gestione Sezione Deriva Termica (6 Bande)
+                const thermalLocked = document.getElementById('thermal-locked-msg');
+                const thermalControls = document.getElementById('thermal-controls');
+                const tcrBadge = document.getElementById('tcr-badge');
+
+                if (state.bandCount === 6) {
+                    thermalLocked.classList.add('hidden');
+                    thermalControls.classList.remove('hidden');
+                    tcrBadge.textContent = `${res.tcrPpm} ppm/K`;
+                    tcrBadge.className = 'font-mono text-xs px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40';
+
+                    const deltaT = state.ambientTemp - 25;
+                    const deltaR = res.nominalOhms * (res.tcrPpm * 1e-6) * deltaT;
+                    const newR = res.nominalOhms + deltaR;
+
+                    document.getElementById('temp-display').textContent =
+                        `${state.ambientTemp} °C (ΔT = ${deltaT >= 0 ? '+' : ''}${deltaT} K)`;
+                    document.getElementById('thermal-delta-r').textContent =
+                        `${deltaR >= 0 ? '+' : ''}${formatResistance(deltaR)}`;
+                    document.getElementById('thermal-new-r').textContent = formatResistance(newR);
+                } else {
+                    thermalLocked.classList.remove('hidden');
+                    thermalControls.classList.add('hidden');
+                    tcrBadge.textContent = 'Solo 6 Bande';
+                    tcrBadge.className = 'font-mono text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700';
+                }
+            }
+
+            // --- SINCRONIZZAZIONE BIDIREZIONALE: BANDE -> INPUT INVERSO ---
+            function syncInverseInputsFromBands() {
+                const res = calculateFromBands();
+                const ohms = res.nominalOhms;
+                const invValueEl = document.getElementById('inv-value');
+                const invUnitEl = document.getElementById('inv-unit');
+                const invTolEl = document.getElementById('inv-tol');
+                const invTcrEl = document.getElementById('inv-tcr');
+
+                if (ohms >= 1e9) {
+                    invUnitEl.value = '1000000000';
+                    invValueEl.value = parseFloat((ohms / 1e9).toFixed(4));
+                } else if (ohms >= 1e6) {
+                    invUnitEl.value = '1000000';
+                    invValueEl.value = parseFloat((ohms / 1e6).toFixed(4));
+                } else if (ohms >= 1e3) {
+                    invUnitEl.value = '1000';
+                    invValueEl.value = parseFloat((ohms / 1e3).toFixed(4));
+                } else {
+                    invUnitEl.value = '1';
+                    invValueEl.value = parseFloat(ohms.toFixed(4));
+                }
+
+                invTolEl.value = String(res.tolPercent);
+                invTcrEl.value = String(res.tcrPpm);
+                document.getElementById('inverse-feedback').textContent = 'Sincronizzato con le bande';
+            }
+
+            // --- CALCOLO INVERSO: VALORE -> BANDE COLORE ---
+            function applyInverseCalculation() {
+                const rawVal = parseFloat(document.getElementById('inv-value').value);
+                const unitMult = parseFloat(document.getElementById('inv-unit').value);
+                const tolVal = parseFloat(document.getElementById('inv-tol').value);
+                const tcrVal = parseFloat(document.getElementById('inv-tcr').value);
+                const feedbackEl = document.getElementById('inverse-feedback');
+
+                if (isNaN(rawVal) || rawVal <= 0) {
+                    feedbackEl.textContent = 'Inserisci un valore positivo > 0';
+                    return;
+                }
+
+                const targetOhms = rawVal * unitMult;
+                const sigDigitsCount = state.bandCount === 4 ? 2 : 3;
+
+                // Calcola l'esponente per normalizzare il numero a 2 o 3 cifre significative
+                const order = Math.floor(Math.log10(targetOhms));
+                const multExp = order - (sigDigitsCount - 1);
+
+                // Limiti dei moltiplicatori IEC 60062: da 10^-2 (0.01) a 10^9 (1G)
+                const clampedExp = Math.max(-2, Math.min(9, multExp));
+                const multiplier = Math.pow(10, clampedExp);
+
+                let significand = Math.round(targetOhms / multiplier);
+                const maxSig = sigDigitsCount === 2 ? 99 : 999;
+                const minSig = sigDigitsCount === 2 ? 10 : 100;
+
+                if (significand > maxSig && clampedExp < 9) {
+                    significand = Math.round(significand / 10);
+                } else if (significand < minSig && clampedExp > -2 && targetOhms >= 1) {
+                    significand = minSig;
+                }
+                significand = Math.max(0, Math.min(maxSig, significand));
+
+                // Estrai singole cifre
+                const digits = String(significand).padStart(sigDigitsCount, '0').split('').map(Number);
+                const digitColors = COLORS.filter(c => c.digit !== null);
+
+                state.selected[0] = digitColors.find(c => c.digit === digits[0])?.id || 'brown';
+                state.selected[1] = digitColors.find(c => c.digit === digits[1])?.id || 'black';
+                if (sigDigitsCount === 3) {
+                    state.selected[2] = digitColors.find(c => c.digit === digits[2])?.id || 'black';
+                }
+
+                // Trova moltiplicatore più vicino
+                const multColors = COLORS.filter(c => c.mult !== null);
+                let bestMult = multColors[0];
+                let minDiff = Infinity;
+                multColors.forEach(c => {
+                    const diff = Math.abs(Math.log10(c.mult) - Math.log10(multiplier));
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        bestMult = c;
+                    }
+                });
+                state.selected[3] = bestMult.id;
+
+                // Trova tolleranza e TCR
+                const tolColor = COLORS.find(c => c.tol === tolVal);
+                if (tolColor) state.selected[4] = tolColor.id;
+
+                const tcrColor = COLORS.find(c => c.tcr === tcrVal);
+                if (tcrColor) state.selected[5] = tcrColor.id;
+
+                const actualOhms = significand * bestMult.mult;
+                if (Math.abs(actualOhms - targetOhms) / targetOhms > 0.005) {
+                    feedbackEl.textContent = `Approssimato al valore codificabile: ${formatResistance(actualOhms)}`;
+                } else {
+                    feedbackEl.textContent = `Codifica esatta applicata (${formatResistance(actualOhms)})`;
+                }
+
+                refreshUI();
+            }
+
+            // --- FUNZIONE DI AGGIORNAMENTO GLOBALE ---
+            function refreshUI() {
+                updateResistorSVG();
+                renderBandSelectors();
+                updateResultsPanel();
+            }
+
+            // --- INTERAZIONE CON LE BANDE SULL'SVG (TOOLTIP + CLICK PER EVIDENZIARE COLONNA) ---
+            const bandRoles = {
+                0: '1ª Cifra Significativa',
+                1: '2ª Cifra Significativa',
+                2: '3ª Cifra Significativa',
+                3: 'Moltiplicatore',
+                4: 'Tolleranza',
+                5: 'Coefficiente di Temperatura (TCR)'
+            };
+
+            document.querySelectorAll('.resistor-band').forEach(bandEl => {
+                bandEl.addEventListener('mousemove', (e) => {
+                    const slot = parseInt(bandEl.dataset.bandIdx, 10);
+                    const color = colorById[state.selected[slot]];
+                    let valStr = color.name;
+                    if (slot <= 2) valStr += ` (${color.digit})`;
+                    else if (slot === 3) valStr += ` (${color.multLabel})`;
+                    else if (slot === 4) valStr += ` (±${color.tol}%)`;
+                    else if (slot === 5) valStr += ` (${color.tcr} ppm/K)`;
+
+                    tooltipRole.textContent = bandRoles[slot];
+                    tooltipVal.textContent = valStr;
+
+                    const parentRect = bandEl.ownerSVGElement.parentElement.getBoundingClientRect();
+                    tooltipEl.style.left = `${e.clientX - parentRect.left + 12}px`;
+                    tooltipEl.style.top = `${e.clientY - parentRect.top - 42}px`;
+                    tooltipEl.classList.remove('hidden');
+                });
+
+                bandEl.addEventListener('mouseleave', () => {
+                    tooltipEl.classList.add('hidden');
+                });
+
+                bandEl.addEventListener('click', () => {
+                    const slot = parseInt(bandEl.dataset.bandIdx, 10);
+                    const colEl = document.getElementById(`selector-col-${slot}`);
+                    if (colEl) {
+                        colEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        colEl.classList.remove('column-highlight');
+                        void colEl.offsetWidth; // trigger reflow per riavviare animazione
+                        colEl.classList.add('column-highlight');
+                    }
+                });
+            });
+
+            // --- EVENTI HEADER E CONTROLLI ---
+            // Cambio Modalità 4 / 5 / 6 Bande
+            document.querySelectorAll('.band-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.bandCount = parseInt(btn.dataset.bands, 10);
+                    document.querySelectorAll('.band-mode-btn').forEach(b => {
+                        b.className = 'band-mode-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-slate-200';
+                    });
+                    btn.className = 'band-mode-btn px-3 sm:px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all bg-cyan-600 text-white shadow-md shadow-cyan-600/30';
+
+                    // Ricalcola mantenendo coerente il valore impostato nell'input inverso
+                    applyInverseCalculation();
+                });
+            });
+
+            // Input Calcolo Inverso
+            document.getElementById('inv-value').addEventListener('input', applyInverseCalculation);
+            document.getElementById('inv-unit').addEventListener('change', applyInverseCalculation);
+            document.getElementById('inv-tol').addEventListener('change', applyInverseCalculation);
+            document.getElementById('inv-tcr').addEventListener('change', applyInverseCalculation);
+
+            // Preset Rapidi
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const ohms = parseFloat(btn.dataset.presetVal);
+                    const tol = parseFloat(btn.dataset.presetTol);
+                    if (ohms >= 1e6) {
+                        document.getElementById('inv-unit').value = '1000000';
+                        document.getElementById('inv-value').value = ohms / 1e6;
+                    } else if (ohms >= 1e3) {
+                        document.getElementById('inv-unit').value = '1000';
+                        document.getElementById('inv-value').value = ohms / 1e3;
+                    } else {
+                        document.getElementById('inv-unit').value = '1';
+                        document.getElementById('inv-value').value = ohms;
+                    }
+                    document.getElementById('inv-tol').value = String(tol);
+                    applyInverseCalculation();
+                });
+            });
+
+            // Resistore Casuale (su valori reali della serie E24)
+            document.getElementById('btn-random').addEventListener('click', () => {
+                const base = E24_VALUES[Math.floor(Math.random() * E24_VALUES.length)];
+                const decades = [1, 10, 100, 1000, 10000, 100000];
+                const mult = decades[Math.floor(Math.random() * decades.length)];
+                const randomOhms = parseFloat((base * mult).toFixed(2));
+                const tolerances = state.bandCount === 4 ? [5, 10, 1, 2] : [1, 0.5, 0.25, 0.1, 2];
+                const randomTol = tolerances[Math.floor(Math.random() * tolerances.length)];
+
+                if (randomOhms >= 1e6) {
+                    document.getElementById('inv-unit').value = '1000000';
+                    document.getElementById('inv-value').value = randomOhms / 1e6;
+                } else if (randomOhms >= 1e3) {
+                    document.getElementById('inv-unit').value = '1000';
+                    document.getElementById('inv-value').value = randomOhms / 1e3;
+                } else {
+                    document.getElementById('inv-unit').value = '1';
+                    document.getElementById('inv-value').value = randomOhms;
+                }
+                document.getElementById('inv-tol').value = String(randomTol);
+                applyInverseCalculation();
+            });
+
+            // Slider Temperatura Ambiente (6 Bande)
+            document.getElementById('temp-slider').addEventListener('input', (e) => {
+                state.ambientTemp = parseInt(e.target.value, 10);
+                updateResultsPanel();
+            });
+
+            // Pulsante Copia Valore (con fallback document.execCommand per compatibilità iframe)
+            document.getElementById('btn-copy').addEventListener('click', () => {
+                const res = calculateFromBands();
+                const textToCopy = `${formatResistance(res.nominalOhms)} ±${res.tolPercent}% (${formatExactOhms(res.nominalOhms)})`;
+
+                const tempInput = document.createElement('textarea');
+                tempInput.value = textToCopy;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                try {
+                    document.execCommand('copy');
+                    const copyTextEl = document.getElementById('copy-text');
+                    copyTextEl.textContent = 'Copiato!';
+                    setTimeout(() => { copyTextEl.textContent = 'Copia valore'; }, 1800);
+                } catch (err) {
+                    // Ignora eventuali errori in ambienti ristretti
+                }
+                document.body.removeChild(tempInput);
+            });
+
+            // --- POPOLAMENTO TABELLA DI RIFERIMENTO IEC 60062 ---
+            function populateReferenceTable() {
+                const tbody = document.getElementById('iec-reference-tbody');
+                tbody.innerHTML = '';
+
+                COLORS.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition-colors';
+                    const swatchStyle = c.swatchClass ? '' : `background-color: ${c.hex};`;
+
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-4 font-sans font-medium text-slate-200">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-4 h-4 rounded-md border border-white/25 shrink-0 ${c.swatchClass || ''}" style="${swatchStyle}"></span>
+                                <span>${c.name}</span>
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-3 text-center text-slate-300">${c.digit !== null ? c.digit : '—'}</td>
+                        <td class="py-2.5 px-3 text-center text-slate-300">${c.digit !== null ? c.digit : '—'}</td>
+                        <td class="py-2.5 px-3 text-center text-slate-300">${c.digit !== null ? c.digit : '—'}</td>
+                        <td class="py-2.5 px-4 text-cyan-300">${c.multLabel}</td>
+                        <td class="py-2.5 px-4 text-amber-300">${c.tol !== null ? `±${c.tol}%` : '—'}</td>
+                        <td class="py-2.5 px-4 text-rose-300">${c.tcr !== null ? `${c.tcr} ppm/K` : '—'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // --- INIZIALIZZAZIONE ---
+            populateReferenceTable();
+            refreshUI();
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -140,6 +141,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <header>
@@ -148,13 +150,8 @@
     </header>
 
     <div class="controls">
-      <input
-        type="search"
-        id="search"
-        class="search-input"
-        placeholder="Cerca per titolo, modello AI, linguaggi o file..."
-        aria-label="Cerca siti"
-      />
+      <input type="search" id="search" class="search-input"
+        placeholder="Cerca per titolo, modello AI, linguaggi o file..." aria-label="Cerca siti" />
     </div>
 
     <main class="grid" id="grid"></main>
@@ -183,11 +180,17 @@
         languages: "HTML, CSS, JavaScript",
         file: "laboratorio_interattivo_delle_sezioni_coniche.html"
       },
-	  {
+      {
         title: "Numeri complessi interattivi",
         ai: "ChatGPT",
         languages: "HTML, CSS, JavaScript",
         file: "numeri_complessi_interattivi.html"
+      },
+      {
+        title: "Calcolatrice codici colore resistori",
+        ai: "ChatGPT",
+        languages: "HTML, CSS, JavaScript",
+        file: "calcolatrice_codici_colore_resistori.html"
       },
     ];
 
@@ -229,4 +232,5 @@
     render();
   </script>
 </body>
+
 </html>
