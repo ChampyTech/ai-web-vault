@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Briscola — L'Arte del Gioco Italiano</title>
+    
+    <!-- Google Fonts: Playfair Display & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        felt: {
+                            950: '#04120c',
+                            900: '#071f15',
+                            800: '#0b2d1f',
+                            700: '#11422e',
+                            600: '#18593e',
+                        },
+                        gold: {
+                            200: '#f5e4b3',
+                            300: '#ebd082',
+                            400: '#dfb64d',
+                            500: '#c99a2e',
+                            600: '#a3781d',
+                        },
+                        parchment: {
+                            50: '#fdfbf7',
+                            100: '#f7f1e3',
+                            200: '#ebe0c9',
+                            300: '#dac7a3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --felt-bg: #071f15;
+            --gold-accent: #dfb64d;
+            --card-bg: #fdfbf7;
+        }
+
+        body {
+            background-color: #05170f;
+            color: #f3efe6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(24, 89, 62, 0.35) 0%, transparent 65%),
+                radial-gradient(circle at 85% 40%, rgba(223, 182, 77, 0.06) 0%, transparent 50%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 6px);
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(11, 45, 31, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(223, 182, 77, 0.22);
+            box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card-dark {
+            background: rgba(4, 18, 12, 0.72);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(223, 182, 77, 0.18);
+        }
+
+        /* Playing Card Styling & 3D Flip */
+        .playing-card {
+            background: linear-gradient(145deg, #fffdf9 0%, #f4ebd8 100%);
+            border-radius: 12px;
+            box-shadow: 
+                0 10px 20px rgba(0, 0, 0, 0.45),
+                0 2px 5px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 2px #d4b982,
+                inset 0 0 0 5px #fdfbf7;
+            color: #1c1917;
+            position: relative;
+            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease;
+            user-select: none;
+        }
+
+        .playing-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 30px rgba(0, 0, 0, 0.6),
+                0 0 18px rgba(223, 182, 77, 0.35),
+                inset 0 0 0 2px #dfb64d,
+                inset 0 0 0 5px #fdfbf7;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #163e64 0%, #0d263f 100%);
+            border-radius: 12px;
+            box-shadow: 
+                0 10px 20px rgba(0, 0, 0, 0.5),
+                inset 0 0 0 3px #f7f1e3,
+                inset 0 0 0 6px #c99a2e;
+            background-image: 
+                radial-gradient(circle, rgba(223, 182, 77, 0.25) 2px, transparent 2.5px),
+                radial-gradient(circle, rgba(223, 182, 77, 0.15) 2px, transparent 2.5px);
+            background-size: 16px 16px;
+            background-position: 0 0, 8px 8px;
+        }
+
+        /* 3D Flip Container for Cenni Cards */
+        .flip-container {
+            perspective: 1000px;
+        }
+        .flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-container.flipped .flip-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-front, .flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
+        }
+        .flip-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Gold Shimmer Text */
+        .text-gold-gradient {
+            background: linear-gradient(135deg, #f5e4b3 0%, #dfb64d 45%, #b58420 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #04120c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #18593e;
+            border-radius: 4px;
+            border: 1px solid rgba(223, 182, 77, 0.3);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c99a2e;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(-4deg); }
+            50% { transform: translateY(-10px) rotate(-2deg); }
+        }
+        @keyframes floatSlowAlt {
+            0%, 100% { transform: translateY(0px) rotate(6deg); }
+            50% { transform: translateY(-12px) rotate(8deg); }
+        }
+        .animate-float-1 { animation: floatSlow 5s ease-in-out infinite; }
+        .animate-float-2 { animation: floatSlowAlt 6s ease-in-out infinite; }
+    </style>
+</head>
+<body class="antialiased selection:bg-gold-500 selection:text-felt-950">
+
+    <!-- ==================== HEADER / NAVIGATION ==================== -->
+    <header class="sticky top-0 z-50 bg-felt-950/85 backdrop-blur-md border-b border-gold-400/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-felt-950 font-serif font-extrabold text-xl shadow-lg group-hover:scale-105 transition">
+                    B
+                </div>
+                <div>
+                    <span class="font-serif font-bold text-lg tracking-wide text-parchment-50">LA BRISCOLA</span>
+                    <span class="hidden sm:inline-block text-xs text-gold-400/80 ml-2 uppercase tracking-widest">Tradizione Italiana</span>
+                </div>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-parchment-200/85">
+                <a href="#semi" class="hover:text-gold-300 transition">I 4 Semi</a>
+                <a href="#punti" class="hover:text-gold-300 transition">Punti & Calcolatore</a>
+                <a href="#regole" class="hover:text-gold-300 transition">Regole & Simulatore</a>
+                <a href="#strategia" class="hover:text-gold-300 transition">Strategia & Cenni</a>
+                <a href="#arena" class="px-4 py-2 rounded-full bg-gold-500/20 border border-gold-400/50 text-gold-300 hover:bg-gold-500 hover:text-felt-950 font-semibold transition">
+                    Sfida il Banco
+                </a>
+            </nav>
+
+            <!-- Mobile CTA -->
+            <a href="#arena" class="md:hidden px-3.5 py-1.5 rounded-full bg-gold-500 text-felt-950 text-xs font-bold shadow">
+                Gioca Ora
+            </a>
+        </div>
+    </header>
+
+    <!-- ==================== 1. HERO SECTION ==================== -->
+    <section class="relative pt-12 pb-20 lg:pt-20 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                <!-- Left Content -->
+                <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-felt-800/90 border border-gold-400/30 text-gold-300 text-xs font-semibold tracking-wider uppercase">
+                        <span class="w-2 h-2 rounded-full bg-gold-400 animate-pulse"></span>
+                        Il Grande Classico del Tavolo Verde
+                    </div>
+                    
+                    <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-parchment-50">
+                        Astuzia, Memoria e <br>
+                        <span class="text-gold-gradient">l'Arte della Briscola</span>
+                    </h1>
+                    
+                    <p class="text-base sm:text-lg text-parchment-200/80 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Dai bar di paese alle sfide tra amici: scopri ogni segreto del gioco di carte più amato d'Italia. Esplora le 40 carte tradizionali, calcola i punti, impara i cenni silenziosi e sfida il banco sul panno verde.
+                    </p>
+
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                        <a href="#arena" class="px-7 py-3.5 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-felt-950 font-bold text-sm sm:text-base shadow-lg shadow-gold-500/20 hover:brightness-110 hover:-translate-y-0.5 transition flex items-center gap-2">
+                            <span>⚔️</span> Avvia Sfida Rapida
+                        </a>
+                        <a href="#semi" class="px-7 py-3.5 rounded-xl bg-felt-800/80 border border-gold-400/35 text-parchment-100 font-semibold text-sm sm:text-base hover:bg-felt-700/80 transition flex items-center gap-2">
+                            <span>🃏</span> Esplora le 40 Carte
+                        </a>
+                    </div>
+
+                    <!-- Quick Stats Ribbon -->
+                    <div class="grid grid-cols-3 gap-4 pt-6 border-t border-gold-400/15 max-w-lg mx-auto lg:mx-0">
+                        <div>
+                            <div class="font-serif text-2xl font-bold text-gold-300">40</div>
+                            <div class="text-xs text-parchment-200/65">Carte Tradizionali</div>
+                        </div>
+                        <div>
+                            <div class="font-serif text-2xl font-bold text-gold-300">120</div>
+                            <div class="text-xs text-parchment-200/65">Punti nel Mazzo</div>
+                        </div>
+                        <div>
+                            <div class="font-serif text-2xl font-bold text-gold-300">61+</div>
+                            <div class="text-xs text-parchment-200/65">Soglia Vittoria</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Visual Showcase (Floating Hero Cards) -->
+                <div class="lg:col-span-5 flex justify-center items-center relative min-h-[320px]">
+                    <div class="absolute w-72 h-72 bg-gold-500/15 rounded-full blur-3xl"></div>
+                    
+                    <!-- Card 1: Asso di Denari -->
+                    <div id="hero-card-1" class="playing-card w-44 h-64 sm:w-48 sm:h-72 p-4 flex flex-col justify-between animate-float-1 z-10 -mr-8"></div>
+                    
+                    <!-- Card 2: Tre di Spade -->
+                    <div id="hero-card-2" class="playing-card w-44 h-64 sm:w-48 sm:h-72 p-4 flex flex-col justify-between animate-float-2 z-20 mt-10"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 2. I 4 SEMI E L'IDENTITÀ DELLE CARTE ==================== -->
+    <section id="semi" class="py-20 border-t border-gold-400/15">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold uppercase tracking-widest text-gold-400">Il Mazzo Italiano</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-parchment-50 mt-2">I 4 Semi e le 40 Carte</h2>
+                <p class="text-parchment-200/75 mt-3 text-sm sm:text-base">
+                    Seleziona un seme per scoprirne il simbolismo storico e osservare tutte le 10 carte disegnate in stile tradizionale italiano rivisitato.
+                </p>
+            </div>
+
+            <!-- Suit Selector Tabs -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto mb-8" id="suit-tabs">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Suit Lore & Details Banner -->
+            <div id="suit-info-banner" class="glass-panel rounded-2xl p-6 sm:p-8 mb-10 flex flex-col md:flex-row items-center gap-6">
+                <div id="suit-banner-icon" class="w-20 h-20 rounded-2xl bg-felt-950/80 border border-gold-400/30 flex items-center justify-center shrink-0 p-3 shadow-inner">
+                    <!-- SVG injected -->
+                </div>
+                <div class="text-center md:text-left">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                        <h3 id="suit-banner-title" class="font-serif text-2xl font-bold text-gold-300">Denari</h3>
+                        <span id="suit-banner-tag" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gold-500/20 text-gold-200 border border-gold-400/30">
+                            Simbolo di Ricchezza & Mercanti
+                        </span>
+                    </div>
+                    <p id="suit-banner-desc" class="text-parchment-200/85 text-sm sm:text-base mt-2 leading-relaxed">
+                        <!-- Description injected -->
+                    </p>
+                </div>
+            </div>
+
+            <!-- 10 Cards Grid for Selected Suit -->
+            <div id="cards-gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
+                <!-- 10 cards rendered dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. LA GERARCHIA E I PUNTI (CALCOLATORE) ==================== -->
+    <section id="punti" class="py-20 bg-felt-950/55 border-t border-gold-400/15">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="text-xs font-bold uppercase tracking-widest text-gold-400">Valori & Presa</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-parchment-50 mt-2">Gerarchia e Calcolatore Punti</h2>
+                <p class="text-parchment-200/75 mt-3 text-sm sm:text-base">
+                    Nella Briscola l'ordine di forza non segue i numeri classici: il <strong>Tre</strong> vale più delle figure! Solo 5 carte per seme portano punti, per un totale esatto di <strong>120 punti</strong>.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8 items-start">
+                <!-- Left: Visual Hierarchy Ladder (7 cols) -->
+                <div class="lg:col-span-7 glass-panel rounded-2xl p-6 sm:p-8">
+                    <h3 class="font-serif text-xl font-bold text-gold-300 mb-6 flex items-center gap-2">
+                        <span>🏆</span> Ordine di Presa (dal più forte al più debole)
+                    </h3>
+
+                    <div class="space-y-3">
+                        <!-- Asso -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-900/90 border border-gold-400/35">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-gold-500 text-felt-950 font-serif font-extrabold flex items-center justify-center">1</span>
+                                <div>
+                                    <div class="font-bold text-parchment-50">Asso (1)</div>
+                                    <div class="text-xs text-parchment-200/65">La carta sovrana del seme. Carico massimo.</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-gold-500/20 text-gold-300 font-bold text-sm border border-gold-400/30">11 Punti</span>
+                        </div>
+
+                        <!-- Tre -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-900/90 border border-gold-400/30">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-gold-400/85 text-felt-950 font-serif font-extrabold flex items-center justify-center">3</span>
+                                <div>
+                                    <div class="font-bold text-parchment-50">Tre (3)</div>
+                                    <div class="text-xs text-parchment-200/65">Batte tutte le figure! Secondo carico più ambito.</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-gold-500/20 text-gold-300 font-bold text-sm border border-gold-400/30">10 Punti</span>
+                        </div>
+
+                        <!-- Re -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-900/70 border border-gold-400/15">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-felt-700 text-gold-300 font-serif font-bold flex items-center justify-center">10</span>
+                                <div>
+                                    <div class="font-bold text-parchment-50">Re (10)</div>
+                                    <div class="text-xs text-parchment-200/65">La figura più alta, coronata.</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-felt-800 text-gold-200 font-semibold text-sm border border-gold-400/20">4 Punti</span>
+                        </div>
+
+                        <!-- Cavallo -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-900/70 border border-gold-400/15">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-felt-700 text-gold-300 font-serif font-bold flex items-center justify-center">9</span>
+                                <div>
+                                    <div class="font-bold text-parchment-50">Cavallo / Donna (9)</div>
+                                    <div class="text-xs text-parchment-200/65">Figura intermedia, ottima per "ungere" le prese.</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-felt-800 text-gold-200 font-semibold text-sm border border-gold-400/20">3 Punti</span>
+                        </div>
+
+                        <!-- Fante -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-900/70 border border-gold-400/15">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-felt-700 text-gold-300 font-serif font-bold flex items-center justify-center">8</span>
+                                <div>
+                                    <div class="font-bold text-parchment-50">Fante (8)</div>
+                                    <div class="text-xs text-parchment-200/65">La figura minore.</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-felt-800 text-gold-200 font-semibold text-sm border border-gold-400/20">2 Punti</span>
+                        </div>
+
+                        <!-- Scartini / Lisci -->
+                        <div class="flex items-center justify-between p-3.5 rounded-xl bg-felt-950/60 border border-white/10">
+                            <div class="flex items-center gap-3.5">
+                                <span class="w-8 h-8 rounded-lg bg-felt-950 text-parchment-200/60 font-serif font-bold flex items-center justify-center text-xs">7-2</span>
+                                <div>
+                                    <div class="font-bold text-parchment-200">Scartini o "Lisci" (7, 6, 5, 4, 2)</div>
+                                    <div class="text-xs text-parchment-200/55">Nessun punto, ma vincono tra loro in ordine numerico decrescente (il 7 batte il 6, ecc.).</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-white/5 text-parchment-200/70 font-semibold text-sm">0 Punti</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive End-Game Point Calculator (5 cols) -->
+                <div class="lg:col-span-5 glass-panel rounded-2xl p-6 sm:p-8 border-gold-400/35">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-serif text-xl font-bold text-gold-300 flex items-center gap-2">
+                            <span>🧮</span> Calcolatore Fine Partita
+                        </h3>
+                        <button id="calc-reset-btn" class="text-xs px-3 py-1.5 rounded-lg bg-felt-900 hover:bg-felt-800 text-parchment-200 border border-gold-400/25 transition">
+                            Azzera
+                        </button>
+                    </div>
+                    <p class="text-xs text-parchment-200/75 mb-5">
+                        Inserisci le carte che hai raccolto nel tuo mazzetto (massimo 4 per tipo nel mazzo) per calcolare il tuo punteggio.
+                    </p>
+
+                    <!-- Counters -->
+                    <div class="space-y-3 mb-6" id="calculator-rows">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <!-- Score Display Box -->
+                    <div class="rounded-xl bg-felt-950/90 border border-gold-400/30 p-5 text-center space-y-3">
+                        <div class="flex justify-between items-center text-xs text-parchment-200/70">
+                            <span>Tuoi Punti</span>
+                            <span>Avversario: <strong id="calc-opp-score" class="text-parchment-100">120</strong> pt</span>
+                        </div>
+
+                        <div class="font-serif text-5xl font-extrabold text-gold-gradient" id="calc-total-score">0</div>
+
+                        <!-- Progress Bar to 61 -->
+                        <div class="w-full h-3 bg-felt-900 rounded-full overflow-hidden border border-white/10 relative">
+                            <div id="calc-progress-bar" class="h-full bg-gradient-to-r from-gold-500 to-gold-300 transition-all duration-300" style="width: 0%"></div>
+                            <!-- 61 pt marker (approx 50.8%) -->
+                            <div class="absolute top-0 bottom-0 left-[50.8%] w-0.5 bg-white/80" title="Soglia 61 punti"></div>
+                        </div>
+
+                        <div id="calc-status-badge" class="inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-400/30">
+                            Mancano 61 punti alla vittoria
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. LE REGOLE DEL GIOCO & SIMULATORE PRESA ==================== -->
+    <section id="regole" class="py-20 border-t border-gold-400/15">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="text-xs font-bold uppercase tracking-widest text-gold-400">Come si Gioca</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-parchment-50 mt-2">Le Regole della Briscola</h2>
+                <p class="text-parchment-200/75 mt-3 text-sm sm:text-base">
+                    Semplice da imparare in due minuti, affascinante da padroneggiare per tutta la vita.
+                </p>
+            </div>
+
+            <!-- 4 Step Cards -->
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+                <div class="glass-card-dark rounded-2xl p-6 relative">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 text-gold-300 font-serif font-bold text-lg flex items-center justify-center mb-4">1</div>
+                    <h3 class="font-serif text-lg font-bold text-parchment-50 mb-2">Distribuzione & Briscola</h3>
+                    <p class="text-sm text-parchment-200/75 leading-relaxed">
+                        Si distribuiscono <strong>3 carte a testa</strong>. La carta successiva viene scoperta sul tavolo e determina il <strong>Seme di Briscola</strong> (il seme dominante). Il mazzo viene poggiato sopra di essa per metà.
+                    </p>
+                </div>
+
+                <div class="glass-card-dark rounded-2xl p-6 relative">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 text-gold-300 font-serif font-bold text-lg flex items-center justify-center mb-4">2</div>
+                    <h3 class="font-serif text-lg font-bold text-parchment-50 mb-2">Nessun Obbligo di Seme</h3>
+                    <p class="text-sm text-parchment-200/75 leading-relaxed">
+                        Il primo giocatore cala una carta sul tavolo (stabilendo il <em>seme di mano</em>). Gli altri giocatori possono giocare <strong>qualsiasi carta</strong>: non c'è obbligo di rispondere al seme né di tagliare!
+                    </p>
+                </div>
+
+                <div class="glass-card-dark rounded-2xl p-6 relative">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 text-gold-300 font-serif font-bold text-lg flex items-center justify-center mb-4">3</div>
+                    <h3 class="font-serif text-lg font-bold text-parchment-50 mb-2">Chi Vince la Presa?</h3>
+                    <p class="text-sm text-parchment-200/75 leading-relaxed">
+                        Vince la briscola più alta giocata. Se non ci sono briscole, vince la carta più alta del <strong>seme giocato per primo</strong>. Chi gioca un altro seme (non briscola) non può mai vincere la mano.
+                    </p>
+                </div>
+
+                <div class="glass-card-dark rounded-2xl p-6 relative">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 text-gold-300 font-serif font-bold text-lg flex items-center justify-center mb-4">4</div>
+                    <h3 class="font-serif text-lg font-bold text-parchment-50 mb-2">Pesca e Ultime 3 Mani</h3>
+                    <p class="text-sm text-parchment-200/75 leading-relaxed">
+                        Chi vince la presa raccoglie le carte, pesca per primo dal mazzo (seguito dagli altri) e gioca per primo la mano seguente. L'ultimo a pescare prende la <strong>briscola scoperta</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Interactive Sandbox: "Chi Vince la Mano?" -->
+            <div class="glass-panel rounded-3xl p-6 sm:p-10 border-gold-400/35">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gold-400/20">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-gold-400">Laboratorio Interattivo</span>
+                        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-parchment-50 mt-1">Simulatore di Presa: "Chi vince la mano?"</h3>
+                    </div>
+                    <button id="sim-random-btn" class="self-start md:self-auto px-4 py-2 rounded-xl bg-felt-900 hover:bg-felt-800 border border-gold-400/40 text-gold-300 text-xs sm:text-sm font-semibold transition flex items-center gap-2">
+                        <span>🎲</span> Genera Scenario Casuale
+                    </button>
+                </div>
+
+                <div class="grid lg:grid-cols-12 gap-8 items-center pt-8">
+                    <!-- Controls Column (5 cols) -->
+                    <div class="lg:col-span-5 space-y-5">
+                        <!-- Trump Selector -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gold-300 mb-2">1. Seme di Briscola sul Tavolo</label>
+                            <div class="grid grid-cols-4 gap-2" id="sim-trump-selector">
+                                <!-- Buttons generated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Player 1 Card Selector -->
+                        <div class="p-4 rounded-xl bg-felt-950/70 border border-white/10">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-parchment-200 mb-2">2. Primo Giocatore (apre il gioco)</label>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <select id="sim-p1-suit" class="bg-felt-900 border border-gold-400/30 rounded-lg px-3 py-2 text-sm text-parchment-50 focus:outline-none focus:border-gold-400"></select>
+                                <select id="sim-p1-rank" class="bg-felt-900 border border-gold-400/30 rounded-lg px-3 py-2 text-sm text-parchment-50 focus:outline-none focus:border-gold-400"></select>
+                            </div>
+                        </div>
+
+                        <!-- Player 2 Card Selector -->
+                        <div class="p-4 rounded-xl bg-felt-950/70 border border-white/10">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-parchment-200 mb-2">3. Secondo Giocatore (risponde)</label>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <select id="sim-p2-suit" class="bg-felt-900 border border-gold-400/30 rounded-lg px-3 py-2 text-sm text-parchment-50 focus:outline-none focus:border-gold-400"></select>
+                                <select id="sim-p2-rank" class="bg-felt-900 border border-gold-400/30 rounded-lg px-3 py-2 text-sm text-parchment-50 focus:outline-none focus:border-gold-400"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Table & Verdict Column (7 cols) -->
+                    <div class="lg:col-span-7 flex flex-col items-center">
+                        <!-- Mini Felt Table -->
+                        <div class="w-full rounded-2xl bg-felt-950/90 border border-gold-400/25 p-6 sm:p-8 flex flex-col items-center">
+                            <!-- Trump indicator pill -->
+                            <div id="sim-trump-badge" class="mb-6 px-4 py-1.5 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-bold flex items-center gap-2">
+                                <!-- Filled by JS -->
+                            </div>
+
+                            <!-- Cards Face-Off -->
+                            <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mb-6">
+                                <div class="text-center">
+                                    <span class="block text-xs font-semibold text-parchment-200/70 mb-2">1° Giocatore</span>
+                                    <div id="sim-card-1-slot" class="w-32 h-48 sm:w-36 sm:h-52"></div>
+                                </div>
+
+                                <div class="font-serif text-2xl font-bold text-gold-400/70">VS</div>
+
+                                <div class="text-center">
+                                    <span class="block text-xs font-semibold text-parchment-200/70 mb-2">2° Giocatore</span>
+                                    <div id="sim-card-2-slot" class="w-32 h-48 sm:w-36 sm:h-52"></div>
+                                </div>
+                            </div>
+
+                            <!-- Verdict Explanation Box -->
+                            <div id="sim-verdict-box" class="w-full rounded-xl bg-felt-800/80 border border-gold-400/35 p-4 text-center">
+                                <!-- Dynamic Verdict -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 5. STRATEGIA, SEGNALI ("CENNI") E VARIANTI ==================== -->
+    <section id="strategia" class="py-20 bg-felt-950/55 border-t border-gold-400/15">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span class="text-xs font-bold uppercase tracking-widest text-gold-400">Tattica da Campioni</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-parchment-50 mt-2">Strategie, Cenni e Varianti</h2>
+                <p class="text-parchment-200/75 mt-3 text-sm sm:text-base">
+                    La vera magia della Briscola emerge nella gestione dei carichi e nella complicità silenziosa del gioco a coppie.
+                </p>
+            </div>
+
+            <!-- Tactical Concepts -->
+            <div class="grid md:grid-cols-3 gap-6 mb-16">
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="text-2xl mb-3">💣</div>
+                    <h3 class="font-serif text-xl font-bold text-gold-300 mb-2">Il "Carico" e lo "Strozzare"</h3>
+                    <p class="text-sm text-parchment-200/80 leading-relaxed">
+                        <strong>Asso</strong> e <strong>Tre</strong> sono detti <em>carichi</em>. Giocarli per primi ("andare di carico") è rischioso perché l'avversario può tagliarli con una briscola piccola. Si usano invece per <em>strozzare</em> (superare) una carta alta dello stesso seme già sul tavolo.
+                    </p>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="text-2xl mb-3">🍃</div>
+                    <h3 class="font-serif text-xl font-bold text-gold-300 mb-2">Il Gioco del "Liscio"</h3>
+                    <p class="text-sm text-parchment-200/80 leading-relaxed">
+                        Quando apri la mano, la mossa più prudente è giocare uno scartino da 0 punti (<em>fare un liscio</em>). Costringi l'avversario a scoprire le sue intenzioni senza regalargli punti facili.
+                    </p>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="text-2xl mb-3">🎯</div>
+                    <h3 class="font-serif text-xl font-bold text-gold-300 mb-2">Contare le Briscole</h3>
+                    <p class="text-sm text-parchment-200/80 leading-relaxed">
+                        Nel mazzo ci sono esattamente <strong>10 briscole</strong>. Tenerne il conto mentale ti permette di sapere con certezza nelle ultime mani se il tuo Asso o Tre può passare indisturbato.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Interactive "Cenni" (Silent Signals in 4-Player Briscola) -->
+            <div class="mb-16">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-gold-400">Briscola a 4 (a Coppie)</span>
+                        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-parchment-50 mt-1">I "Cenni": il Linguaggio Segreto</h3>
+                    </div>
+                    <div class="px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-400/35 text-amber-200 text-xs flex items-center gap-2">
+                        <span>🤫</span> <strong>Regola d'oro:</strong> Mai farsi beccare dagli avversari mentre fai un cenno!
+                    </div>
+                </div>
+                <p class="text-sm text-parchment-200/75 mb-6">
+                    Nella Briscola a coppie (2 contro 2), i compagni seduti l'uno di fronte all'altro possono comunicare le briscole che hanno in mano tramite espressioni codificate. <strong>Clicca sulle carte qui sotto per svelare il segno!</strong>
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="cenni-grid">
+                    <!-- Rendered dynamically with 3D flip cards -->
+                </div>
+            </div>
+
+            <!-- Main Variants -->
+            <div class="glass-card-dark rounded-2xl p-6 sm:p-8">
+                <h3 class="font-serif text-xl font-bold text-gold-300 mb-5">Varianti Principali della Tradizione</h3>
+                <div class="grid md:grid-cols-3 gap-6 text-sm">
+                    <div class="border-l-2 border-gold-400 pl-4">
+                        <h4 class="font-bold text-parchment-50 text-base mb-1">Briscola a 2 (Testa a Testa)</h4>
+                        <p class="text-parchment-200/75 leading-relaxed">
+                            La sfida pura di calcolo e memoria. Si pescano 17 carte a testa dal mazzo (oltre alle 3 iniziali). Ogni singolo punto fa la differenza.
+                        </p>
+                    </div>
+                    <div class="border-l-2 border-gold-400 pl-4">
+                        <h4 class="font-bold text-parchment-50 text-base mb-1">Briscola a 4 (A Coppie)</h4>
+                        <p class="text-parchment-200/75 leading-relaxed">
+                            Due squadre incrociate. I punti si sommano nel mazzetto comune della coppia. Dominano i <em>cenni</em> e il gioco di squadra per "ungere" le prese del compagno.
+                        </p>
+                    </div>
+                    <div class="border-l-2 border-gold-400 pl-4">
+                        <h4 class="font-bold text-parchment-50 text-base mb-1">Briscola Chiamata (a 5)</h4>
+                        <p class="text-parchment-200/75 leading-relaxed">
+                            Si distribuiscono tutte e 40 le carte (8 a testa). Dopo un'asta al ribasso, il dichiarante chiama una carta (es. "il 2 di Spade") e sceglie il seme di briscola: chi possiede quella carta è segretamente suo socio!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 6. MINI-PARTITA INTERATTIVA ("SFIDA IL BANCO") ==================== -->
+    <section id="arena" class="py-20 border-t border-gold-400/15">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="text-xs font-bold uppercase tracking-widest text-gold-400">Tavolo Verde Interattivo</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-parchment-50 mt-2">Sfida il Banco — Partita Rapida</h2>
+                <p class="text-parchment-200/75 mt-2 text-sm sm:text-base">
+                    Metti subito in pratica le regole! Sfida l'Intelligenza Artificiale in una partita rapida (mazzo ridotto a 20 carte, <strong>soglia vittoria: 31 punti su 60</strong>).
+                </p>
+            </div>
+
+            <!-- Game Table Arena -->
+            <div class="glass-panel rounded-3xl p-5 sm:p-8 border-gold-400/40 shadow-2xl relative overflow-hidden">
+                <!-- Top Scoreboard -->
+                <div class="flex flex-wrap items-center justify-between gap-4 pb-5 mb-6 border-b border-gold-400/20">
+                    <div class="flex items-center gap-4">
+                        <div class="px-4 py-2 rounded-xl bg-felt-950/90 border border-gold-400/30">
+                            <span class="text-[11px] uppercase tracking-wider text-parchment-200/60 block">Tuoi Punti</span>
+                            <span id="game-player-score" class="font-serif text-2xl font-bold text-gold-300">0</span>
+                        </div>
+                        <div class="px-4 py-2 rounded-xl bg-felt-950/90 border border-white/10">
+                            <span class="text-[11px] uppercase tracking-wider text-parchment-200/60 block">Banco</span>
+                            <span id="game-cpu-score" class="font-serif text-2xl font-bold text-parchment-200">0</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                            <span class="text-[11px] uppercase tracking-wider text-gold-400 block">Obiettivo Vittoria</span>
+                            <span class="text-sm font-bold text-parchment-50">31+ Punti</span>
+                        </div>
+                        <button id="game-restart-btn" class="px-4 py-2.5 rounded-xl bg-gold-500/20 hover:bg-gold-500 text-gold-300 hover:text-felt-950 border border-gold-400/40 text-xs sm:text-sm font-bold transition">
+                            ↻ Nuova Partita
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Opponent Hand (Face Down) -->
+                <div class="flex flex-col items-center mb-6">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-parchment-200/60 mb-2">Mano del Banco</span>
+                    <div id="game-cpu-hand" class="flex justify-center gap-2 sm:gap-3 min-h-[84px]">
+                        <!-- Face down cards -->
+                    </div>
+                </div>
+
+                <!-- Center Table: Deck + Trump Card + Trick Area -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center my-6 py-6 px-4 rounded-2xl bg-felt-950/75 border border-gold-400/20">
+                    <!-- Deck & Trump (4 cols) -->
+                    <div class="md:col-span-4 flex items-center justify-center gap-4 border-b md:border-b-0 md:border-r border-gold-400/15 pb-4 md:pb-0">
+                        <div class="text-center">
+                            <div id="game-deck-visual" class="w-16 h-24 sm:w-20 sm:h-28 card-back flex flex-col items-center justify-center text-gold-200 shadow-lg mx-auto">
+                                <span id="game-deck-count" class="font-serif font-bold text-lg">14</span>
+                                <span class="text-[10px] uppercase tracking-wider">Mazzo</span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-gold-400 mb-1">Briscola</span>
+                            <div id="game-trump-slot" class="w-20 h-28 sm:w-24 sm:h-32 mx-auto">
+                                <!-- Trump card rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Active Trick Play Area (8 cols) -->
+                    <div class="md:col-span-8 flex flex-col items-center justify-center">
+                        <div id="game-status-banner" class="mb-4 px-4 py-1.5 rounded-full bg-gold-500/15 border border-gold-400/30 text-gold-200 text-xs sm:text-sm font-medium text-center">
+                            Tocca a te! Scegli una carta dalla tua mano.
+                        </div>
+
+                        <div class="flex items-center justify-center gap-6 sm:gap-10 min-h-[150px]">
+                            <div class="text-center">
+                                <span class="block text-[11px] text-parchment-200/60 mb-1.5">Tua Carta</span>
+                                <div id="game-table-player" class="w-24 h-36 sm:w-28 sm:h-40 rounded-xl border-2 border-dashed border-gold-400/25 flex items-center justify-center text-xs text-parchment-200/40">
+                                    In attesa
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <span class="block text-[11px] text-parchment-200/60 mb-1.5">Carta Banco</span>
+                                <div id="game-table-cpu" class="w-24 h-36 sm:w-28 sm:h-40 rounded-xl border-2 border-dashed border-gold-400/25 flex items-center justify-center text-xs text-parchment-200/40">
+                                    In attesa
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Hand (Interactive) -->
+                <div class="flex flex-col items-center mt-4">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gold-300 mb-3">La Tua Mano (Clicca per giocare)</span>
+                    <div id="game-player-hand" class="flex justify-center gap-3 sm:gap-5 min-h-[168px]">
+                        <!-- Player cards rendered here -->
+                    </div>
+                </div>
+
+                <!-- End of Game Overlay Modal -->
+                <div id="game-over-overlay" class="hidden absolute inset-0 bg-felt-950/92 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center">
+                    <div id="game-over-emoji" class="text-5xl mb-3">🏆</div>
+                    <h3 id="game-over-title" class="font-serif text-3xl sm:text-4xl font-extrabold text-gold-gradient mb-2">Vittoria!</h3>
+                    <p id="game-over-desc" class="text-parchment-200/85 max-w-md mb-6 text-sm sm:text-base"></p>
+                    <button id="game-modal-restart" class="px-7 py-3 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-felt-950 font-bold shadow-lg hover:brightness-110 transition">
+                        Gioca un'altra partita
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="border-t border-gold-400/20 bg-felt-950 py-10 text-center text-xs text-parchment-200/60">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <div class="font-serif text-base font-bold text-gold-300">LA BRISCOLA — L'Arte del Gioco Italiano</div>
+            <p>Progettato per celebrare la cultura, la strategia e la tradizione delle carte regionali italiane.</p>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT APPLICATION LOGIC ==================== -->
+    <script>
+        /**
+         * DATA DEFINITIONS: SUITS, RANKS, HIERARCHY & VECTOR ARTWORK
+         */
+        const SUITS = {
+            denari: {
+                id: 'denari',
+                name: 'Denari',
+                color: '#d97706',
+                accentBg: 'bg-amber-500/20',
+                tag: 'Simbolo di Ricchezza & Mercanti',
+                desc: 'I Denari (o Ori) rappresentano la borghesia mercantile e la prosperità economica delle antiche repubbliche marinare italiane. L\'Asso di Denari, spesso raffigurato come un sole radioso o un\'aquila reale, è tradizionalmente la carta più iconica e decorata dell\'intero mazzo.'
+            },
+            coppe: {
+                id: 'coppe',
+                name: 'Coppe',
+                color: '#dc2626',
+                accentBg: 'bg-red-500/20',
+                tag: 'Simbolo del Clero & Convivialità',
+                desc: 'Le Coppe simboleggiano il calice sacro, l\'ospitalità e la celebrazione. Nelle carte regionali italiane sono riccamente cesellate in oro e rubino, evocando i banchetti rinascimentali e la tradizione vitivinicola della penisola.'
+            },
+            spade: {
+                id: 'spade',
+                name: 'Spade',
+                color: '#2563eb',
+                accentBg: 'bg-blue-500/20',
+                tag: 'Simbolo della Nobiltà & Cavalleria',
+                desc: 'Le Spade rappresentano l\'aristocrazia guerriera, il coraggio e la giustizia. Nei mazzi italiani (come le Napoletane e Piacentine) le lame si intrecciano armoniosamente formando eleganti geometrie attorno al centro della carta.'
+            },
+            bastoni: {
+                id: 'bastoni',
+                name: 'Bastoni',
+                color: '#15803d',
+                accentBg: 'bg-emerald-500/20',
+                tag: 'Simbolo del Popolo & Agricoltura',
+                desc: 'I Bastoni (o Mazze) incarnano la forza della terra, il lavoro contadino e la tenacia popolare. Raffigurati come rami nodosi o scettri rustici, completano l\'equilibrio sociale delle quattro classi medievali.'
+            }
+        };
+
+        // Ordered from strongest to weakest in Briscola
+        const RANKS = [
+            { value: 1,  code: '1',  name: 'Asso',    points: 11, power: 10, role: 'Carico Massimo' },
+            { value: 3,  code: '3',  name: 'Tre',     points: 10, power: 9,  role: 'Carico' },
+            { value: 10, code: '10', name: 'Re',      points: 4,  power: 8,  role: 'Figura Alta' },
+            { value: 9,  code: '9',  name: 'Cavallo', points: 3,  power: 7,  role: 'Figura Media' },
+            { value: 8,  code: '8',  name: 'Fante',   points: 2,  power: 6,  role: 'Figura Bassa' },
+            { value: 7,  code: '7',  name: 'Sette',   points: 0,  power: 5,  role: 'Liscio Alto' },
+            { value: 6,  code: '6',  name: 'Sei',     points: 0,  power: 4,  role: 'Liscio' },
+            { value: 5,  code: '5',  name: 'Cinque',  points: 0,  power: 3,  role: 'Liscio' },
+            { value: 4,  code: '4',  name: 'Quattro', points: 0,  power: 2,  role: 'Liscio' },
+            { value: 2,  code: '2',  name: 'Due',     points: 0,  power: 1,  role: 'Liscio Minimo' }
+        ];
+
+        // Natural numerical order (1 to 10) for displaying the 10-card suit gallery
+        const GALLERY_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        /**
+         * CRISP CUSTOM SVG ICONS FOR ITALIAN SUITS
+         */
+        function getSuitSVG(suitId, sizeClass = "w-8 h-8") {
+            switch (suitId) {
+                case 'denari':
+                    return `<svg viewBox="0 0 64 64" class="${sizeClass}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="32" cy="32" r="27" fill="#F59E0B" stroke="#92400E" stroke-width="3"/>
+                        <circle cx="32" cy="32" r="20" fill="#FDE68A" stroke="#B45309" stroke-width="2" stroke-dasharray="4 3"/>
+                        <path d="M32 15L36.5 27.5L49 32L36.5 36.5L32 49L27.5 36.5L15 32L27.5 27.5L32 15Z" fill="#D97706" stroke="#78350F" stroke-width="1.5"/>
+                        <circle cx="32" cy="32" r="4" fill="#FEF3C7"/>
+                    </svg>`;
+                case 'coppe':
+                    return `<svg viewBox="0 0 64 64" class="${sizeClass}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 12H48L44 30C42.5 37 37.5 41 32 41C26.5 41 21.5 37 20 30L16 12Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="3" stroke-linejoin="round"/>
+                        <path d="M18 18H46" stroke="#FCD34D" stroke-width="2.5"/>
+                        <path d="M32 41V52" stroke="#B45309" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M20 53H44" stroke="#92400E" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="32" cy="27" r="4" fill="#FDE68A"/>
+                    </svg>`;
+                case 'spade':
+                    return `<svg viewBox="0 0 64 64" class="${sizeClass}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32 7L37 16L35 44H29L27 16L32 7Z" fill="#3B82F6" stroke="#1E3A8A" stroke-width="2.5" stroke-linejoin="round"/>
+                        <path d="M32 9V43" stroke="#DBEAFE" stroke-width="1.5"/>
+                        <path d="M18 44H46" stroke="#D97706" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M32 44V54" stroke="#78350F" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="32" cy="56" r="3.5" fill="#F59E0B" stroke="#78350F" stroke-width="1.5"/>
+                    </svg>`;
+                case 'bastoni':
+                    return `<svg viewBox="0 0 64 64" class="${sizeClass}" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27 10C27 8.5 37 8.5 37 10L39 54C39 56 25 56 25 54L27 10Z" fill="#16A34A" stroke="#14532D" stroke-width="2.5"/>
+                        <path d="M26 22L38 25M26 36L38 33M26 47L38 49" stroke="#86EFAC" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="28" r="2.5" fill="#15803D"/>
+                        <circle cx="40" cy="40" r="2.5" fill="#15803D"/>
+                    </svg>`;
+            }
+        }
+
+        /**
+         * RENDER A FULL PLAYING CARD HTML COMPONENT
+         */
+        function createCardHTML(suitId, rankValue, compact = false) {
+            const suit = SUITS[suitId];
+            const rank = RANKS.find(r => r.value === rankValue);
+            const isFace = rank.value >= 8;
+            const faceSymbol = rank.value === 10 ? '👑' : rank.value === 9 ? '🐎' : rank.value === 8 ? '🛡️' : '';
+
+            if (compact) {
+                return `
+                <div class="playing-card w-full h-full p-2 flex flex-col justify-between">
+                    <div class="flex items-center justify-between leading-none">
+                        <span class="font-serif font-extrabold text-sm sm:text-base" style="color:${suit.color}">${rank.code}</span>
+                        ${getSuitSVG(suitId, 'w-4 h-4')}
+                    </div>
+                    <div class="flex flex-col items-center justify-center my-auto">
+                        ${isFace ? `<span class="text-lg sm:text-xl mb-0.5">${faceSymbol}</span>` : ''}
+                        ${getSuitSVG(suitId, 'w-7 h-7 sm:w-8 sm:h-8')}
+                    </div>
+                    <div class="text-center">
+                        <span class="text-[10px] font-bold uppercase tracking-tight text-stone-700 block truncate">${rank.name}</span>
+                        ${rank.points > 0 ? `<span class="inline-block px-1.5 py-0.2 rounded bg-amber-200/80 text-amber-950 font-bold text-[9px]">+${rank.points} pt</span>` : ''}
+                    </div>
+                </div>`;
+            }
+
+            return `
+            <div class="playing-card w-full h-full p-3.5 flex flex-col justify-between">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span class="font-serif font-extrabold text-2xl leading-none block" style="color:${suit.color}">${rank.code}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-stone-500">${suit.name}</span>
+                    </div>
+                    ${getSuitSVG(suitId, 'w-6 h-6')}
+                </div>
+
+                <div class="flex flex-col items-center justify-center my-auto py-1">
+                    ${isFace ? `<div class="text-2xl mb-1">${faceSymbol}</div>` : ''}
+                    ${getSuitSVG(suitId, 'w-12 h-12')}
+                </div>
+
+                <div class="flex items-center justify-between pt-1.5 border-t border-stone-300/80">
+                    <span class="font-serif font-bold text-xs text-stone-800">${rank.name}</span>
+                    ${rank.points > 0 
+                        ? `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-900 font-bold text-[11px] border border-amber-500/40">${rank.points} pt</span>`
+                        : `<span class="text-[11px] text-stone-400 font-medium">0 pt</span>`
+                    }
+                </div>
+            </div>`;
+        }
+
+        /**
+         * SECTION 1 & 2: HERO CARDS & SUIT EXPLORER
+         */
+        let currentSuit = 'denari';
+
+        function initHeroAndSuits() {
+            // Render Hero Floating Cards
+            document.getElementById('hero-card-1').innerHTML = createCardHTML('denari', 1);
+            document.getElementById('hero-card-2').innerHTML = createCardHTML('spade', 3);
+
+            // Render Suit Selector Tabs
+            const tabsContainer = document.getElementById('suit-tabs');
+            Object.values(SUITS).forEach(suit => {
+                const btn = document.createElement('button');
+                btn.id = `tab-${suit.id}`;
+                btn.className = `suit-tab-btn flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl border transition font-bold text-sm sm:text-base`;
+                btn.innerHTML = `${getSuitSVG(suit.id, 'w-6 h-6')} <span>${suit.name}</span>`;
+                btn.addEventListener('click', () => selectSuit(suit.id));
+                tabsContainer.appendChild(btn);
+            });
+
+            selectSuit('denari');
+        }
+
+        function selectSuit(suitId) {
+            currentSuit = suitId;
+            const suit = SUITS[suitId];
+
+            // Update Tabs Active Styling
+            Object.values(SUITS).forEach(s => {
+                const btn = document.getElementById(`tab-${s.id}`);
+                if (s.id === suitId) {
+                    btn.className = 'suit-tab-btn flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl border-2 border-gold-400 bg-felt-800 text-gold-300 shadow-lg transition font-bold text-sm sm:text-base';
+                } else {
+                    btn.className = 'suit-tab-btn flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl border border-gold-400/20 bg-felt-950/60 text-parchment-200/75 hover:bg-felt-900 transition font-bold text-sm sm:text-base';
+                }
+            });
+
+            // Update Lore Banner
+            document.getElementById('suit-banner-icon').innerHTML = getSuitSVG(suitId, 'w-12 h-12');
+            document.getElementById('suit-banner-title').textContent = `Seme di ${suit.name}`;
+            document.getElementById('suit-banner-tag').textContent = suit.tag;
+            document.getElementById('suit-banner-desc').textContent = suit.desc;
+
+            // Render 10 Cards in Gallery
+            const grid = document.getElementById('cards-gallery-grid');
+            grid.innerHTML = '';
+            GALLERY_ORDER.forEach(val => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'h-60 sm:h-64';
+                wrapper.innerHTML = createCardHTML(suitId, val);
+                grid.appendChild(wrapper);
+            });
+        }
+
+        /**
+         * SECTION 3: INTERACTIVE POINT CALCULATOR
+         */
+        const calcState = { 1: 0, 3: 0, 10: 0, 9: 0, 8: 0 };
+        const CALC_ITEMS = [
+            { value: 1,  label: 'Assi',    pts: 11 },
+            { value: 3,  label: 'Tre',     pts: 10 },
+            { value: 10, label: 'Re',      pts: 4  },
+            { value: 9,  label: 'Cavalli', pts: 3  },
+            { value: 8,  label: 'Fanti',   pts: 2  }
+        ];
+
+        function initCalculator() {
+            const container = document.getElementById('calculator-rows');
+            CALC_ITEMS.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-felt-950/70 border border-white/10';
+                row.innerHTML = `
+                    <div>
+                        <span class="font-bold text-sm text-parchment-50">${item.label}</span>
+                        <span class="text-xs text-gold-400 ml-1.5">(${item.pts} pt cad.)</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button data-val="${item.value}" data-delta="-1" class="calc-btn w-8 h-8 rounded-lg bg-felt-800 hover:bg-felt-700 text-parchment-100 font-bold border border-gold-400/25 transition">-</button>
+                        <span id="calc-count-${item.value}" class="w-5 text-center font-bold text-gold-300">0</span>
+                        <button data-val="${item.value}" data-delta="1" class="calc-btn w-8 h-8 rounded-lg bg-felt-800 hover:bg-felt-700 text-parchment-100 font-bold border border-gold-400/25 transition">+</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            document.querySelectorAll('.calc-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const val = parseInt(btn.dataset.val);
+                    const delta = parseInt(btn.dataset.delta);
+                    const next = calcState[val] + delta;
+                    if (next >= 0 && next <= 4) {
+                        calcState[val] = next;
+                        document.getElementById(`calc-count-${val}`).textContent = next;
+                        updateCalculatorUI();
+                    }
+                });
+            });
+
+            document.getElementById('calc-reset-btn').addEventListener('click', () => {
+                Object.keys(calcState).forEach(k => {
+                    calcState[k] = 0;
+                    document.getElementById(`calc-count-${k}`).textContent = '0';
+                });
+                updateCalculatorUI();
+            });
+        }
+
+        function updateCalculatorUI() {
+            let total = 0;
+            CALC_ITEMS.forEach(item => {
+                total += calcState[item.value] * item.pts;
+            });
+
+            const oppTotal = 120 - total;
+            const pct = Math.min(100, Math.round((total / 120) * 100));
+
+            document.getElementById('calc-total-score').textContent = total;
+            document.getElementById('calc-opp-score').textContent = oppTotal;
+            document.getElementById('calc-progress-bar').style.width = `${pct}%`;
+
+            const badge = document.getElementById('calc-status-badge');
+            if (total >= 61) {
+                badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-500/25 text-emerald-300 border border-emerald-400/40';
+                badge.textContent = `🎉 Vittoria! Hai superato i 61 punti (+${total - 60} di margine)`;
+            } else if (total === 60) {
+                badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-amber-500/25 text-amber-200 border border-amber-400/40';
+                badge.textContent = `⚖️ Pareggio Esatto (60 - 60)! Partita patta`;
+            } else {
+                badge.className = 'inline-block px-4 py-1.5 rounded-full text-xs font-bold bg-red-500/20 text-red-300 border border-red-400/30';
+                badge.textContent = `Mancano ${61 - total} punti alla vittoria`;
+            }
+        }
+
+        /**
+         * SECTION 4: TRICK SIMULATOR ("CHI VINCE LA MANO?")
+         */
+        let simTrump = 'denari';
+
+        function evaluateTrick(trumpSuit, c1, c2) {
+            const r1 = RANKS.find(r => r.value === c1.rank);
+            const r2 = RANKS.find(r => r.value === c2.rank);
+            const totalPts = r1.points + r2.points;
+
+            // Case 1: Both played Trump
+            if (c1.suit === trumpSuit && c2.suit === trumpSuit) {
+                if (r1.power > r2.power) {
+                    return { winner: 1, points: totalPts, reason: `Entrambi hanno giocato Briscola (${SUITS[trumpSuit].name}), ma il ${r1.name} batte il ${r2.name} nella gerarchia.` };
+                } else {
+                    return { winner: 2, points: totalPts, reason: `Entrambi hanno giocato Briscola (${SUITS[trumpSuit].name}), e il ${r2.name} supera il ${r1.name}!` };
+                }
+            }
+            // Case 2: Only Player 1 played Trump
+            if (c1.suit === trumpSuit && c2.suit !== trumpSuit) {
+                return { winner: 1, points: totalPts, reason: `Il 1° Giocatore ha giocato Briscola (${SUITS[trumpSuit].name}), che domina su qualsiasi altro seme.` };
+            }
+            // Case 3: Only Player 2 played Trump (Taglio)
+            if (c1.suit !== trumpSuit && c2.suit === trumpSuit) {
+                return { winner: 2, points: totalPts, reason: `Taglio di Briscola! Il 2° Giocatore taglia con ${r2.name} di ${SUITS[trumpSuit].name} e si aggiudica la presa.` };
+            }
+            // Case 4: Neither played Trump, same suit as lead (c1.suit)
+            if (c1.suit === c2.suit) {
+                if (r1.power > r2.power) {
+                    return { winner: 1, points: totalPts, reason: `Stesso seme (${SUITS[c1.suit].name}) senza briscole: il ${r1.name} è più forte del ${r2.name}.` };
+                } else {
+                    return { winner: 2, points: totalPts, reason: `Strozzata! Sul seme di ${SUITS[c1.suit].name}, il ${r2.name} del 2° Giocatore supera il ${r1.name}.` };
+                }
+            }
+            // Case 5: Player 2 threw a different non-trump suit ("Piombo" / scarto)
+            return { winner: 1, points: totalPts, reason: `Il 2° Giocatore ha scartato un seme diverso (${SUITS[c2.suit].name}) non di briscola: vince automaticamente il 1° Giocatore che ha aperto a ${SUITS[c1.suit].name}.` };
+        }
+
+        function initSimulator() {
+            const trumpContainer = document.getElementById('sim-trump-selector');
+            const p1SuitSel = document.getElementById('sim-p1-suit');
+            const p2SuitSel = document.getElementById('sim-p2-suit');
+            const p1RankSel = document.getElementById('sim-p1-rank');
+            const p2RankSel = document.getElementById('sim-p2-rank');
+
+            Object.values(SUITS).forEach(s => {
+                // Trump buttons
+                const btn = document.createElement('button');
+                btn.id = `sim-trump-btn-${s.id}`;
+                btn.className = 'p-2 rounded-xl border flex flex-col items-center gap-1 text-xs font-bold transition';
+                btn.innerHTML = `${getSuitSVG(s.id, 'w-5 h-5')} <span>${s.name}</span>`;
+                btn.addEventListener('click', () => {
+                    simTrump = s.id;
+                    updateSimulator();
+                });
+                trumpContainer.appendChild(btn);
+
+                // Dropdown options
+                p1SuitSel.add(new Option(s.name, s.id));
+                p2SuitSel.add(new Option(s.name, s.id));
+            });
+
+            RANKS.forEach(r => {
+                p1RankSel.add(new Option(`${r.name} (${r.points} pt)`, r.value));
+                p2RankSel.add(new Option(`${r.name} (${r.points} pt)`, r.value));
+            });
+
+            // Default interesting scenario: P1 plays Asso di Coppe, P2 cuts with 2 di Denari (Briscola)
+            p1SuitSel.value = 'coppe';
+            p1RankSel.value = '1';
+            p2SuitSel.value = 'denari';
+            p2RankSel.value = '2';
+
+            [p1SuitSel, p2SuitSel, p1RankSel, p2RankSel].forEach(el => {
+                el.addEventListener('change', updateSimulator);
+            });
+
+            document.getElementById('sim-random-btn').addEventListener('click', () => {
+                const suitKeys = Object.keys(SUITS);
+                simTrump = suitKeys[Math.floor(Math.random() * 4)];
+                p1SuitSel.value = suitKeys[Math.floor(Math.random() * 4)];
+                p2SuitSel.value = suitKeys[Math.floor(Math.random() * 4)];
+                p1RankSel.value = RANKS[Math.floor(Math.random() * 10)].value;
+                p2RankSel.value = RANKS[Math.floor(Math.random() * 10)].value;
+                updateSimulator();
+            });
+
+            updateSimulator();
+        }
+
+        function updateSimulator() {
+            // Update Trump buttons styling
+            Object.values(SUITS).forEach(s => {
+                const btn = document.getElementById(`sim-trump-btn-${s.id}`);
+                if (s.id === simTrump) {
+                    btn.className = 'p-2 rounded-xl border-2 border-gold-400 bg-felt-800 text-gold-300 flex flex-col items-center gap-1 text-xs font-bold shadow';
+                } else {
+                    btn.className = 'p-2 rounded-xl border border-white/10 bg-felt-950/60 text-parchment-200/70 hover:bg-felt-900 flex flex-col items-center gap-1 text-xs font-bold';
+                }
+            });
+
+            const c1 = {
+                suit: document.getElementById('sim-p1-suit').value,
+                rank: parseInt(document.getElementById('sim-p1-rank').value)
+            };
+            const c2 = {
+                suit: document.getElementById('sim-p2-suit').value,
+                rank: parseInt(document.getElementById('sim-p2-rank').value)
+            };
+
+            // Prevent identical card
+            if (c1.suit === c2.suit && c1.rank === c2.rank) {
+                c2.rank = c1.rank === 1 ? 3 : 1;
+                document.getElementById('sim-p2-rank').value = c2.rank;
+            }
+
+            document.getElementById('sim-trump-badge').innerHTML = `
+                <span>Briscola attiva:</span> ${getSuitSVG(simTrump, 'w-4 h-4')} <strong>${SUITS[simTrump].name}</strong>
+            `;
+
+            const slot1 = document.getElementById('sim-card-1-slot');
+            const slot2 = document.getElementById('sim-card-2-slot');
+            slot1.innerHTML = createCardHTML(c1.suit, c1.rank, true);
+            slot2.innerHTML = createCardHTML(c2.suit, c2.rank, true);
+
+            const res = evaluateTrick(simTrump, c1, c2);
+
+            slot1.className = `w-32 h-48 sm:w-36 sm:h-52 rounded-xl transition-all duration-300 ${res.winner === 1 ? 'ring-4 ring-gold-400 scale-105' : 'opacity-75 scale-95'}`;
+            slot2.className = `w-32 h-48 sm:w-36 sm:h-52 rounded-xl transition-all duration-300 ${res.winner === 2 ? 'ring-4 ring-gold-400 scale-105' : 'opacity-75 scale-95'}`;
+
+            document.getElementById('sim-verdict-box').innerHTML = `
+                <div class="text-gold-300 font-serif font-bold text-lg mb-1">
+                    🏆 Vince il ${res.winner}° Giocatore (+${res.points} punti)
+                </div>
+                <p class="text-xs sm:text-sm text-parchment-200/85">${res.reason}</p>
+            `;
+        }
+
+        /**
+         * SECTION 5: INTERACTIVE "CENNI" (4-PLAYER SIGNALS)
+         */
+        const CENNI_DATA = [
+            {
+                card: 'Asso di Briscola',
+                pts: '11 pt',
+                emoji: '🙄',
+                gesture: 'Occhi al cielo / Sguardo verso l\'alto',
+                desc: 'Si alza leggermente lo sguardo verso il soffitto. Indica al compagno che possiedi l\'Asso di briscola e puoi prendere qualsiasi carico.'
+            },
+            {
+                card: 'Tre di Briscola',
+                pts: '10 pt',
+                emoji: '😉',
+                gesture: 'Bocca storta o Strizzata d\'occhio',
+                desc: 'Si piega leggermente l\'angolo della bocca di lato (o un rapido occhiolino). Segnala il possesso del Tre di briscola.'
+            },
+            {
+                card: 'Re di Briscola',
+                pts: '4 pt',
+                emoji: '🤨',
+                gesture: 'Sopracciglia alzate / Sguardo fiero',
+                desc: 'Un rapido inarcamento delle sopracciglia o sguardo fisso in avanti per indicare il Re di briscola.'
+            },
+            {
+                card: 'Cavallo di Briscola',
+                pts: '3 pt',
+                emoji: '🤷',
+                gesture: 'Colpetto di spalla',
+                desc: 'Un impercettibile movimento di una spalla verso l\'alto comunica al socio la presenza del Cavallo di briscola.'
+            },
+            {
+                card: 'Fante di Briscola',
+                pts: '2 pt',
+                emoji: '😛',
+                gesture: 'Punta della lingua sulle labbra',
+                desc: 'Sfiorare appena il labbro con la punta della lingua rivela il Fante di briscola.'
+            },
+            {
+                card: 'Nessuna Briscola ("Liscio")',
+                pts: '0 pt',
+                emoji: '😑',
+                gesture: 'Occhi chiusi un istante / Impassibilità',
+                desc: 'Chiudere brevemente gli occhi (o restare totalmente immobili) avvisa il compagno di non rischiare carichi perché non puoi coprirli.'
+            }
+        ];
+
+        function initCenni() {
+            const grid = document.getElementById('cenni-grid');
+            CENNI_DATA.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'flip-container h-48 cursor-pointer group';
+                card.innerHTML = `
+                    <div class="flip-inner">
+                        <!-- Front -->
+                        <div class="flip-front glass-panel p-6 flex flex-col items-center justify-center text-center border border-gold-400/25 group-hover:border-gold-400/60 transition">
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-gold-500/20 text-gold-300 mb-3">${item.pts}</span>
+                            <h4 class="font-serif text-xl font-bold text-parchment-50 mb-2">${item.card}</h4>
+                            <span class="text-xs text-gold-400/80 flex items-center gap-1 mt-2">
+                                <span>👆</span> Tocca per scoprire il cenno
+                            </span>
+                        </div>
+                        <!-- Back -->
+                        <div class="flip-back bg-gradient-to-br from-felt-800 to-felt-950 p-5 flex flex-col items-center justify-center text-center border-2 border-gold-400 shadow-xl">
+                            <div class="text-3xl mb-1.5">${item.emoji}</div>
+                            <div class="font-bold text-gold-300 text-sm mb-1.5">${item.gesture}</div>
+                            <p class="text-xs text-parchment-200/85 leading-relaxed">${item.desc}</p>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    card.classList.toggle('flipped');
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        /**
+         * SECTION 6: PLAYABLE MINI-BRISCOLA ARENA ("SFIDA IL BANCO")
+         * Uses a balanced 20-card deck (Ranks: 1, 3, 10, 9, 7 across all 4 suits = 60 total points, 31 to win)
+         */
+        const MINI_RANKS = [1, 3, 10, 9, 7]; // 11 + 10 + 4 + 3 + 0 = 28? Wait: 11+10+4+3+2 = 30 per suit -> let's use [1, 3, 10, 9, 8] = 30 pts * 2 suits or [1, 3, 10, 9, 8] across 4 suits = 120 pts!
+        // Even better: use [1, 3, 10, 9, 8] across all 4 suits = 20 cards, 120 total points (61 to win)! Fast 10-turn full-point game!
+        const ARENA_RANKS = [1, 3, 10, 9, 8];
+
+        let gameState = {
+            deck: [],
+            trumpCard: null,
+            trumpSuit: null,
+            playerHand: [],
+            cpuHand: [],
+            playerScore: 0,
+            cpuScore: 0,
+            turn: 'player', // 'player' or 'cpu'
+            tablePlayerCard: null,
+            tableCpuCard: null,
+            busy: false
+        };
+
+        function startNewGame() {
+            // Build 20-card deck (120 total points)
+            const deck = [];
+            Object.keys(SUITS).forEach(suit => {
+                ARENA_RANKS.forEach(rank => {
+                    deck.push({ suit, rank });
+                });
+            });
+
+            // Fisher-Yates Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            // Deal 3 cards each
+            const playerHand = [deck.pop(), deck.pop(), deck.pop()];
+            const cpuHand = [deck.pop(), deck.pop(), deck.pop()];
+            // Last card is trump at the bottom
+            const trumpCard = deck[0];
+
+            gameState = {
+                deck,
+                trumpCard,
+                trumpSuit: trumpCard.suit,
+                playerHand,
+                cpuHand,
+                playerScore: 0,
+                cpuScore: 0,
+                turn: 'player',
+                tablePlayerCard: null,
+                tableCpuCard: null,
+                busy: false
+            };
+
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            updateGameUI("Tocca a te! Scegli una carta da calare sul tavolo.");
+        }
+
+        function updateGameUI(statusMessage) {
+            if (statusMessage) {
+                document.getElementById('game-status-banner').textContent = statusMessage;
+            }
+
+            // Update Scores (adjust victory target display to 61)
+            document.getElementById('game-player-score').textContent = gameState.playerScore;
+            document.getElementById('game-cpu-score').textContent = gameState.cpuScore;
+
+            // Update Deck & Trump
+            const deckVisual = document.getElementById('game-deck-visual');
+            const trumpSlot = document.getElementById('game-trump-slot');
+
+            if (gameState.deck.length > 0) {
+                deckVisual.style.opacity = '1';
+                document.getElementById('game-deck-count').textContent = gameState.deck.length;
+                trumpSlot.innerHTML = createCardHTML(gameState.trumpCard.suit, gameState.trumpCard.rank, true);
+            } else {
+                deckVisual.style.opacity = '0.25';
+                document.getElementById('game-deck-count').textContent = '0';
+                trumpSlot.innerHTML = `<div class="w-full h-full rounded-xl border border-dashed border-gold-400/30 flex flex-col items-center justify-center text-[10px] text-gold-300 p-1 text-center">
+                    ${getSuitSVG(gameState.trumpSuit, 'w-5 h-5 mb-1')}
+                    Briscola:<br>${SUITS[gameState.trumpSuit].name}
+                </div>`;
+            }
+
+            // Update CPU Hand (face down)
+            const cpuHandEl = document.getElementById('game-cpu-hand');
+            cpuHandEl.innerHTML = '';
+            gameState.cpuHand.forEach(() => {
+                const back = document.createElement('div');
+                back.className = 'w-14 h-20 sm:w-16 sm:h-24 card-back shadow';
+                cpuHandEl.appendChild(back);
+            });
+
+            // Update Center Table Cards
+            const tablePlayerEl = document.getElementById('game-table-player');
+            const tableCpuEl = document.getElementById('game-table-cpu');
+
+            if (gameState.tablePlayerCard) {
+                tablePlayerEl.className = 'w-24 h-36 sm:w-28 sm:h-40';
+                tablePlayerEl.innerHTML = createCardHTML(gameState.tablePlayerCard.suit, gameState.tablePlayerCard.rank, true);
+            } else {
+                tablePlayerEl.className = 'w-24 h-36 sm:w-28 sm:h-40 rounded-xl border-2 border-dashed border-gold-400/25 flex items-center justify-center text-xs text-parchment-200/40';
+                tablePlayerEl.textContent = 'In attesa';
+            }
+
+            if (gameState.tableCpuCard) {
+                tableCpuEl.className = 'w-24 h-36 sm:w-28 sm:h-40';
+                tableCpuEl.innerHTML = createCardHTML(gameState.tableCpuCard.suit, gameState.tableCpuCard.rank, true);
+            } else {
+                tableCpuEl.className = 'w-24 h-36 sm:w-28 sm:h-40 rounded-xl border-2 border-dashed border-gold-400/25 flex items-center justify-center text-xs text-parchment-200/40';
+                tableCpuEl.textContent = 'In attesa';
+            }
+
+            // Update Player Hand
+            const playerHandEl = document.getElementById('game-player-hand');
+            playerHandEl.innerHTML = '';
+            gameState.playerHand.forEach((card, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `w-28 h-40 sm:w-32 sm:h-44 text-left focus:outline-none transition-transform ${gameState.busy ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-3'}`;
+                btn.innerHTML = createCardHTML(card.suit, card.rank, true);
+                btn.disabled = gameState.busy;
+                btn.addEventListener('click', () => handlePlayerPlay(idx));
+                playerHandEl.appendChild(btn);
+            });
+        }
+
+        function chooseCpuCard(leadCard) {
+            const hand = gameState.cpuHand;
+            const trump = gameState.trumpSuit;
+
+            // If CPU leads the trick: prefer non-trump low value card
+            if (!leadCard) {
+                const sorted = [...hand].sort((a, b) => {
+                    const aTrump = a.suit === trump ? 1 : 0;
+                    const bTrump = b.suit === trump ? 1 : 0;
+                    if (aTrump !== bTrump) return aTrump - bTrump;
+                    return RANKS.find(r => r.value === a.rank).points - RANKS.find(r => r.value === b.rank).points;
+                });
+                return hand.indexOf(sorted[0]);
+            }
+
+            // If CPU responds to player's leadCard:
+            const leadRank = RANKS.find(r => r.value === leadCard.rank);
+            // Can CPU win without trump?
+            const sameSuitWinners = hand.filter(c => c.suit === leadCard.suit && RANKS.find(r => r.value === c.rank).power > leadRank.power);
+            if (sameSuitWinners.length > 0 && leadRank.points >= 3) {
+                return hand.indexOf(sameSuitWinners[0]);
+            }
+            // If player threw a carico (>=10 pts), cut with lowest trump if available
+            if (leadRank.points >= 10) {
+                const trumps = hand.filter(c => c.suit === trump).sort((a, b) => RANKS.find(r => r.value === a.rank).power - RANKS.find(r => r.value === b.rank).power);
+                if (trumps.length > 0) return hand.indexOf(trumps[0]);
+            }
+            // Otherwise throw lowest value non-trump card
+            const discards = [...hand].sort((a, b) => {
+                const aTrump = a.suit === trump ? 100 : 0;
+                const bTrump = b.suit === trump ? 100 : 0;
+                return (aTrump + RANKS.find(r => r.value === a.rank).points) - (bTrump + RANKS.find(r => r.value === b.rank).points);
+            });
+            return hand.indexOf(discards[0]);
+        }
+
+        function handlePlayerPlay(cardIndex) {
+            if (gameState.busy) return;
+            gameState.busy = true;
+
+            const playedCard = gameState.playerHand.splice(cardIndex, 1)[0];
+            gameState.tablePlayerCard = playedCard;
+
+            if (gameState.turn === 'player') {
+                // Player led; CPU responds after short delay
+                updateGameUI("Il Banco sta valutando la risposta...");
+                setTimeout(() => {
+                    const cpuIdx = chooseCpuCard(playedCard);
+                    gameState.tableCpuCard = gameState.cpuHand.splice(cpuIdx, 1)[0];
+                    resolveArenaTrick(playedCard, gameState.tableCpuCard, 'player');
+                }, 650);
+            } else {
+                // CPU led earlier; resolve immediately
+                resolveArenaTrick(gameState.tableCpuCard, playedCard, 'cpu');
+            }
+        }
+
+        function resolveArenaTrick(firstCard, secondCard, leader) {
+            const evalResult = evaluateTrick(gameState.trumpSuit, firstCard, secondCard);
+            const playerWon = (leader === 'player' && evalResult.winner === 1) || (leader === 'cpu' && evalResult.winner === 2);
+
+            if (playerWon) {
+                gameState.playerScore += evalResult.points;
+                updateGameUI(`Prendi tu! +${evalResult.points} punti.`);
+            } else {
+                gameState.cpuScore += evalResult.points;
+                updateGameUI(`Prende il Banco (+${evalResult.points} punti).`);
+            }
+
+            setTimeout(() => {
+                // Draw cards if deck not empty (winner draws first!)
+                if (gameState.deck.length >= 2) {
+                    if (playerWon) {
+                        gameState.playerHand.push(gameState.deck.pop());
+                        gameState.cpuHand.push(gameState.deck.pop());
+                    } else {
+                        gameState.cpuHand.push(gameState.deck.pop());
+                        gameState.playerHand.push(gameState.deck.pop());
+                    }
+                }
+
+                gameState.tablePlayerCard = null;
+                gameState.tableCpuCard = null;
+
+                // Check End of Game
+                if (gameState.playerHand.length === 0 && gameState.cpuHand.length === 0) {
+                    finishArenaGame();
+                    return;
+                }
+
+                if (playerWon) {
+                    gameState.turn = 'player';
+                    gameState.busy = false;
+                    updateGameUI("Tocca a te aprire la mano!");
+                } else {
+                    gameState.turn = 'cpu';
+                    updateGameUI("Il Banco apre la mano...");
+                    setTimeout(() => {
+                        const cpuIdx = chooseCpuCard(null);
+                        gameState.tableCpuCard = gameState.cpuHand.splice(cpuIdx, 1)[0];
+                        gameState.busy = false;
+                        updateGameUI("Il Banco ha calato. Tocca a te rispondere!");
+                    }, 650);
+                }
+            }, 1250);
+        }
+
+        function finishArenaGame() {
+            const overlay = document.getElementById('game-over-overlay');
+            const emoji = document.getElementById('game-over-emoji');
+            const title = document.getElementById('game-over-title');
+            const desc = document.getElementById('game-over-desc');
+
+            overlay.classList.remove('hidden');
+
+            if (gameState.playerScore >= 61) {
+                emoji.textContent = '🏆';
+                title.textContent = 'Vittoria al Tavolo!';
+                desc.textContent = `Complimenti! Hai totalizzato ${gameState.playerScore} punti contro i ${gameState.cpuScore} del Banco, superando la soglia dei 61 punti.`;
+            } else if (gameState.playerScore === 60) {
+                emoji.textContent = '🤝';
+                title.textContent = 'Pareggio Perfetto!';
+                desc.textContent = `Incredibile equilibrio: 60 punti a 60! Nessuno dei due ha raggiunto i 61 punti.`;
+            } else {
+                emoji.textContent = '🃏';
+                title.textContent = 'Vince il Banco';
+                desc.textContent = `Il Banco si aggiudica la partita con ${gameState.cpuScore} punti contro i tuoi ${gameState.playerScore}. Riprova subito!`;
+            }
+        }
+
+        /**
+         * INITIALIZE ALL MODULES ON LOAD
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            initHeroAndSuits();
+            initCalculator();
+            initSimulator();
+            initCenni();
+
+            // Adjust Arena victory label to match 120-pt deck
+            document.querySelector('#arena p').innerHTML = `Metti subito in pratica le regole! Sfida il Banco in una partita rapida a 20 carte (<strong>120 punti totali, soglia vittoria: 61 punti</strong>).`;
+            document.querySelector('#arena .text-sm.font-bold.text-parchment-50').textContent = '61+ Punti';
+
+            document.getElementById('game-restart-btn').addEventListener('click', startNewGame);
+            document.getElementById('game-modal-restart').addEventListener('click', startNewGame);
+            startNewGame();
+        });
+    </script>
+</body>
+</html>
