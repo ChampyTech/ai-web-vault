@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextForge Studio — Convertitore & Laboratorio Testo Avanzato</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        obsidian: '#090d16',
+                        slatepanel: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #090d16;
+            background-image:
+                radial-gradient(circle at 12% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 42%),
+                radial-gradient(circle at 88% 10%, rgba(129, 140, 248, 0.08) 0%, transparent 42%),
+                radial-gradient(circle at 50% 100%, rgba(52, 211, 153, 0.05) 0%, transparent 48%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.65);
+        }
+
+        .transform-pill {
+            transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .transform-pill:hover {
+            transform: translateY(-1px);
+            border-color: rgba(56, 189, 248, 0.45);
+            background: rgba(30, 41, 59, 0.85);
+        }
+        .transform-pill.active-transform {
+            background: linear-gradient(135deg, rgba(14, 116, 144, 0.42), rgba(79, 70, 229, 0.38));
+            border-color: #38bdf8;
+            box-shadow: 0 0 18px -4px rgba(56, 189, 248, 0.45);
+            color: #ffffff;
+        }
+
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(9, 13, 22, 0.5); }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.55); }
+
+        /* Slider personalizzato */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(51, 65, 85, 0.85);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            background: #38bdf8;
+            border: 2px solid #ffffff;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.75);
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans antialiased selection:bg-sky-500/30 selection:text-sky-200 flex flex-col">
+
+    <!-- NOTIFICA TOAST FLUTTUANTE -->
+    <div id="toast-banner" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-200">
+        <div class="glass-card px-4 py-2.5 rounded-2xl border border-emerald-400/40 flex items-center gap-2.5 shadow-2xl">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="toast-message" class="text-xs sm:text-sm font-medium text-emerald-200">Copiato negli appunti!</span>
+        </div>
+    </div>
+
+    <!-- HEADER SUPERIORE -->
+    <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-[#090d16]/85 backdrop-blur-xl">
+        <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+
+            <!-- Brand & Privacy Badge -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-sky-500/20 shrink-0">
+                    <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                        <line x1="9" y1="20" x2="15" y2="20"></line>
+                        <line x1="12" y1="4" x2="12" y2="20"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="font-bold text-base sm:text-lg tracking-tight text-white">TextForge <span class="text-sky-400">Studio</span></h1>
+                        <span class="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            Elaborazione 100% Locale & Istantanea
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 hidden sm:block">Convertitore universale, analisi linguistica, cifrari e utilità per sviluppatori</p>
+                </div>
+            </div>
+
+            <!-- Azioni Rapide Header -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Dropdown Testi di Esempio -->
+                <div class="relative">
+                    <select id="sample-preset-select" aria-label="Carica testo di esempio"
+                        class="appearance-none bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/50 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-200 focus:outline-none focus:border-sky-400 transition cursor-pointer">
+                        <option value="" disabled selected>✨ Carica esempio...</option>
+                        <option value="standard">📝 Testo & Frasi Miste</option>
+                        <option value="code">💻 Codice & Variabili Dev</option>
+                        <option value="list">📋 Lista Disordinata & Duplicati</option>
+                        <option value="json">🔗 JSON, Email & URL</option>
+                    </select>
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+
+                <!-- Pulsante Inverti Input <-> Output (Chain Transformation) -->
+                <button id="btn-swap-io" type="button"
+                    class="px-3 py-1.5 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-400/35 text-indigo-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                    title="Sposta l'output nell'input per applicare un'altra trasformazione in serie">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                    </svg>
+                    <span>Inverti Input ↔ Output</span>
+                </button>
+
+                <!-- Toggle Vista Live / Griglia Multi-Formato -->
+                <button id="btn-toggle-multigrid" type="button"
+                    class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 text-sky-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                    <span id="multigrid-btn-label">Griglia Multi-Formato</span>
+                </button>
+
+                <!-- Pulsante Svuota Tutto -->
+                <button id="btn-clear-all" type="button"
+                    class="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 hover:text-rose-200 text-xs font-medium transition"
+                    title="Cancella testo">
+                    Svuota
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- CONTENUTO PRINCIPALE A DUE COLONNE -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        <!-- ========================================================= -->
+        <!-- COLONNA SINISTRA: EDITOR INPUT + STATISTICHE + PULIZIA    -->
+        <!-- ========================================================= -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+
+            <!-- Card Editor Input -->
+            <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
+                <!-- Toolbar Editor -->
+                <div class="px-4 py-2.5 border-b border-slate-800/90 bg-slate-950/60 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Testo Sorgente (Input)</h2>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-undo" type="button" disabled
+                            class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-slate-200 text-xs font-medium flex items-center gap-1 transition"
+                            title="Annulla ultima modifica (Cronologia 15 stati)">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                            <span>Annulla</span>
+                            <span id="undo-count" class="font-mono text-[10px] text-slate-400">(0)</span>
+                        </button>
+
+                        <button id="btn-paste" type="button"
+                            class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-sky-300 text-xs font-medium flex items-center gap-1 transition"
+                            title="Incolla dagli appunti">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            <span>Incolla</span>
+                        </button>
+
+                        <button id="btn-clear-input" type="button"
+                            class="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 text-xs font-medium transition">
+                            Pulisci
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Area di testo con gutter numeri di riga sincronizzato -->
+                <div class="relative flex bg-[#070b14]/90 min-h-[230px] sm:min-h-[260px]">
+                    <div id="line-numbers-gutter" aria-hidden="true"
+                        class="py-3.5 px-2.5 text-right font-mono text-xs leading-6 text-slate-600 bg-slate-950/70 border-r border-slate-800/70 select-none overflow-hidden shrink-0 w-10">
+                        1
+                    </div>
+                    <textarea id="input-textarea" spellcheck="false" placeholder="Scrivi o incolla qui il tuo testo, codice, lista o JSON..."
+                        class="flex-1 w-full bg-transparent p-3.5 font-mono text-xs sm:text-[13px] leading-6 text-slate-100 placeholder-slate-600 focus:outline-none resize-y min-h-[230px] sm:min-h-[260px]"></textarea>
+                </div>
+
+                <!-- Barra Statistiche Live -->
+                <div class="p-3 bg-slate-950/75 border-t border-slate-800/90 space-y-3">
+                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5 text-center">
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-chars" class="font-mono text-xs sm:text-sm font-bold text-sky-300">0</div>
+                            <div class="text-[10px] text-slate-400">Caratteri</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-chars-nospace" class="font-mono text-xs sm:text-sm font-bold text-slate-200">0</div>
+                            <div class="text-[10px] text-slate-400">No Spazi</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-words" class="font-mono text-xs sm:text-sm font-bold text-emerald-300">0</div>
+                            <div class="text-[10px] text-slate-400">Parole</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-sentences" class="font-mono text-xs sm:text-sm font-bold text-indigo-300">0</div>
+                            <div class="text-[10px] text-slate-400">Frasi</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-lines" class="font-mono text-xs sm:text-sm font-bold text-slate-200">0</div>
+                            <div class="text-[10px] text-slate-400">Righe</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80">
+                            <div id="stat-bytes" class="font-mono text-xs sm:text-sm font-bold text-amber-300">0 B</div>
+                            <div class="text-[10px] text-slate-400">UTF-8</div>
+                        </div>
+                        <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80 col-span-2 sm:col-span-1">
+                            <div id="stat-readtime" class="font-mono text-xs sm:text-sm font-bold text-purple-300">0s</div>
+                            <div class="text-[10px] text-slate-400">Lettura</div>
+                        </div>
+                    </div>
+
+                    <!-- Analisi Frequenza Parole Top 5 -->
+                    <div class="pt-2 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Top 5 Parole:</span>
+                        <div id="top-words-container" class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-[11px] text-slate-500 italic">Nessuna parola rilevata</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pannello Rapido: Trova, Sostituisci & Pulizia Righe -->
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-slate-800/90 bg-slate-950/60 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Trova, Sostituisci & Pulizia Righe</h3>
+                    </div>
+
+                    <!-- Mini Tabs Pannello Sinistro -->
+                    <div class="flex items-center gap-1 bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+                        <button type="button" data-lefttab="find" class="left-tab-btn px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-600 text-white transition">Trova/Sost.</button>
+                        <button type="button" data-lefttab="lines" class="left-tab-btn px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-400 hover:text-white transition">Righe & Ordine</button>
+                        <button type="button" data-lefttab="wrap" class="left-tab-btn px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-400 hover:text-white transition">Prefisso/Suff.</button>
+                    </div>
+                </div>
+
+                <!-- Sub-tab 1: Trova & Sostituisci -->
+                <div id="left-panel-find" class="p-4 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Trova testo o pattern</label>
+                            <input type="text" id="find-input" placeholder="Es. parola o \d+"
+                                class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl px-3 py-1.5 font-mono text-xs text-slate-100 focus:outline-none focus:border-sky-400">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Sostituisci con</label>
+                            <input type="text" id="replace-input" placeholder="Nuovo valore..."
+                                class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl px-3 py-1.5 font-mono text-xs text-slate-100 focus:outline-none focus:border-sky-400">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-3 text-xs text-slate-300">
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="chk-find-case" class="rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0">
+                                <span>Maiuscole/Minuscole</span>
+                            </label>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" id="chk-find-regex" class="rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-0">
+                                <span class="font-mono text-[11px] text-indigo-300">Regex</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span id="find-match-badge" class="font-mono text-[11px] text-slate-400">0 corrispondenze</span>
+                            <button id="btn-replace-all" type="button"
+                                class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow transition">
+                                Sostituisci Tutto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-tab 2: Pulizia & Ordinamento Righe -->
+                <div id="left-panel-lines" class="p-4 hidden">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <button type="button" data-lineop="dedupe" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🧹 Rimuovi Duplicate
+                        </button>
+                        <button type="button" data-lineop="removeEmpty" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            ✂ Rimuovi Righe Vuote
+                        </button>
+                        <button type="button" data-lineop="trimSpaces" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            ␣ Pulisci Spazi Extra
+                        </button>
+                        <button type="button" data-lineop="sortAZ" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🔤 Ordina A → Z
+                        </button>
+                        <button type="button" data-lineop="sortZA" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🔡 Ordina Z → A
+                        </button>
+                        <button type="button" data-lineop="sortLen" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            📏 Ordina per Lunghezza
+                        </button>
+                        <button type="button" data-lineop="shuffle" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🎲 Mescola Righe
+                        </button>
+                        <button type="button" data-lineop="reverseLines" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🔃 Inverti Ordine Righe
+                        </button>
+                        <button type="button" data-lineop="numberLines" class="line-op-btn px-2.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 text-xs font-medium text-slate-200 transition text-left">
+                            🔢 Numera Righe (1. )
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sub-tab 3: Aggiungi Prefisso / Suffisso a ogni riga -->
+                <div id="left-panel-wrap" class="p-4 hidden space-y-3">
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Prefisso riga</label>
+                            <input type="text" id="line-prefix-input" placeholder='Es. "- " oppure "<li>"'
+                                class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl px-3 py-1.5 font-mono text-xs text-slate-100 focus:outline-none focus:border-sky-400">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Suffisso riga</label>
+                            <input type="text" id="line-suffix-input" placeholder='Es. "," oppure "</li>"'
+                                class="w-full bg-slate-950/90 border border-slate-700/80 rounded-xl px-3 py-1.5 font-mono text-xs text-slate-100 focus:outline-none focus:border-sky-400">
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button id="btn-apply-wrap" type="button"
+                            class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition">
+                            Applica a tutte le righe
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- COLONNA DESTRA: OUTPUT LIVE + CATALOGO 40+ TRASFORMAZIONI -->
+        <!-- ========================================================= -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+
+            <!-- Box Output Risultato in Evidenza -->
+            <div id="single-output-card" class="glass-card rounded-2xl overflow-hidden border border-sky-500/25">
+                <div class="px-4 py-2.5 border-b border-slate-800/90 bg-gradient-to-r from-slate-950/90 via-sky-950/25 to-indigo-950/25 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Risultato Convertito:</h2>
+                        <span id="active-mode-badge" class="font-mono text-xs font-semibold px-2.5 py-0.5 rounded-lg bg-sky-500/20 text-sky-300 border border-sky-500/35">
+                            UPPERCASE
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-promote-output" type="button"
+                            class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-indigo-600/30 border border-slate-700 hover:border-indigo-400/50 text-indigo-300 text-xs font-medium transition"
+                            title="Sposta questo risultato nell'editor Input per concatenare un'altra trasformazione">
+                            ↑ Usa come Input
+                        </button>
+
+                        <button id="btn-download-txt" type="button"
+                            class="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1 transition"
+                            title="Scarica come file .TXT">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span class="hidden sm:inline">Scarica .TXT</span>
+                        </button>
+
+                        <button id="btn-copy-output" type="button"
+                            class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white text-xs font-bold shadow-lg shadow-sky-500/25 flex items-center gap-1.5 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <span id="copy-output-label">Copia Risultato</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Area Output -->
+                <div class="relative bg-[#060911]/95">
+                    <textarea id="output-textarea" readonly
+                        class="w-full bg-transparent p-4 font-mono text-xs sm:text-sm leading-6 text-emerald-300 focus:outline-none resize-y min-h-[165px] sm:min-h-[185px]"></textarea>
+                </div>
+
+                <!-- Footer Output con Contatori & Controlli Parametrici Dinamici (es. Zalgo / Cesare) -->
+                <div class="px-4 py-2 bg-slate-950/80 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+                    <div class="flex items-center gap-3 font-mono">
+                        <span>Output: <strong id="out-stat-chars" class="text-slate-200">0</strong> car.</span>
+                        <span>•</span>
+                        <span><strong id="out-stat-words" class="text-slate-200">0</strong> parole</span>
+                        <span>•</span>
+                        <span><strong id="out-stat-lines" class="text-slate-200">0</strong> righe</span>
+                    </div>
+
+                    <!-- Controllo Extra per Zalgo Intensity -->
+                    <div id="param-zalgo-wrap" class="hidden items-center gap-2">
+                        <label for="zalgo-intensity" class="text-sky-300 font-medium">Intensità Glitch:</label>
+                        <input type="range" id="zalgo-intensity" min="1" max="10" value="4" class="w-24">
+                        <span id="zalgo-val" class="font-mono text-sky-300 font-bold">4</span>
+                    </div>
+
+                    <!-- Controllo Extra per Cifrario di Cesare Shift -->
+                    <div id="param-caesar-wrap" class="hidden items-center gap-2">
+                        <label for="caesar-shift" class="text-amber-300 font-medium">Spostamento (Shift):</label>
+                        <input type="range" id="caesar-shift" min="1" max="25" value="3" class="w-24">
+                        <span id="caesar-val" class="font-mono text-amber-300 font-bold">+3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catalogo Trasformazioni & Schede -->
+            <div class="glass-card rounded-2xl overflow-hidden flex flex-col">
+
+                <!-- Barra Schede Categorie + Ricerca Istantanea -->
+                <div class="p-3 sm:p-4 border-b border-slate-800/90 bg-slate-950/60 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <!-- Tabs Categorie -->
+                        <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0" role="tablist">
+                            <button type="button" data-cat="case" class="cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-600 text-white shadow-md shadow-sky-600/25 whitespace-nowrap transition">
+                                Case & Stile
+                            </button>
+                            <button type="button" data-cat="dev" class="cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 whitespace-nowrap transition">
+                                Programmazione
+                            </button>
+                            <button type="button" data-cat="unicode" class="cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 whitespace-nowrap transition">
+                                Unicode & Creativi
+                            </button>
+                            <button type="button" data-cat="crypto" class="cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 whitespace-nowrap transition">
+                                Codifica & Cifrari
+                            </button>
+                            <button type="button" data-cat="compare" class="cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/50 border border-emerald-500/25 whitespace-nowrap transition">
+                                ⚡ Confronto Live (16)
+                            </button>
+                        </div>
+
+                        <!-- Barra Ricerca Funzioni -->
+                        <div class="relative w-full sm:w-56 shrink-0">
+                            <svg class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" id="transform-search-input" placeholder="Cerca formato (es. snake, base64)..."
+                                class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-400 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Griglia Pulsanti Trasformazione -->
+                <div id="transforms-grid-container" class="p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 max-h-[460px] overflow-y-auto">
+                    <!-- Popolata dinamicamente via JS -->
+                </div>
+
+                <!-- Vista Confronto Live Multi-Formato (16 card cliccabili) -->
+                <div id="compare-grid-container" class="hidden p-3.5 sm:p-4 grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[540px] overflow-y-auto">
+                    <!-- Popolata dinamicamente via JS -->
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * TextForge Studio — Motore di Trasformazione, Codifica e Analisi Testo
+         * 100% Client-Side, zero latenza, supporto completo Unicode, Regex e cronologia Undo.
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            // --- TESTI DI ESEMPIO ---
+            const SAMPLE_TEXTS = {
+                standard: `Benvenuto in TextForge Studio! Trasforma qualsiasi frase o codice in 40+ formati.\n\nCon un solo clic puoi convertire titoli per articoli, nomi di variabili per software, font Unicode per i social media oppure decodificare stringhe Base64 e Morse in tempo reale.`,
+                code: `getUserAccountBalance\nMAX_RETRY_CONNECTION_TIMEOUT\napi-gateway-authentication-service\nuser.profile.settings.darkMode\nOrderItemControllerFactory`,
+                list: `Milano\nRoma\nNapoli\nMilano\nTorino\nFirenze\n\nBologna\nRoma\nVenezia\nPalermo`,
+                json: `{"studio":"TextForge","versione":2.4,"attivo":true,"contatti":["info@textforge.it","support@studio.dev"],"sito":"https://textforge.studio/app?lang=it"}`
+            };
+
+            // --- FUNZIONI DI SUPPORTO PER TOKENIZZAZIONE E MAPPE UNICODE ---
+            // Estrae parole pulite da stringhe in camelCase, PascalCase, snake_case, kebab-case o frasi normali
+            function tokenizeWords(str) {
+                if (!str) return [];
+                return str
+                    .replace(/([a-z\u00E0-\u00FC])([A-Z\u00C0-\u00DC])/g, '$1 $2')
+                    .replace(/([A-Z\u00C0-\u00DC]+)([A-Z\u00C0-\u00DC][a-z\u00E0-\u00FC])/g, '$1 $2')
+                    .replace(/[_\-./\\]+/g, ' ')
+                    .replace(/[^\p{L}\p{N}\s]+/gu, ' ')
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean);
+            }
+
+            // Converte ogni riga separatamente se multilinea per i formati di programmazione
+            function mapLines(str, fn) {
+                return str.split('\n').map(line => line.trim() ? fn(line) : '').join('\n');
+            }
+
+            // Mappatura alfabetica Unicode Mathematical Alphanumeric Symbols
+            const ALPHA_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const ALPHA_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+            const DIGITS      = '0123456789';
+
+            function mapAlphabet(text, upperArr, lowerArr, digitArr = null) {
+                return Array.from(text).map(ch => {
+                    const uIdx = ALPHA_UPPER.indexOf(ch);
+                    if (uIdx !== -1 && upperArr[uIdx]) return upperArr[uIdx];
+                    const lIdx = ALPHA_LOWER.indexOf(ch);
+                    if (lIdx !== -1 && lowerArr[lIdx]) return lowerArr[lIdx];
+                    if (digitArr) {
+                        const dIdx = DIGITS.indexOf(ch);
+                        if (dIdx !== -1 && digitArr[dIdx]) return digitArr[dIdx];
+                    }
+                    return ch;
+                }).join('');
+            }
+
+            const UNICODE_SETS = {
+                boldSerif: {
+                    u: Array.from('𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙'),
+                    l: Array.from('𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳'),
+                    d: Array.from('𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗')
+                },
+                boldSans: {
+                    u: Array.from('𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭'),
+                    l: Array.from('𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇'),
+                    d: Array.from('𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵')
+                },
+                italicSans: {
+                    u: Array.from('𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡'),
+                    l: Array.from('𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻')
+                },
+                boldItalic: {
+                    u: Array.from('𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'),
+                    l: Array.from('𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯')
+                },
+                fraktur: {
+                    u: Array.from('𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ'),
+                    l: Array.from('𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷')
+                },
+                boldFraktur: {
+                    u: Array.from('𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅'),
+                    l: Array.from('𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟')
+                },
+                script: {
+                    u: Array.from('𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵'),
+                    l: Array.from('𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏')
+                },
+                boldScript: {
+                    u: Array.from('𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩'),
+                    l: Array.from('𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃')
+                },
+                monospace: {
+                    u: Array.from('𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉'),
+                    l: Array.from('𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣'),
+                    d: Array.from('𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿')
+                },
+                circled: {
+                    u: Array.from('ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ'),
+                    l: Array.from('ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ'),
+                    d: Array.from('⓪①②③④⑤⑥⑦⑧⑨')
+                },
+                squared: {
+                    u: Array.from('🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉'),
+                    l: Array.from('🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉')
+                },
+                smallCaps: {
+                    u: Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+                    l: Array.from('ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ')
+                }
+            };
+
+            // Mappa Capovolgimento (Upside Down / Flip)
+            const FLIP_MAP = {
+                a:'ɐ', b:'q', c:'ɔ', d:'p', e:'ǝ', f:'ɟ', g:'ƃ', h:'ɥ', i:'ᴉ', j:'ɾ', k:'ʞ', l:'l', m:'ɯ',
+                n:'u', o:'o', p:'d', q:'b', r:'ɹ', s:'s', t:'ʇ', u:'n', v:'ʌ', w:'ʍ', x:'x', y:'ʎ', z:'z',
+                A:'∀', B:'𐐒', C:'Ɔ', D:'ᗡ', E:'Ǝ', F:'Ⅎ', G:'פ', H:'H', I:'I', J:'ſ', K:'ʞ', L:'˥', M:'W',
+                N:'N', O:'O', P:'Ԁ', Q:'Ό', R:'ᴚ', S:'S', T:'⊥', U:'∩', V:'Λ', W:'M', X:'X', Y:'⅄', Z:'Z',
+                '1':'Ɩ', '2':'ᄅ', '3':'Ɛ', '4':'ㄣ', '5':'ϛ', '6':'9', '7':'ㄥ', '8':'8', '9':'6', '0':'0',
+                '.':'˙', ',':'\'', '\'':',', '"':',,', '?':'¿', '!':'¡', '(' :')', ')':'(', '[':']', ']':'[',
+                '{':'}', '}':'{', '<':'>', '>':'<', '&':'⅋', '_':'‾'
+            };
+
+            // Dizionario Morse Internazionale
+            const MORSE_MAP = {
+                'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....',
+                'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.',
+                'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-', 'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-',
+                'Y':'-.--', 'Z':'--..', '0':'-----', '1':'.----', '2':'..---', '3':'...--', '4':'....-',
+                '5':'.....', '6':'-....', '7':'--...', '8':'---..', '9':'----.', '.':'.-.-.-', ',':'--..--',
+                '?':'..--..', '!':'-.-.--', '/':'-..-.', '(':'-.--.', ')':'-.--.-', '&':'.-...', ':':'---...',
+                ';':'-.-.-.', '=':'-...-', '+':'.-.-.', '-':'-....-', '_':'..--.-', '"':'.-..-.', '@':'.--.-.',
+                ' ':'/'
+            };
+            const REVERSE_MORSE = Object.fromEntries(Object.entries(MORSE_MAP).map(([k, v]) => [v, k]));
+
+            // Caratteri combinanti per Zalgo / Glitch
+            const ZALGO_UP = ['\u030d','\u030e','\u0304','\u0305','\u033f','\u0311','\u0306','\u0310','\u0352','\u0357','\u0351','\u0307','\u0308','\u030a','\u0342','\u0343','\u0344','\u034a','\u034b','\u034c','\u0303','\u0302','\u030c','\u0350','\u0300','\u0301','\u030b','\u030f','\u0312','\u0313','\u0314','\u033d','\u0309','\u0363','\u0364','\u0365','\u0366','\u0367','\u0368','\u0369','\u036a','\u036b','\u036c','\u036d','\u036e','\u036f','\u033e','\u035b'];
+            const ZALGO_DOWN = ['\u0316','\u0317','\u0318','\u0319','\u031c','\u031d','\u031e','\u031f','\u0320','\u0324','\u0325','\u0326','\u0329','\u032a','\u032b','\u032c','\u032d','\u032e','\u032f','\u0330','\u0331','\u0332','\u0333','\u0339','\u033a','\u033b','\u033c','\u0345','\u0347','\u0348','\u0349','\u034d','\u034e','\u0353','\u0354','\u0355','\u0356','\u0359','\u035a','\u0323'];
+
+            // Parole minori per Title Case editoriale (Italiano + Inglese)
+            const MINOR_WORDS = new Set([
+                'il','lo','la','i','gli','le','un','uno','una','di','a','da','in','con','su','per','tra','fra',
+                'del','dello','della','dei','degli','delle','al','allo','alla','ai','agli','alle','dal','dallo',
+                'dalla','nel','nello','nella','sul','sullo','sulla','e','ed','o','od','ma','che',
+                'a','an','the','and','but','or','for','nor','on','at','to','from','by','of','in','with'
+            ]);
+
+            // --- CATALOGO COMPLETO DELLE 42 TRASFORMAZIONI ---
+            const TRANSFORMATIONS = [
+                // === 1. CASE & STILE ===
+                {
+                    id: 'uppercase',
+                    cat: 'case',
+                    name: 'UPPERCASE',
+                    preview: 'TUTTO MAIUSCOLO',
+                    desc: 'Converte ogni carattere in maiuscolo.',
+                    fn: (t) => t.toUpperCase()
+                },
+                {
+                    id: 'lowercase',
+                    cat: 'case',
+                    name: 'lowercase',
+                    preview: 'tutto minuscolo',
+                    desc: 'Converte ogni carattere in minuscolo.',
+                    fn: (t) => t.toLowerCase()
+                },
+                {
+                    id: 'capitalize-words',
+                    cat: 'case',
+                    name: 'Capitalize Every Word',
+                    preview: 'Iniziale Maiuscola Per Parola',
+                    desc: 'Rende maiuscola la prima lettera di ogni parola.',
+                    fn: (t) => t.toLowerCase().replace(/(^|[\s\-_([{"'«])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase())
+                },
+                {
+                    id: 'capitalize-sentences',
+                    cat: 'case',
+                    name: 'Capitalize Every Sentence',
+                    preview: 'Iniziale maiuscola per frase.',
+                    desc: 'Rende maiuscola solo la prima lettera di ogni frase.',
+                    fn: (t) => t.toLowerCase().replace(/(^\s*|[.!?…]\s+|\n+\s*)(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase())
+                },
+                {
+                    id: 'title-case',
+                    cat: 'case',
+                    name: 'Title Case (Editoriale)',
+                    preview: 'Il Significato della Vita nel Mondo',
+                    desc: 'Maiuscola intelligente: lascia minuscoli articoli e preposizioni interni.',
+                    fn: (t) => t.split('\n').map(line => {
+                        const words = line.split(/(\s+)/);
+                        let wordIndex = 0;
+                        const totalWords = words.filter(w => w.trim().length > 0).length;
+                        return words.map(token => {
+                            if (!token.trim()) return token;
+                            const lower = token.toLowerCase();
+                            const isFirstOrLast = wordIndex === 0 || wordIndex === totalWords - 1;
+                            wordIndex++;
+                            if (!isFirstOrLast && MINOR_WORDS.has(lower)) {
+                                return lower;
+                            }
+                            return lower.charAt(0).toUpperCase() + lower.slice(1);
+                        }).join('');
+                    }).join('\n')
+                },
+                {
+                    id: 'invert-case',
+                    cat: 'case',
+                    name: 'iNVERT cASE',
+                    preview: 'iNVERTI mAIUSCOLE/mINUSCOLE',
+                    desc: 'Scambia ogni maiuscola con minuscola e viceversa.',
+                    fn: (t) => Array.from(t).map(ch => ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase()).join('')
+                },
+                {
+                    id: 'spongebob-case',
+                    cat: 'case',
+                    name: 'SpOnGeBoB CaSe',
+                    preview: 'tEsTo iRoNiCo aLtErNaTo',
+                    desc: 'Alternanza ironica/ritmica stile meme SpongeBob.',
+                    fn: (t) => {
+                        let streak = 0;
+                        let lastUpper = false;
+                        return Array.from(t).map((ch, idx) => {
+                            if (!/\p{L}/u.test(ch)) return ch;
+                            let makeUpper = (idx % 2 === 0);
+                            if (streak >= 2) makeUpper = !lastUpper;
+                            else if (Math.sin(idx * 12.9898) > 0.35) makeUpper = !lastUpper;
+                            streak = (makeUpper === lastUpper) ? streak + 1 : 1;
+                            lastUpper = makeUpper;
+                            return makeUpper ? ch.toUpperCase() : ch.toLowerCase();
+                        }).join('');
+                    }
+                },
+                {
+                    id: 'alternating-case',
+                    cat: 'case',
+                    name: 'aLtErNaTiNg cAsE',
+                    preview: 'aLtErNaTo rIgOrOsO',
+                    desc: 'Alterna rigorosamente lettera minuscola e maiuscola.',
+                    fn: (t) => {
+                        let toggle = false;
+                        return Array.from(t).map(ch => {
+                            if (!/\p{L}/u.test(ch)) return ch;
+                            const res = toggle ? ch.toUpperCase() : ch.toLowerCase();
+                            toggle = !toggle;
+                            return res;
+                        }).join('');
+                    }
+                },
+                {
+                    id: 'remove-accents',
+                    cat: 'case',
+                    name: 'Rimuovi Accenti & Diacritici',
+                    preview: 'Citta, perche, cosi -> Citta, perche, cosi',
+                    desc: 'Normalizza Unicode NFD rimuovendo segni diacritici e accenti.',
+                    fn: (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                },
+
+                // === 2. PROGRAMMAZIONE & NAMING ===
+                {
+                    id: 'camel-case',
+                    cat: 'dev',
+                    name: 'camelCase',
+                    preview: 'userAccountBalance',
+                    desc: 'Prima parola minuscola, successive con iniziale maiuscola.',
+                    fn: (t) => mapLines(t, line => {
+                        const words = tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                        return words.map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+                    })
+                },
+                {
+                    id: 'pascal-case',
+                    cat: 'dev',
+                    name: 'PascalCase',
+                    preview: 'UserAccountBalance',
+                    desc: 'Ogni parola inizia con lettera maiuscola senza spazi (Classi/Componenti).',
+                    fn: (t) => mapLines(t, line => {
+                        const words = tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+                        return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+                    })
+                },
+                {
+                    id: 'snake-case',
+                    cat: 'dev',
+                    name: 'snake_case',
+                    preview: 'user_account_balance',
+                    desc: 'Parole minuscole separate da trattino basso (Python, SQL, Rust).',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toLowerCase()).join('_'))
+                },
+                {
+                    id: 'screaming-snake',
+                    cat: 'dev',
+                    name: 'SCREAMING_SNAKE_CASE',
+                    preview: 'MAX_RETRY_TIMEOUT',
+                    desc: 'Maiuscolo con underscore, ideale per costanti e variabili .env.',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toUpperCase()).join('_'))
+                },
+                {
+                    id: 'kebab-case',
+                    cat: 'dev',
+                    name: 'kebab-case',
+                    preview: 'user-account-balance',
+                    desc: 'Parole minuscole separate da trattino (CSS, attributi HTML, CLI).',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toLowerCase()).join('-'))
+                },
+                {
+                    id: 'screaming-kebab',
+                    cat: 'dev',
+                    name: 'SCREAMING-KEBAB-CASE',
+                    preview: 'COBOL-CASE-HEADER',
+                    desc: 'Parole maiuscole separate da trattino (COBOL / HTTP Headers).',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toUpperCase()).join('-'))
+                },
+                {
+                    id: 'dot-case',
+                    cat: 'dev',
+                    name: 'dot.case',
+                    preview: 'user.account.balance',
+                    desc: 'Parole minuscole separate da punto (chiavi JSON, package Java).',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toLowerCase()).join('.'))
+                },
+                {
+                    id: 'path-case',
+                    cat: 'dev',
+                    name: 'path/case',
+                    preview: 'user/account/balance',
+                    desc: 'Parole minuscole separate da barra (percorsi URL e filesystem).',
+                    fn: (t) => mapLines(t, line => tokenizeWords(line.normalize('NFD').replace(/[\u0300-\u036f]/g, '')).map(w => w.toLowerCase()).join('/'))
+                },
+                {
+                    id: 'seo-slug',
+                    cat: 'dev',
+                    name: 'Slug URL SEO-Friendly',
+                    preview: 'titolo-articolo-ottimizzato-seo',
+                    desc: 'Rimuove accenti, punteggiatura e doppi trattini per permalink puliti.',
+                    fn: (t) => mapLines(t, line => line
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s-]/g, '')
+                        .trim()
+                        .replace(/[\s_-]+/g, '-')
+                        .replace(/^-+|-+$/g, '')
+                    )
+                },
+
+                // === 3. EFFETTI UNICODE & CREATIVI ===
+                {
+                    id: 'unicode-bold-sans',
+                    cat: 'unicode',
+                    name: '𝗕𝗼𝗹𝗱 𝗦𝗮𝗻𝘀 (Social)',
+                    preview: '𝗧𝗲𝘀𝘁𝗼 𝗚𝗿𝗮𝘀𝘀𝗲𝘁𝘁𝗼 𝗨𝗻𝗶𝗰𝗼𝗱𝗲',
+                    desc: 'Grassetto sans-serif compatibile con X, Instagram, LinkedIn e bio.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.boldSans.u, UNICODE_SETS.boldSans.l, UNICODE_SETS.boldSans.d)
+                },
+                {
+                    id: 'unicode-bold-serif',
+                    cat: 'unicode',
+                    name: '𝐁𝐨𝐥𝐝 𝐒𝐞𝐫𝐢𝐟',
+                    preview: '𝐓𝐞𝐬𝐭𝐨 𝐆𝐫𝐚𝐬𝐬𝐞𝐭𝐭𝐨 𝐂𝐥𝐚𝐬𝐬𝐢𝐜𝐨',
+                    desc: 'Grassetto matematico con grazie.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.boldSerif.u, UNICODE_SETS.boldSerif.l, UNICODE_SETS.boldSerif.d)
+                },
+                {
+                    id: 'unicode-italic',
+                    cat: 'unicode',
+                    name: '𝘐𝘵𝘢𝘭𝘪𝘤 𝘚𝘢𝘯𝘴',
+                    preview: '𝘛𝘦𝘴𝘵𝘰 𝘊𝘰𝘳𝘴𝘪𝘷𝘰 𝘜𝘯𝘪𝘤𝘰𝘥𝘦',
+                    desc: 'Corsivo sans-serif per enfasi nei post social.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.italicSans.u, UNICODE_SETS.italicSans.l)
+                },
+                {
+                    id: 'unicode-bold-italic',
+                    cat: 'unicode',
+                    name: '𝘽𝙤𝙡𝙙 𝙄𝙩𝙖𝙡𝙞𝙘',
+                    preview: '𝙂𝙧𝙖𝙨𝙨𝙚𝙩𝙩𝙤 𝘾𝙤𝙧𝙨𝙞𝙫𝙤',
+                    desc: 'Combina grassetto e corsivo in caratteri Unicode.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.boldItalic.u, UNICODE_SETS.boldItalic.l)
+                },
+                {
+                    id: 'unicode-script',
+                    cat: 'unicode',
+                    name: '𝓢𝓬𝓻𝓲𝓹𝓽 𝓒𝓪𝓵𝓵𝓲𝓰𝓻𝓪𝓯𝓲𝓬𝓸',
+                    preview: '𝓢𝓽𝓲𝓵𝓮 𝓔𝓵𝓮𝓰𝓪𝓷𝓽𝓮 𝓒𝓪𝓵𝓵𝓲𝓰𝓻𝓪𝓯𝓲𝓬𝓸',
+                    desc: 'Caratteri calligrafici decorativi in grassetto.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.boldScript.u, UNICODE_SETS.boldScript.l)
+                },
+                {
+                    id: 'unicode-fraktur',
+                    cat: 'unicode',
+                    name: '𝕭𝖔𝖑𝖉 𝕱𝖗𝖆𝖐𝖙𝖚𝖗 (Gotico)',
+                    preview: '𝕾𝖙𝖎𝖑𝖊 𝕲𝖔𝖙𝖎𝖈𝖔 𝕸𝖊𝖉𝖎𝖊𝖛𝖆𝖑𝖊',
+                    desc: 'Caratteri gotici Fraktur ad alto impatto visivo.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.boldFraktur.u, UNICODE_SETS.boldFraktur.l)
+                },
+                {
+                    id: 'unicode-monospace',
+                    cat: 'unicode',
+                    name: '𝙼𝚘𝚗𝚘𝚜𝚙𝚊𝚌𝚎 𝚃𝚢𝚙𝚎𝚠𝚛𝚒𝚝𝚎𝚛',
+                    preview: '𝚂𝚝𝚒𝚕𝚎 𝙼𝚊𝚌𝚌𝚑𝚒𝚗𝚊 𝚍𝚊 𝚂𝚌𝚛𝚒𝚟𝚎𝚛𝚎',
+                    desc: 'Caratteri a larghezza fissa Unicode.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.monospace.u, UNICODE_SETS.monospace.l, UNICODE_SETS.monospace.d)
+                },
+                {
+                    id: 'unicode-smallcaps',
+                    cat: 'unicode',
+                    name: 'Sᴍᴀʟʟ Cᴀᴘs (Maiuscoletto)',
+                    preview: 'Mᴀɪᴜsᴄᴏʟᴇᴛᴛᴏ Eʟᴇɢᴀɴᴛᴇ',
+                    desc: 'Converte le minuscole in maiuscoletto tipografico Unicode.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.smallCaps.u, UNICODE_SETS.smallCaps.l)
+                },
+                {
+                    id: 'unicode-circled',
+                    cat: 'unicode',
+                    name: 'Ⓒⓘⓡⓒⓛⓔⓓ (Cerchiato)',
+                    preview: 'Ⓣⓔⓢⓣⓞ Ⓒⓔⓡⓒⓗⓘⓐⓣⓞ',
+                    desc: 'Racchiude ogni lettera e numero in un cerchio.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.circled.u, UNICODE_SETS.circled.l, UNICODE_SETS.circled.d)
+                },
+                {
+                    id: 'unicode-squared',
+                    cat: 'unicode',
+                    name: '🅂🅀🅄🄰🅁🄴🄳 (Quadrato)',
+                    preview: '🅃🄴🅂🅃🄾 🅀🅄🄰🄳🅁🄰🅃🄾',
+                    desc: 'Racchiude ogni lettera in un riquadro.',
+                    fn: (t) => mapAlphabet(t, UNICODE_SETS.squared.u, UNICODE_SETS.squared.l)
+                },
+                {
+                    id: 'fullwidth-vaporwave',
+                    cat: 'unicode',
+                    name: 'Ｆｕｌｌｗｉｄｔｈ (Vaporwave)',
+                    preview: 'Ａ Ｅ Ｓ Ｔ Ｈ Ｅ Ｔ Ｉ Ｃ',
+                    desc: 'Caratteri CJK a larghezza piena stile estetica Vaporwave.',
+                    fn: (t) => Array.from(t).map(ch => {
+                        const code = ch.charCodeAt(0);
+                        if (code === 32) return '\u3000';
+                        if (code >= 33 && code <= 126) return String.fromCharCode(code + 65248);
+                        return ch;
+                    }).join('')
+                },
+                {
+                    id: 'upside-down',
+                    cat: 'unicode',
+                    name: 'uʍop ǝpᴉsd∩ (Capovolto)',
+                    preview: 'oʇloʌodɐɔ oʇsǝ┴',
+                    desc: 'Capovolge sottosopra il testo e ne inverte l\'ordine.',
+                    fn: (t) => Array.from(t).reverse().map(ch => FLIP_MAP[ch] || ch).join('')
+                },
+                {
+                    id: 'reverse-chars',
+                    cat: 'unicode',
+                    name: 'Testo Specchiato (esrever)',
+                    preview: 'otaihcceps otseT',
+                    desc: 'Inverte l\'ordine di tutti i caratteri (palindromi/specchio).',
+                    fn: (t) => Array.from(t).reverse().join('')
+                },
+                {
+                    id: 'reverse-words',
+                    cat: 'unicode',
+                    name: 'Inverti Ordine Parole',
+                    preview: 'Parole Ordine Inverti',
+                    desc: 'Inverte la sequenza delle parole mantenendo intatte le singole parole.',
+                    fn: (t) => t.split('\n').map(line => line.split(/\s+/).reverse().join(' ')).join('\n')
+                },
+                {
+                    id: 'strikethrough',
+                    cat: 'unicode',
+                    name: 'T̶e̶s̶t̶o̶ ̶B̶a̶r̶r̶a̶t̶o̶',
+                    preview: 'C̶a̶n̶c̶e̶l̶l̶a̶t̶o̶ ̶U̶n̶i̶c̶o̶d̶e̶',
+                    desc: 'Applica una linea orizzontale sopra ogni carattere.',
+                    fn: (t) => Array.from(t).map(ch => ch === '\n' ? ch : ch + '\u0336').join('')
+                },
+                {
+                    id: 'underline',
+                    cat: 'unicode',
+                    name: 'T̲e̲s̲t̲o̲ ̲S̲o̲t̲t̲o̲l̲i̲n̲e̲a̲t̲o̲',
+                    preview: 'S̲o̲t̲t̲o̲l̲i̲n̲e̲a̲t̲u̲r̲a̲ ̲U̲n̲i̲c̲o̲d̲e̲',
+                    desc: 'Sottolinea ogni carattere tramite combinazione Unicode.',
+                    fn: (t) => Array.from(t).map(ch => (ch === '\n' || ch === ' ') ? ch : ch + '\u0332').join('')
+                },
+                {
+                    id: 'zalgo-glitch',
+                    cat: 'unicode',
+                    name: 'Zalgo / Glitch Text',
+                    preview: 'T̷̢e̸̡s̴̨ţ̵o̷̡ ̸̨C̴̡o̵̢r̷̨r̸̡o̴̧t̵̢t̷̡ǫ̸',
+                    desc: 'Genera testo glitch/horror con segni diacritici sovrapposti.',
+                    hasParam: 'zalgo',
+                    fn: (t, opts) => {
+                        const level = opts?.zalgo || 4;
+                        return Array.from(t).map((ch, idx) => {
+                            if (ch === '\n' || ch === ' ') return ch;
+                            let out = ch;
+                            for (let i = 0; i < level; i++) {
+                                const u = ZALGO_UP[(idx * 7 + i * 13) % ZALGO_UP.length];
+                                const d = ZALGO_DOWN[(idx * 11 + i * 17) % ZALGO_DOWN.length];
+                                out += u + d;
+                            }
+                            return out;
+                        }).join('');
+                    }
+                },
+
+                // === 4. CODIFICA, CIFRARI & DEV ===
+                {
+                    id: 'base64-encode',
+                    cat: 'crypto',
+                    name: 'Base64 Encode',
+                    preview: 'VGV4dEZvcmdlIFN0dWRpbw==',
+                    desc: 'Codifica il testo UTF-8 in stringa Base64 sicura.',
+                    fn: (t) => {
+                        try {
+                            const bytes = new TextEncoder().encode(t);
+                            let bin = '';
+                            bytes.forEach(b => bin += String.fromCharCode(b));
+                            return btoa(bin);
+                        } catch (e) {
+                            return 'Errore nella codifica Base64.';
+                        }
+                    }
+                },
+                {
+                    id: 'base64-decode',
+                    cat: 'crypto',
+                    name: 'Base64 Decode',
+                    preview: 'Decodifica stringa Base64',
+                    desc: 'Decodifica una stringa Base64 nel testo originale UTF-8.',
+                    fn: (t) => {
+                        try {
+                            const clean = t.trim();
+                            if (!clean) return '';
+                            const bin = atob(clean);
+                            const bytes = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+                            return new TextDecoder().decode(bytes);
+                        } catch (e) {
+                            return '⚠ Input non valido: inserisci una stringa Base64 corretta.';
+                        }
+                    }
+                },
+                {
+                    id: 'url-encode',
+                    cat: 'crypto',
+                    name: 'URL Encode (Percent)',
+                    preview: 'Ciao%20Mondo%21%20%26%20Co.',
+                    desc: 'Codifica caratteri speciali per parametri query URL.',
+                    fn: (t) => encodeURIComponent(t)
+                },
+                {
+                    id: 'url-decode',
+                    cat: 'crypto',
+                    name: 'URL Decode',
+                    preview: 'Decodifica %20 e caratteri URL',
+                    desc: 'Ripristina una stringa URL-encoded in testo leggibile.',
+                    fn: (t) => {
+                        try { return decodeURIComponent(t.replace(/\+/g, ' ')); }
+                        catch (e) { return '⚠ Sequenza URL percent-encoded non valida.'; }
+                    }
+                },
+                {
+                    id: 'html-encode',
+                    cat: 'crypto',
+                    name: 'HTML Entities Encode',
+                    preview: '&lt;div class=&quot;box&quot;&gt;',
+                    desc: 'Converte <, >, &, " e \' in entità HTML sicure.',
+                    fn: (t) => t
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;')
+                },
+                {
+                    id: 'html-decode',
+                    cat: 'crypto',
+                    name: 'HTML Entities Decode',
+                    preview: 'Decodifica &lt; &amp; &quot;',
+                    desc: 'Converte entità HTML nei rispettivi caratteri.',
+                    fn: (t) => {
+                        const doc = new DOMParser().parseFromString(t, 'text/html');
+                        return doc.documentElement.textContent || '';
+                    }
+                },
+                {
+                    id: 'binary-encode',
+                    cat: 'crypto',
+                    name: 'Testo → Binario (8-bit)',
+                    preview: '01001000 01101001',
+                    desc: 'Converte ogni byte UTF-8 nella sua rappresentazione binaria.',
+                    fn: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(2).padStart(8, '0')).join(' ')
+                },
+                {
+                    id: 'binary-decode',
+                    cat: 'crypto',
+                    name: 'Binario → Testo',
+                    preview: 'Decodifica sequenze 01001000',
+                    desc: 'Converte byte binari separati da spazi in testo UTF-8.',
+                    fn: (t) => {
+                        try {
+                            const tokens = t.trim().split(/\s+/).filter(Boolean);
+                            if (!tokens.length) return '';
+                            const bytes = new Uint8Array(tokens.map(bin => {
+                                if (!/^[01]{1,8}$/.test(bin)) throw new Error();
+                                return parseInt(bin, 2);
+                            }));
+                            return new TextDecoder().decode(bytes);
+                        } catch (e) {
+                            return '⚠ Inserisci byte binari validi separati da spazi (es. 01001000 01101001).';
+                        }
+                    }
+                },
+                {
+                    id: 'hex-encode',
+                    cat: 'crypto',
+                    name: 'Testo → Esadecimale (Hex)',
+                    preview: '54 65 78 74 46 6f 72 67 65',
+                    desc: 'Converte il testo in coppie esadecimali UTF-8.',
+                    fn: (t) => Array.from(new TextEncoder().encode(t)).map(b => b.toString(16).padStart(2, '0')).join(' ')
+                },
+                {
+                    id: 'hex-decode',
+                    cat: 'crypto',
+                    name: 'Esadecimale (Hex) → Testo',
+                    preview: 'Decodifica coppie Hex in testo',
+                    desc: 'Converte valori esadecimali in testo leggibile.',
+                    fn: (t) => {
+                        try {
+                            const clean = t.replace(/[^0-9a-fA-F]/g, '');
+                            if (!clean) return '';
+                            if (clean.length % 2 !== 0) throw new Error();
+                            const bytes = new Uint8Array(clean.match(/.{2}/g).map(h => parseInt(h, 16)));
+                            return new TextDecoder().decode(bytes);
+                        } catch (e) {
+                            return '⚠ Inserisci una sequenza esadecimale valida (numero pari di cifre 0-9, A-F).';
+                        }
+                    }
+                },
+                {
+                    id: 'morse-encode',
+                    cat: 'crypto',
+                    name: 'Codice Morse Encode',
+                    preview: '... --- ... / - . -..- -',
+                    desc: 'Traduce lettere e numeri in punti e linee Morse.',
+                    fn: (t) => Array.from(t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase())
+                        .map(ch => ch === '\n' ? '\n' : (MORSE_MAP[ch] || ch))
+                        .join(' ')
+                        .replace(/ \n /g, '\n')
+                },
+                {
+                    id: 'morse-decode',
+                    cat: 'crypto',
+                    name: 'Codice Morse Decode',
+                    preview: 'Decodifica . - e / in testo',
+                    desc: 'Converte Codice Morse separato da spazi (usa / per spazio parole).',
+                    fn: (t) => t.split('\n').map(line =>
+                        line.trim().split(/\s+/).map(code => REVERSE_MORSE[code] || (code === '/' ? ' ' : '')).join('')
+                    ).join('\n')
+                },
+                {
+                    id: 'rot13',
+                    cat: 'crypto',
+                    name: 'Cifrario ROT13',
+                    preview: 'Rotazione simmetrica 13 posizioni',
+                    desc: 'Cifra o decifra il testo ruotando l\'alfabeto di 13 lettere.',
+                    fn: (t) => t.replace(/[a-zA-Z]/g, ch => {
+                        const base = ch <= 'Z' ? 65 : 97;
+                        return String.fromCharCode(((ch.charCodeAt(0) - base + 13) % 26) + base);
+                    })
+                },
+                {
+                    id: 'caesar-cipher',
+                    cat: 'crypto',
+                    name: 'Cifrario di Cesare',
+                    preview: 'Spostamento alfabetico personalizzabile',
+                    desc: 'Cifra il testo spostando ogni lettera di N posizioni.',
+                    hasParam: 'caesar',
+                    fn: (t, opts) => {
+                        const shift = opts?.caesar || 3;
+                        return t.replace(/[a-zA-Z]/g, ch => {
+                            const base = ch <= 'Z' ? 65 : 97;
+                            return String.fromCharCode(((ch.charCodeAt(0) - base + shift) % 26) + base);
+                        });
+                    }
+                },
+                {
+                    id: 'json-prettify',
+                    cat: 'crypto',
+                    name: 'JSON Prettify (Formatta)',
+                    preview: 'Indenta e formatta codice JSON',
+                    desc: 'Formatta un oggetto o array JSON con indentazione a 2 spazi.',
+                    fn: (t) => {
+                        try {
+                            if (!t.trim()) return '';
+                            return JSON.stringify(JSON.parse(t), null, 2);
+                        } catch (e) {
+                            return '⚠ JSON non valido: ' + e.message;
+                        }
+                    }
+                },
+                {
+                    id: 'json-minify',
+                    cat: 'crypto',
+                    name: 'JSON Minify (Comprimi)',
+                    preview: '{"chiave":"valore"}',
+                    desc: 'Rimuove spazi e ritorni a capo superflui dal JSON.',
+                    fn: (t) => {
+                        try {
+                            if (!t.trim()) return '';
+                            return JSON.stringify(JSON.parse(t));
+                        } catch (e) {
+                            return '⚠ JSON non valido: ' + e.message;
+                        }
+                    }
+                },
+                {
+                    id: 'extract-emails',
+                    cat: 'crypto',
+                    name: 'Estrai Indirizzi Email',
+                    preview: 'nome@dominio.it',
+                    desc: 'Estrae tutti gli indirizzi email univoci trovati nel testo.',
+                    fn: (t) => {
+                        const matches = t.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
+                        return matches ? Array.from(new Set(matches)).join('\n') : 'Nessun indirizzo email trovato.';
+                    }
+                },
+                {
+                    id: 'extract-urls',
+                    cat: 'crypto',
+                    name: 'Estrai Link / URL',
+                    preview: 'https://esempio.it',
+                    desc: 'Estrae tutti i collegamenti http/https presenti nel testo.',
+                    fn: (t) => {
+                        const matches = t.match(/https?:\/\/[^\s"'<>]+/g);
+                        return matches ? Array.from(new Set(matches)).join('\n') : 'Nessun URL trovato.';
+                    }
+                },
+                {
+                    id: 'extract-numbers',
+                    cat: 'crypto',
+                    name: 'Estrai Numeri',
+                    preview: '42, 3.14, -10',
+                    desc: 'Estrae tutti i valori numerici (interi e decimali) dal testo.',
+                    fn: (t) => {
+                        const matches = t.match(/-?\d+(?:[.,]\d+)?/g);
+                        return matches ? matches.join('\n') : 'Nessun numero trovato.';
+                    }
+                }
+            ];
+
+            // 16 formati principali mostrati nella scheda "Confronto Live"
+            const COMPARE_IDS = [
+                'uppercase', 'lowercase', 'capitalize-words', 'title-case',
+                'spongebob-case', 'camel-case', 'pascal-case', 'snake-case',
+                'screaming-snake', 'kebab-case', 'seo-slug', 'unicode-bold-sans',
+                'unicode-italic', 'fullwidth-vaporwave', 'upside-down', 'base64-encode'
+            ];
+
+            // --- STATO APPLICAZIONE ---
+            const state = {
+                activeTransformId: 'uppercase',
+                activeCategory: 'case',
+                searchQuery: '',
+                isMultiGridMode: false,
+                zalgoIntensity: 4,
+                caesarShift: 3,
+                undoStack: [],
+                lastRecordedText: ''
+            };
+
+            // --- RIFERIMENTI DOM ---
+            const inputEl = document.getElementById('input-textarea');
+            const outputEl = document.getElementById('output-textarea');
+            const gutterEl = document.getElementById('line-numbers-gutter');
+            const transformsGrid = document.getElementById('transforms-grid-container');
+            const compareGrid = document.getElementById('compare-grid-container');
+            const singleOutputCard = document.getElementById('single-output-card');
+
+            // --- TOAST FEEDBACK ---
+            let toastTimeout = null;
+            function showToast(msg) {
+                const banner = document.getElementById('toast-banner');
+                document.getElementById('toast-message').textContent = msg;
+                banner.classList.remove('opacity-0', 'translate-y-2');
+                banner.classList.add('opacity-100', 'translate-y-0');
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    banner.classList.remove('opacity-100', 'translate-y-0');
+                    banner.classList.add('opacity-0', 'translate-y-2');
+                }, 2100);
+            }
+
+            // --- GESTIONE CRONOLOGIA UNDO (FINO A 15 STATI) ---
+            function pushUndoHistory(prevText) {
+                if (prevText === state.lastRecordedText) return;
+                state.undoStack.push(state.lastRecordedText);
+                if (state.undoStack.length > 15) state.undoStack.shift();
+                state.lastRecordedText = prevText;
+                updateUndoButton();
+            }
+
+            function updateUndoButton() {
+                const btn = document.getElementById('btn-undo');
+                const countEl = document.getElementById('undo-count');
+                btn.disabled = state.undoStack.length === 0;
+                countEl.textContent = `(${state.undoStack.length})`;
+            }
+
+            document.getElementById('btn-undo').addEventListener('click', () => {
+                if (state.undoStack.length === 0) return;
+                const previous = state.undoStack.pop();
+                state.lastRecordedText = previous;
+                inputEl.value = previous;
+                updateUndoButton();
+                onInputChanged(false);
+                showToast('Modifica annullata');
+            });
+
+            // --- AGGIORNAMENTO NUMERI DI RIGA & STATISTICHE ---
+            function updateLineNumbers() {
+                const linesCount = Math.max(1, inputEl.value.split('\n').length);
+                let nums = '';
+                for (let i = 1; i <= linesCount; i++) {
+                    nums += i + '\n';
+                }
+                gutterEl.textContent = nums;
+            }
+
+            inputEl.addEventListener('scroll', () => {
+                gutterEl.scrollTop = inputEl.scrollTop;
+            });
+
+            function updateStatistics(text) {
+                const chars = Array.from(text).length;
+                const charsNoSpace = Array.from(text.replace(/\s/g, '')).length;
+                const wordsArr = text.trim() ? text.trim().split(/\s+/) : [];
+                const words = wordsArr.length;
+                const sentences = text.trim()
+                    ? text.split(/[.!?…]+/).filter(s => s.trim().length > 0).length
+                    : 0;
+                const lines = text.length === 0 ? 0 : text.split('\n').length;
+                const bytes = new TextEncoder().encode(text).length;
+
+                // Tempo medio di lettura: ~200 parole al minuto
+                const totalSec = Math.ceil((words / 200) * 60);
+                let readTimeStr = '0s';
+                if (words > 0) {
+                    if (totalSec < 60) readTimeStr = `${totalSec}s`;
+                    else {
+                        const m = Math.floor(totalSec / 60);
+                        const s = totalSec % 60;
+                        readTimeStr = s > 0 ? `${m}m ${s}s` : `${m}m`;
+                    }
+                }
+
+                document.getElementById('stat-chars').textContent = chars.toLocaleString('it-IT');
+                document.getElementById('stat-chars-nospace').textContent = charsNoSpace.toLocaleString('it-IT');
+                document.getElementById('stat-words').textContent = words.toLocaleString('it-IT');
+                document.getElementById('stat-sentences').textContent = sentences.toLocaleString('it-IT');
+                document.getElementById('stat-lines').textContent = lines.toLocaleString('it-IT');
+                document.getElementById('stat-bytes').textContent = bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`;
+                document.getElementById('stat-readtime').textContent = readTimeStr;
+
+                // Analisi Frequenza Parole Top 5
+                const freqMap = new Map();
+                const cleanTokens = text.toLowerCase().match(/\p{L}{2,}/gu) || [];
+                cleanTokens.forEach(w => freqMap.set(w, (freqMap.get(w) || 0) + 1));
+
+                const top5 = Array.from(freqMap.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+
+                const topWordsContainer = document.getElementById('top-words-container');
+                topWordsContainer.innerHTML = '';
+                if (top5.length === 0) {
+                    topWordsContainer.innerHTML = '<span class="text-[11px] text-slate-500 italic">Nessuna parola rilevata</span>';
+                } else {
+                    top5.forEach(([word, count]) => {
+                        const badge = document.createElement('span');
+                        badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900 border border-slate-800 font-mono text-[11px] text-slate-300';
+                        badge.innerHTML = `<span class="text-sky-300">${word}</span><span class="text-slate-500">×${count}</span>`;
+                        topWordsContainer.appendChild(badge);
+                    });
+                }
+            }
+
+            // --- ESECUZIONE TRASFORMAZIONE ATTIVA ---
+            function computeOutput() {
+                const raw = inputEl.value;
+                const tr = TRANSFORMATIONS.find(item => item.id === state.activeTransformId) || TRANSFORMATIONS[0];
+
+                document.getElementById('active-mode-badge').textContent = tr.name;
+
+                // Mostra controlli parametrici se previsti (Zalgo o Cesare)
+                const zalgoWrap = document.getElementById('param-zalgo-wrap');
+                const caesarWrap = document.getElementById('param-caesar-wrap');
+                zalgoWrap.classList.toggle('hidden', tr.hasParam !== 'zalgo');
+                zalgoWrap.classList.toggle('flex', tr.hasParam === 'zalgo');
+                caesarWrap.classList.toggle('hidden', tr.hasParam !== 'caesar');
+                caesarWrap.classList.toggle('flex', tr.hasParam === 'caesar');
+
+                const result = tr.fn(raw, {
+                    zalgo: state.zalgoIntensity,
+                    caesar: state.caesarShift
+                });
+
+                outputEl.value = result;
+
+                // Aggiorna contatori dell'output
+                const outChars = Array.from(result).length;
+                const outWords = result.trim() ? result.trim().split(/\s+/).length : 0;
+                const outLines = result.length === 0 ? 0 : result.split('\n').length;
+                document.getElementById('out-stat-chars').textContent = outChars.toLocaleString('it-IT');
+                document.getElementById('out-stat-words').textContent = outWords.toLocaleString('it-IT');
+                document.getElementById('out-stat-lines').textContent = outLines.toLocaleString('it-IT');
+
+                if (state.activeCategory === 'compare' || state.isMultiGridMode) {
+                    renderCompareGrid();
+                }
+            }
+
+            // --- RENDER GRIGLIA PILLOLE TRASFORMAZIONI ---
+            function renderTransformCards() {
+                const isCompare = state.activeCategory === 'compare';
+                transformsGrid.classList.toggle('hidden', isCompare);
+                compareGrid.classList.toggle('hidden', !isCompare);
+                compareGrid.classList.toggle('grid', isCompare);
+
+                if (isCompare) {
+                    renderCompareGrid();
+                    return;
+                }
+
+                const q = state.searchQuery.trim().toLowerCase();
+                const filtered = TRANSFORMATIONS.filter(tr => {
+                    const matchesSearch = !q ||
+                        tr.name.toLowerCase().includes(q) ||
+                        tr.desc.toLowerCase().includes(q) ||
+                        tr.preview.toLowerCase().includes(q);
+                    if (q) return matchesSearch; // Se cerca, mostra risultati da tutte le categorie!
+                    return tr.cat === state.activeCategory;
+                });
+
+                transformsGrid.innerHTML = '';
+                if (filtered.length === 0) {
+                    transformsGrid.innerHTML = `<div class="col-span-full py-8 text-center text-xs text-slate-500">Nessun formato trovato per "${state.searchQuery}".</div>`;
+                    return;
+                }
+
+                filtered.forEach(tr => {
+                    const isActive = tr.id === state.activeTransformId;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `transform-pill text-left p-3 rounded-xl bg-slate-900/75 border border-slate-800/90 flex flex-col justify-between gap-1.5 ${isActive ? 'active-transform' : ''}`;
+                    btn.innerHTML = `
+                        <div class="flex items-center justify-between gap-2 w-full">
+                            <span class="font-semibold text-xs text-slate-100 truncate">${tr.name}</span>
+                            ${isActive ? '<span class="w-2 h-2 rounded-full bg-sky-400 shrink-0"></span>' : ''}
+                        </div>
+                        <div class="font-mono text-[11px] text-sky-300/90 truncate w-full">${tr.preview}</div>
+                        <p class="text-[10px] text-slate-400 line-clamp-1">${tr.desc}</p>
+                    `;
+                    btn.addEventListener('click', () => {
+                        state.activeTransformId = tr.id;
+                        renderTransformCards();
+                        computeOutput();
+                    });
+                    transformsGrid.appendChild(btn);
+                });
+            }
+
+            // --- RENDER GRIGLIA CONFRONTO LIVE (16 FORMATI SIMULTANEI) ---
+            function renderCompareGrid() {
+                const raw = inputEl.value;
+                compareGrid.innerHTML = '';
+
+                COMPARE_IDS.forEach(id => {
+                    const tr = TRANSFORMATIONS.find(item => item.id === id);
+                    if (!tr) return;
+                    const converted = tr.fn(raw, { zalgo: state.zalgoIntensity, caesar: state.caesarShift });
+
+                    const card = document.createElement('div');
+                    card.className = 'p-3 rounded-xl bg-slate-900/85 hover:bg-slate-800/90 border border-slate-800 hover:border-sky-400/50 transition cursor-pointer group flex flex-col gap-1.5';
+                    card.title = 'Clicca per copiare questo formato';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-sky-300">${tr.name}</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-400 group-hover:text-emerald-300 group-hover:bg-emerald-950/60 transition">
+                                Copia
+                            </span>
+                        </div>
+                        <div class="font-mono text-xs text-slate-200 bg-slate-950/75 rounded-lg p-2 border border-slate-800/70 line-clamp-2 break-all min-h-[44px]">
+                            ${escapeHtmlForDisplay(converted || '—')}
+                        </div>
+                    `;
+                    card.addEventListener('click', () => {
+                        copyTextToClipboard(converted);
+                        showToast(`Copiato in ${tr.name}!`);
+                    });
+                    compareGrid.appendChild(card);
+                });
+            }
+
+            function escapeHtmlForDisplay(str) {
+                return str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            // --- FUNZIONE COPIA NEGLI APPUNTI (CON FALLBACK IFRAME) ---
+            function copyTextToClipboard(text) {
+                if (!text) return;
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                temp.style.position = 'fixed';
+                temp.style.left = '-9999px';
+                document.body.appendChild(temp);
+                temp.select();
+                try {
+                    document.execCommand('copy');
+                } catch (err) {
+                    if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
+                }
+                document.body.removeChild(temp);
+            }
+
+            // --- HANDLER CAMBIO INPUT ---
+            let historyDebounce = null;
+            function onInputChanged(recordHistory = true) {
+                const val = inputEl.value;
+                updateLineNumbers();
+                updateStatistics(val);
+                updateFindMatchesCount();
+                computeOutput();
+
+                if (recordHistory) {
+                    clearTimeout(historyDebounce);
+                    historyDebounce = setTimeout(() => {
+                        pushUndoHistory(val);
+                    }, 450);
+                }
+            }
+
+            inputEl.addEventListener('input', () => onInputChanged(true));
+
+            // --- AZIONI PULSANTI PRINCIPALI ---
+            document.getElementById('btn-copy-output').addEventListener('click', () => {
+                copyTextToClipboard(outputEl.value);
+                const lbl = document.getElementById('copy-output-label');
+                lbl.textContent = 'Copiato!';
+                showToast('Risultato copiato negli appunti!');
+                setTimeout(() => { lbl.textContent = 'Copia Risultato'; }, 1600);
+            });
+
+            document.getElementById('btn-download-txt').addEventListener('click', () => {
+                const blob = new Blob([outputEl.value], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `textforge-${state.activeTransformId}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('File .TXT scaricato');
+            });
+
+            function promoteOutputToInput() {
+                if (!outputEl.value) return;
+                pushUndoHistory(inputEl.value);
+                inputEl.value = outputEl.value;
+                state.lastRecordedText = inputEl.value;
+                onInputChanged(false);
+                showToast('Output spostato nell\'Input per concatenazione');
+            }
+
+            document.getElementById('btn-promote-output').addEventListener('click', promoteOutputToInput);
+            document.getElementById('btn-swap-io').addEventListener('click', promoteOutputToInput);
+
+            document.getElementById('btn-paste').addEventListener('click', async () => {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const clipText = await navigator.clipboard.readText();
+                        if (clipText) {
+                            pushUndoHistory(inputEl.value);
+                            inputEl.value = clipText;
+                            state.lastRecordedText = clipText;
+                            onInputChanged(false);
+                            showToast('Testo incollato dagli appunti');
+                            return;
+                        }
+                    }
+                } catch (e) {}
+                inputEl.focus();
+                showToast('Premi Ctrl+V / Cmd+V nell\'editor');
+            });
+
+            function clearEditor() {
+                if (!inputEl.value) return;
+                pushUndoHistory(inputEl.value);
+                inputEl.value = '';
+                state.lastRecordedText = '';
+                onInputChanged(false);
+            }
+            document.getElementById('btn-clear-input').addEventListener('click', clearEditor);
+            document.getElementById('btn-clear-all').addEventListener('click', clearEditor);
+
+            // Dropdown Testi di Esempio
+            document.getElementById('sample-preset-select').addEventListener('change', (e) => {
+                const key = e.target.value;
+                if (SAMPLE_TEXTS[key]) {
+                    pushUndoHistory(inputEl.value);
+                    inputEl.value = SAMPLE_TEXTS[key];
+                    state.lastRecordedText = inputEl.value;
+                    onInputChanged(false);
+                    showToast('Esempio caricato');
+                }
+                e.target.value = '';
+            });
+
+            // Toggle Vista Griglia Multi-Formato dall'Header
+            document.getElementById('btn-toggle-multigrid').addEventListener('click', () => {
+                state.isMultiGridMode = !state.isMultiGridMode;
+                const lbl = document.getElementById('multigrid-btn-label');
+                if (state.isMultiGridMode) {
+                    state.activeCategory = 'compare';
+                    lbl.textContent = 'Vista Singola';
+                    singleOutputCard.classList.add('hidden');
+                } else {
+                    state.activeCategory = 'case';
+                    lbl.textContent = 'Griglia Multi-Formato';
+                    singleOutputCard.classList.remove('hidden');
+                }
+                updateCategoryTabsUI();
+                renderTransformCards();
+            });
+
+            // Gestione Schede Categorie
+            function updateCategoryTabsUI() {
+                document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+                    const active = btn.dataset.cat === state.activeCategory;
+                    if (btn.dataset.cat === 'compare') {
+                        btn.className = active
+                            ? 'cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow-md shadow-emerald-600/25 whitespace-nowrap transition'
+                            : 'cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/50 border border-emerald-500/25 whitespace-nowrap transition';
+                    } else {
+                        btn.className = active
+                            ? 'cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-600 text-white shadow-md shadow-sky-600/25 whitespace-nowrap transition'
+                            : 'cat-tab-btn px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/80 whitespace-nowrap transition';
+                    }
+                });
+            }
+
+            document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.activeCategory = btn.dataset.cat;
+                    state.isMultiGridMode = (state.activeCategory === 'compare');
+                    document.getElementById('multigrid-btn-label').textContent = state.isMultiGridMode ? 'Vista Singola' : 'Griglia Multi-Formato';
+                    singleOutputCard.classList.toggle('hidden', state.isMultiGridMode);
+                    updateCategoryTabsUI();
+                    renderTransformCards();
+                });
+            });
+
+            // Ricerca Istantanea Funzioni
+            document.getElementById('transform-search-input').addEventListener('input', (e) => {
+                state.searchQuery = e.target.value;
+                if (state.activeCategory === 'compare' && state.searchQuery.trim()) {
+                    state.activeCategory = 'case';
+                    state.isMultiGridMode = false;
+                    singleOutputCard.classList.remove('hidden');
+                    updateCategoryTabsUI();
+                }
+                renderTransformCards();
+            });
+
+            // Slider Parametrici (Zalgo & Cesare)
+            document.getElementById('zalgo-intensity').addEventListener('input', (e) => {
+                state.zalgoIntensity = parseInt(e.target.value, 10);
+                document.getElementById('zalgo-val').textContent = state.zalgoIntensity;
+                computeOutput();
+            });
+
+            document.getElementById('caesar-shift').addEventListener('input', (e) => {
+                state.caesarShift = parseInt(e.target.value, 10);
+                document.getElementById('caesar-val').textContent = `+${state.caesarShift}`;
+                computeOutput();
+            });
+
+            // --- PANNELLO SINISTRO: TROVA/SOSTITUISCI & OPERAZIONI RIGHE ---
+            document.querySelectorAll('.left-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.lefttab;
+                    document.querySelectorAll('.left-tab-btn').forEach(b => {
+                        b.className = 'left-tab-btn px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-400 hover:text-white transition';
+                    });
+                    btn.className = 'left-tab-btn px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-600 text-white transition';
+
+                    document.getElementById('left-panel-find').classList.toggle('hidden', tab !== 'find');
+                    document.getElementById('left-panel-lines').classList.toggle('hidden', tab !== 'lines');
+                    document.getElementById('left-panel-wrap').classList.toggle('hidden', tab !== 'wrap');
+                });
+            });
+
+            function buildFindRegex() {
+                const pattern = document.getElementById('find-input').value;
+                if (!pattern) return null;
+                const caseSensitive = document.getElementById('chk-find-case').checked;
+                const useRegex = document.getElementById('chk-find-regex').checked;
+                const flags = caseSensitive ? 'g' : 'gi';
+                try {
+                    const source = useRegex ? pattern : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    return new RegExp(source, flags);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function updateFindMatchesCount() {
+                const badge = document.getElementById('find-match-badge');
+                const rx = buildFindRegex();
+                if (!rx) {
+                    badge.textContent = '0 corrispondenze';
+                    return;
+                }
+                const matches = inputEl.value.match(rx);
+                const count = matches ? matches.length : 0;
+                badge.textContent = `${count} corrispondenz${count === 1 ? 'a' : 'e'}`;
+            }
+
+            document.getElementById('find-input').addEventListener('input', updateFindMatchesCount);
+            document.getElementById('chk-find-case').addEventListener('change', updateFindMatchesCount);
+            document.getElementById('chk-find-regex').addEventListener('change', updateFindMatchesCount);
+
+            document.getElementById('btn-replace-all').addEventListener('click', () => {
+                const rx = buildFindRegex();
+                if (!rx) {
+                    showToast('Inserisci un pattern valido da cercare');
+                    return;
+                }
+                const replacement = document.getElementById('replace-input').value;
+                pushUndoHistory(inputEl.value);
+                inputEl.value = inputEl.value.replace(rx, replacement);
+                state.lastRecordedText = inputEl.value;
+                onInputChanged(false);
+                showToast('Sostituzione completata');
+            });
+
+            // Operazioni sulle Righe (Deduplica, Ordina, Mescola, Numera...)
+            document.querySelectorAll('.line-op-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const op = btn.dataset.lineop;
+                    const lines = inputEl.value.split('\n');
+                    let resultLines = [...lines];
+
+                    if (op === 'dedupe') {
+                        resultLines = Array.from(new Set(lines));
+                    } else if (op === 'removeEmpty') {
+                        resultLines = lines.filter(l => l.trim().length > 0);
+                    } else if (op === 'trimSpaces') {
+                        resultLines = lines.map(l => l.trim().replace(/\s{2,}/g, ' '));
+                    } else if (op === 'sortAZ') {
+                        resultLines.sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+                    } else if (op === 'sortZA') {
+                        resultLines.sort((a, b) => b.localeCompare(a, 'it', { sensitivity: 'base' }));
+                    } else if (op === 'sortLen') {
+                        resultLines.sort((a, b) => a.length - b.length);
+                    } else if (op === 'shuffle') {
+                        for (let i = resultLines.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [resultLines[i], resultLines[j]] = [resultLines[j], resultLines[i]];
+                        }
+                    } else if (op === 'reverseLines') {
+                        resultLines.reverse();
+                    } else if (op === 'numberLines') {
+                        resultLines = lines.map((l, idx) => `${idx + 1}. ${l}`);
+                    }
+
+                    pushUndoHistory(inputEl.value);
+                    inputEl.value = resultLines.join('\n');
+                    state.lastRecordedText = inputEl.value;
+                    onInputChanged(false);
+                    showToast('Operazione sulle righe applicata');
+                });
+            });
+
+            // Prefisso & Suffisso su ogni riga
+            document.getElementById('btn-apply-wrap').addEventListener('click', () => {
+                const prefix = document.getElementById('line-prefix-input').value;
+                const suffix = document.getElementById('line-suffix-input').value;
+                if (!prefix && !suffix) return;
+                pushUndoHistory(inputEl.value);
+                inputEl.value = inputEl.value.split('\n').map(l => `${prefix}${l}${suffix}`).join('\n');
+                state.lastRecordedText = inputEl.value;
+                onInputChanged(false);
+                showToast('Prefisso e suffisso applicati');
+            });
+
+            // --- INIZIALIZZAZIONE ALL'AVVIO ---
+            inputEl.value = SAMPLE_TEXTS.standard;
+            state.lastRecordedText = inputEl.value;
+            renderTransformCards();
+            onInputChanged(false);
+        });
+    </script>
+</body>
+</html>
