@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ComplexLab 360 — Numeri Complessi, Calcolo & Trigonometria</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        abyss: '#070b14',
+                        slatepanel: '#0f172a',
+                        slateborder: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #070b14;
+            color: #f1f5f9;
+            overflow: hidden;
+        }
+
+        /* Scrollbar elegante dark-mode */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #070b14; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        /* Slider personalizzati ad alta precisione */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 5px;
+            border-radius: 999px;
+            background: #1e293b;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            background: #38bdf8;
+            border: 2px solid #ffffff;
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.75);
+            transition: transform 0.12s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+        }
+
+        .slider-purple::-webkit-slider-thumb {
+            background: #a855f7 !important;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.75) !important;
+        }
+        .slider-emerald::-webkit-slider-thumb {
+            background: #10b981 !important;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.75) !important;
+        }
+        .slider-amber::-webkit-slider-thumb {
+            background: #f59e0b !important;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.75) !important;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.90);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid #1e293b;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-sky-500/30 selection:text-sky-200 flex flex-col">
+
+    <!-- TOAST NOTIFICHE -->
+    <div id="toast-banner" class="fixed bottom-5 left-5 z-50 pointer-events-none opacity-0 translate-y-2 transition-all duration-200">
+        <div class="glass-card px-4 py-2 rounded-2xl border border-emerald-500/40 flex items-center gap-2 shadow-2xl">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span id="toast-text" class="text-xs font-semibold text-emerald-200">Copiato!</span>
+        </div>
+    </div>
+
+    <!-- HEADER SUPERIORE COMPATTO -->
+    <header class="h-14 shrink-0 bg-[#0f172a] border-b border-[#1e293b] px-3 sm:px-5 flex items-center justify-between gap-2 z-30">
+        <!-- Logo & Titolo -->
+        <div class="flex items-center gap-2.5 shrink-0">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 via-purple-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="8" stroke-opacity="0.55"/>
+                    <line x1="12" y1="12" x2="17.5" y2="6.5"/>
+                    <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
+                </svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-extrabold text-sm sm:text-base tracking-tight text-white">ComplexLab <span class="text-sky-400">360</span></h1>
+                    <span class="hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        Piano di Gauss & Eulero
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-400 hidden md:block">Numeri Complessi, Calcolo & Trigonometria</p>
+            </div>
+        </div>
+
+        <!-- Tabs delle 4 Modalità Operative -->
+        <nav class="flex items-center gap-1 bg-[#070b14] p-1 rounded-xl border border-[#1e293b] overflow-x-auto max-w-full" role="tablist">
+            <button type="button" data-mode="explore" class="mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 whitespace-nowrap transition">
+                1. Esplora & Forme
+            </button>
+            <button type="button" data-mode="operations" class="mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white border border-transparent whitespace-nowrap transition">
+                2. Operazioni & Calcolo
+            </button>
+            <button type="button" data-mode="demoivre" class="mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white border border-transparent whitespace-nowrap transition">
+                3. De Moivre & Radici
+            </button>
+            <button type="button" data-mode="trig" class="mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white border border-transparent whitespace-nowrap transition">
+                4. Trigonometria & Eulero
+            </button>
+        </nav>
+
+        <!-- Toggle Pannello Mobile -->
+        <button id="btn-toggle-right-panel" type="button" class="lg:hidden p-2 rounded-xl bg-[#070b14] border border-[#1e293b] text-sky-300 hover:text-white shrink-0" title="Mostra/Nascondi controlli">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- AREA PRINCIPALE SPLIT: PIANO DI GAUSS (SINISTRA) + PANNELLO LAB (DESTRA) -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- ========================================================= -->
+        <!-- COLONNA SINISTRA / CENTRALE: PIANO DI GAUSS INTERATTIVO    -->
+        <!-- ========================================================= -->
+        <main id="gauss-viewport" class="flex-1 relative bg-[#070b14] overflow-hidden select-none">
+            <canvas id="gauss-canvas" class="block w-full h-full cursor-crosshair"></canvas>
+
+            <!-- Barra HUD Superiore Sul Canvas (Coordinate + Snap + Overlay Geometrici) -->
+            <div class="absolute top-3 left-3 right-14 z-10 flex flex-wrap items-center gap-2 pointer-events-none">
+                <!-- Coordinate Cursore -->
+                <div class="glass-card px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono shadow-lg">
+                    <span class="text-slate-400">Cursore:</span>
+                    <span id="hud-cursor-complex" class="text-sky-300 font-semibold">0.00 + 0.00i</span>
+                </div>
+
+                <!-- Toggle Snap Griglia / Angoli Notevoli -->
+                <label class="glass-card px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 text-[11px] font-medium text-slate-300 cursor-pointer pointer-events-auto hover:border-sky-500/40 transition" title="Aggancia i vettori alla griglia o agli angoli notevoli (30°, 45°, 60°...)">
+                    <input type="checkbox" id="chk-snap-grid" class="rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0">
+                    <span>Snap Angoli/Griglia</span>
+                </label>
+
+                <!-- Toggles Rapidi Costruzioni Geometriche -->
+                <div id="geo-overlays-bar" class="glass-card px-2 py-1 rounded-xl flex flex-wrap items-center gap-1 pointer-events-auto">
+                    <button type="button" data-overlay="conj" class="geo-toggle-btn px-2 py-0.5 rounded-lg text-[11px] font-mono text-slate-400 hover:text-white border border-transparent transition" title="Mostra il coniugato z̄ = a - bi">
+                        z̄ Coniugato
+                    </button>
+                    <button type="button" data-overlay="neg" class="geo-toggle-btn px-2 py-0.5 rounded-lg text-[11px] font-mono text-slate-400 hover:text-white border border-transparent transition" title="Mostra l'opposto -z = -a - bi">
+                        -z Opposto
+                    </button>
+                    <button type="button" data-overlay="inv" class="geo-toggle-btn px-2 py-0.5 rounded-lg text-[11px] font-mono text-slate-400 hover:text-white border border-transparent transition" title="Mostra il reciproco 1/z = z̄ / |z|²">
+                        1/z Reciproco
+                    </button>
+                    <button type="button" data-overlay="ipowers" class="geo-toggle-btn px-2 py-0.5 rounded-lg text-[11px] font-mono text-slate-400 hover:text-white border border-transparent transition" title="Mostra le potenze cicliche di i: i⁰, i¹, i², i³">
+                        Potenze di i
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controlli Zoom & Centratura (In alto a destra sul Canvas) -->
+            <div class="absolute top-3 right-3 z-10 flex flex-col gap-1.5">
+                <button id="btn-zoom-in" type="button" class="w-9 h-9 rounded-xl glass-card hover:bg-[#1e293b] text-slate-200 hover:text-white flex items-center justify-center font-bold text-lg shadow-lg transition" title="Zoom Avanti (+)">
+                    +
+                </button>
+                <button id="btn-zoom-out" type="button" class="w-9 h-9 rounded-xl glass-card hover:bg-[#1e293b] text-slate-200 hover:text-white flex items-center justify-center font-bold text-lg shadow-lg transition" title="Zoom Indietro (-)">
+                    −
+                </button>
+                <button id="btn-reset-view" type="button" class="w-9 h-9 rounded-xl glass-card hover:bg-[#1e293b] text-sky-400 hover:text-sky-300 flex items-center justify-center shadow-lg transition" title="Centra Piano di Gauss">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Suggerimento Interattivo in basso a sinistra -->
+            <div class="hidden sm:flex absolute bottom-3 left-3 z-10 glass-card px-3 py-1.5 rounded-xl items-center gap-2 text-[11px] text-slate-400 pointer-events-none">
+                <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                <span>Trascina le punte dei vettori <strong class="text-sky-300 font-mono">z₁</strong> / <strong class="text-purple-300 font-mono">z₂</strong> sul piano • Rotella per zoom • Trascina lo sfondo per spostarti</span>
+            </div>
+        </main>
+
+        <!-- ========================================================= -->
+        <!-- PANNELLO DESTRO: CONTROLLI, FORMULE E CALCOLATRICE        -->
+        <!-- ========================================================= -->
+        <aside id="control-panel" class="w-full sm:w-[440px] lg:w-[470px] shrink-0 bg-[#0f172a] border-l border-[#1e293b] flex flex-col z-20 absolute lg:static inset-y-0 right-0 transition-transform duration-200 translate-x-0">
+
+            <!-- Contenuto Scorrevole delle 4 Schede -->
+            <div class="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-4">
+
+                <!-- ================================================= -->
+                <!-- TAB 1: ESPLORA & FORME (ALGEBRICA, TRIG, EULERO)  -->
+                <!-- ================================================= -->
+                <section id="panel-explore" class="space-y-4">
+                    <!-- Header Z1 & Animazione -->
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></span>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Numero Complesso z₁</h2>
+                        </div>
+                        <button id="btn-animate-theta" type="button"
+                            class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 text-xs font-semibold flex items-center gap-1.5 transition">
+                            <span id="anim-theta-icon">▶</span>
+                            <span id="anim-theta-label">Ruota θ(t)</span>
+                        </button>
+                    </div>
+
+                    <!-- Preset Notevoli Rapidi -->
+                    <div class="space-y-1.5">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Preset Notevoli:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" data-zpreset="i" class="z-preset-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-xs text-sky-300 transition">i (90°)</button>
+                            <button type="button" data-zpreset="deg30" class="z-preset-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-xs text-slate-200 transition">2∠30° (π/6)</button>
+                            <button type="button" data-zpreset="deg45" class="z-preset-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-xs text-slate-200 transition">√2∠45° (1+i)</button>
+                            <button type="button" data-zpreset="deg60" class="z-preset-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-xs text-slate-200 transition">2∠60° (π/3)</button>
+                            <button type="button" data-zpreset="deg120" class="z-preset-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-xs text-slate-200 transition">1∠120° (2π/3)</button>
+                            <button type="button" data-zpreset="euler" class="z-preset-btn px-2.5 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/35 font-mono text-xs text-purple-300 transition">e^(iπ) = -1</button>
+                            <button type="button" data-zpreset="golden" class="z-preset-btn px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 font-mono text-xs text-amber-300 transition">φ + i/φ</button>
+                        </div>
+                    </div>
+
+                    <!-- Controlli Coordinate Cartesiane (a, b) -->
+                    <div class="p-3 rounded-2xl bg-[#070b14]/90 border border-[#1e293b] space-y-3">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-sky-400">Coordinate Cartesiane (Algebriche)</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-400">Parte Reale <strong class="text-white font-mono">a = Re(z)</strong></span>
+                                </div>
+                                <input type="number" id="inp-z1-a" step="0.1" value="1.5"
+                                    class="w-full bg-[#0f172a] border border-[#1e293b] focus:border-sky-400 rounded-xl px-2.5 py-1.5 font-mono text-xs text-white focus:outline-none mb-1.5">
+                                <input type="range" id="sld-z1-a" min="-6" max="6" step="0.05" value="1.5" class="w-full">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-400">Immaginaria <strong class="text-white font-mono">b = Im(z)</strong></span>
+                                </div>
+                                <input type="number" id="inp-z1-b" step="0.1" value="2"
+                                    class="w-full bg-[#0f172a] border border-[#1e293b] focus:border-sky-400 rounded-xl px-2.5 py-1.5 font-mono text-xs text-white focus:outline-none mb-1.5">
+                                <input type="range" id="sld-z1-b" min="-6" max="6" step="0.05" value="2" class="w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controlli Coordinate Polari (Modulo r, Argomento θ) -->
+                    <div class="p-3 rounded-2xl bg-[#070b14]/90 border border-[#1e293b] space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400">Coordinate Polari & Trigonometriche</span>
+                            <span id="badge-pi-fraction" class="font-mono text-[11px] px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">θ ≈ 0.30π rad</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-400">Modulo <strong class="text-white font-mono">r = |z|</strong></span>
+                                </div>
+                                <input type="number" id="inp-z1-r" step="0.1" min="0" value="2.5"
+                                    class="w-full bg-[#0f172a] border border-[#1e293b] focus:border-purple-400 rounded-xl px-2.5 py-1.5 font-mono text-xs text-white focus:outline-none mb-1.5">
+                                <input type="range" id="sld-z1-r" min="0" max="8" step="0.05" value="2.5" class="slider-purple w-full">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-slate-400">Argomento <strong class="text-white font-mono">θ (gradi)</strong></span>
+                                </div>
+                                <input type="number" id="inp-z1-deg" step="1" value="53.13"
+                                    class="w-full bg-[#0f172a] border border-[#1e293b] focus:border-purple-400 rounded-xl px-2.5 py-1.5 font-mono text-xs text-white focus:outline-none mb-1.5">
+                                <input type="range" id="sld-z1-deg" min="-180" max="180" step="1" value="53.13" class="slider-purple w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Le 3 Rappresentazioni Sincronizzate -->
+                    <div class="space-y-2">
+                        <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Rappresentazioni Matematiche di z₁:</div>
+
+                        <!-- 1. Forma Algebrica -->
+                        <div class="p-3 rounded-xl bg-sky-950/25 border border-sky-500/30 flex items-center justify-between gap-2">
+                            <div>
+                                <div class="text-[10px] font-semibold uppercase tracking-wider text-sky-400">Forma Algebrica (Normale)</div>
+                                <div id="repr-algebraic" class="font-mono text-sm font-bold text-white mt-0.5">z = 1.50 + 2.00i</div>
+                            </div>
+                            <button type="button" data-copytarget="repr-algebraic" class="copy-repr-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-sky-500/20 text-[11px] text-sky-300 border border-[#1e293b] transition">Copia</button>
+                        </div>
+
+                        <!-- 2. Forma Trigonometrica -->
+                        <div class="p-3 rounded-xl bg-emerald-950/25 border border-emerald-500/30 flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Forma Trigonometrica</div>
+                                <div id="repr-trig" class="font-mono text-xs sm:text-[13px] font-bold text-white mt-0.5 break-all">z = 2.50 · (cos(53.1°) + i·sin(53.1°))</div>
+                            </div>
+                            <button type="button" data-copytarget="repr-trig" class="copy-repr-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-emerald-500/20 text-[11px] text-emerald-300 border border-[#1e293b] shrink-0 transition">Copia</button>
+                        </div>
+
+                        <!-- 3. Forma Esponenziale (Eulero) -->
+                        <div class="p-3 rounded-xl bg-purple-950/25 border border-purple-500/30 flex items-center justify-between gap-2">
+                            <div>
+                                <div class="text-[10px] font-semibold uppercase tracking-wider text-purple-400">Forma Esponenziale (Formula di Eulero)</div>
+                                <div id="repr-euler" class="font-mono text-sm font-bold text-white mt-0.5">z = 2.50 · e^(i · 0.93 rad)</div>
+                            </div>
+                            <button type="button" data-copytarget="repr-euler" class="copy-repr-btn px-2.5 py-1 rounded-lg bg-[#070b14] hover:bg-purple-500/20 text-[11px] text-purple-300 border border-[#1e293b] transition">Copia</button>
+                        </div>
+                    </div>
+
+                    <!-- Box Identità di Eulero -->
+                    <div id="euler-identity-card" class="p-3 rounded-2xl bg-gradient-to-r from-purple-950/40 via-[#070b14] to-sky-950/40 border border-purple-500/30 text-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-purple-300">✨ Formula & Identità di Eulero</span>
+                            <span class="font-mono text-[11px] text-amber-300 font-bold">e^(iπ) + 1 = 0</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-relaxed">
+                            Per <span class="font-mono text-white">r = 1</span> e <span class="font-mono text-white">θ = π</span> (180°), <span class="font-mono text-sky-300">e^(iπ) = cos(π) + i·sin(π) = -1</span>, unendo le 5 costanti fondamentali della matematica (<span class="font-mono">e, i, π, 1, 0</span>).
+                        </p>
+                    </div>
+                </section>
+
+                <!-- ================================================= -->
+                <!-- TAB 2: OPERAZIONI & CALCOLO STEP-BY-STEP (z1, z2) -->
+                <!-- ================================================= -->
+                <section id="panel-operations" class="hidden space-y-4">
+                    <!-- Input Compatti per z1 e z2 -->
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="p-2.5 rounded-xl bg-[#070b14] border border-sky-500/35 space-y-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                                <span class="text-xs font-bold text-sky-300 font-mono">z₁ = a + bi</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <input type="number" id="op-z1-a" step="0.2" class="w-full bg-[#0f172a] border border-[#1e293b] rounded-lg px-2 py-1 font-mono text-xs text-white" title="Parte reale z1">
+                                <input type="number" id="op-z1-b" step="0.2" class="w-full bg-[#0f172a] border border-[#1e293b] rounded-lg px-2 py-1 font-mono text-xs text-white" title="Parte immaginaria z1">
+                            </div>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-[#070b14] border border-purple-500/35 space-y-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                                <span class="text-xs font-bold text-purple-300 font-mono">z₂ = c + di</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <input type="number" id="op-z2-a" step="0.2" class="w-full bg-[#0f172a] border border-[#1e293b] rounded-lg px-2 py-1 font-mono text-xs text-white" title="Parte reale z2">
+                                <input type="number" id="op-z2-b" step="0.2" class="w-full bg-[#0f172a] border border-[#1e293b] rounded-lg px-2 py-1 font-mono text-xs text-white" title="Parte immaginaria z2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selettore Operazione Visiva -->
+                    <div class="grid grid-cols-4 gap-1.5">
+                        <button type="button" data-op="add" class="op-select-btn py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 font-mono text-xs font-bold transition">
+                            z₁ + z₂
+                        </button>
+                        <button type="button" data-op="sub" class="op-select-btn py-2 rounded-xl bg-[#070b14] border border-[#1e293b] text-slate-300 hover:text-white font-mono text-xs font-bold transition">
+                            z₁ − z₂
+                        </button>
+                        <button type="button" data-op="mul" class="op-select-btn py-2 rounded-xl bg-[#070b14] border border-[#1e293b] text-slate-300 hover:text-white font-mono text-xs font-bold transition">
+                            z₁ · z₂
+                        </button>
+                        <button type="button" data-op="div" class="op-select-btn py-2 rounded-xl bg-[#070b14] border border-[#1e293b] text-slate-300 hover:text-white font-mono text-xs font-bold transition">
+                            z₁ / z₂
+                        </button>
+                    </div>
+
+                    <!-- Svolgimento Passo-Passo (Algebrico & Geometrico/Trigonometrico) -->
+                    <div id="op-step-by-step" class="p-3.5 rounded-2xl bg-[#070b14] border border-emerald-500/30 space-y-2.5 text-xs">
+                        <!-- Popolato dinamicamente via JS -->
+                    </div>
+
+                    <!-- Tabella Comparativa Simultanea delle 4 Operazioni -->
+                    <div class="rounded-2xl bg-[#070b14] border border-[#1e293b] overflow-hidden">
+                        <div class="px-3 py-2 bg-[#111b2e] border-b border-[#1e293b] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Riepilogo Simultaneo (Algebrico & Polare)
+                        </div>
+                        <div id="op-summary-table" class="divide-y divide-[#1e293b] font-mono text-[11px]">
+                            <!-- Popolato via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================================================= -->
+                <!-- TAB 3: TEOREMA DI DE MOIVRE & RADICI N-ESIME      -->
+                <!-- ================================================= -->
+                <section id="panel-demoivre" class="hidden space-y-4">
+                    <!-- Selettore Potenza vs Radice -->
+                    <div class="grid grid-cols-2 gap-2 bg-[#070b14] p-1 rounded-xl border border-[#1e293b]">
+                        <button type="button" data-dm="power" class="dm-mode-btn py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold transition">
+                            Potenza z₁ⁿ (Spirale)
+                        </button>
+                        <button type="button" data-dm="roots" class="dm-mode-btn py-1.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition">
+                            Radici n-esime ⁿ√z₁
+                        </button>
+                    </div>
+
+                    <!-- Controllo Esponente / Indice n -->
+                    <div class="p-3 rounded-2xl bg-[#070b14] border border-[#1e293b] space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-300">Indice intero <strong class="font-mono text-amber-300">n</strong>:</span>
+                            <span id="dm-n-badge" class="font-mono text-sm font-bold px-2.5 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/40">n = 4</span>
+                        </div>
+                        <input type="range" id="sld-dm-n" min="2" max="12" step="1" value="4" class="slider-amber w-full">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span>
+                        </div>
+                    </div>
+
+                    <!-- Formula Teorema di De Moivre & Risultati -->
+                    <div id="dm-formula-box" class="p-3.5 rounded-2xl bg-[#070b14] border border-amber-500/30 space-y-2 text-xs">
+                        <!-- Popolato via JS -->
+                    </div>
+
+                    <!-- Elenco Potenze Intermedie o Radici w_0 ... w_{n-1} -->
+                    <div class="space-y-1.5">
+                        <div id="dm-list-title" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Vertici delle Radici nel Piano di Gauss:
+                        </div>
+                        <div id="dm-items-list" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                            <!-- Popolato via JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================================================= -->
+                <!-- TAB 4: TRIGONOMETRIA & FASORI DI EULERO           -->
+                <!-- ================================================= -->
+                <section id="panel-trig" class="hidden space-y-4">
+                    <div class="p-3 rounded-2xl bg-gradient-to-r from-sky-950/35 to-purple-950/35 border border-sky-500/30 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-sky-300">🌊 Dal Moto Circolare alle Onde</span>
+                            <button id="btn-trig-anim" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold transition">
+                                ⏸ Pausa / ▶ Avvia
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-relaxed">
+                            Un numero complesso unitario <span class="font-mono text-white">e^(iθ)</span> che ruota sulla circonferenza genera simultaneamente <span class="font-mono text-emerald-300">cos(θ)</span> (proiezione reale) e <span class="font-mono text-rose-400">sin(θ)</span> (proiezione immaginaria).
+                        </p>
+                    </div>
+
+                    <!-- Canvas Secondario Sincronizzato: Onde cos(θ) e sin(θ) -->
+                    <div class="rounded-2xl bg-[#070b14] border border-[#1e293b] p-2.5 space-y-2">
+                        <div class="flex items-center justify-between text-[11px] font-mono px-1">
+                            <span class="text-emerald-400 font-bold">― cos(θ) = Re(e^(iθ))</span>
+                            <span class="text-rose-400 font-bold">― sin(θ) = Im(e^(iθ))</span>
+                        </div>
+                        <canvas id="trig-waves-canvas" class="w-full h-44 rounded-xl bg-[#050811] block"></canvas>
+                    </div>
+
+                    <!-- Identità Trigonometriche di Eulero & Fasori Controrotanti -->
+                    <div class="p-3.5 rounded-2xl bg-[#070b14] border border-[#1e293b] space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-300">Formule di Eulero per Coseno e Seno</span>
+                            <label class="inline-flex items-center gap-1.5 text-[11px] text-amber-300 cursor-pointer">
+                                <input type="checkbox" id="chk-show-phasors" checked class="rounded bg-slate-800 border-slate-600 text-amber-500 focus:ring-0">
+                                <span>Fasori e^(±iθ) sul Piano</span>
+                            </label>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-[#0f172a] border border-emerald-500/25 font-mono text-xs space-y-1">
+                            <div class="text-emerald-300 font-bold">cos(θ) = (e^(iθ) + e^(-iθ)) / 2</div>
+                            <div id="euler-cos-calc" class="text-[11px] text-slate-300">cos(53.1°) = 0.6000</div>
+                        </div>
+
+                        <div class="p-2.5 rounded-xl bg-[#0f172a] border border-rose-500/25 font-mono text-xs space-y-1">
+                            <div class="text-rose-300 font-bold">sin(θ) = (e^(iθ) − e^(-iθ)) / (2i)</div>
+                            <div id="euler-sin-calc" class="text-[11px] text-slate-300">sin(53.1°) = 0.8000</div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- ========================================================= -->
+            <!-- CALCOLATRICE ESPRESSIONI COMPLESSE RAPIDA (SEMPRE VISIBILE) -->
+            <!-- ========================================================= -->
+            <div class="p-3.5 bg-[#090f1d] border-t border-[#1e293b] shrink-0 space-y-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-amber-300">Calcolatrice Espressioni Complesse (Punto w)</span>
+                    </div>
+                    <button id="btn-clear-expr" type="button" class="text-[10px] text-slate-400 hover:text-white">Nascondi w</button>
+                </div>
+
+                <div class="flex gap-1.5">
+                    <input type="text" id="complex-expr-input" value="(1 + i)^4"
+                        placeholder="Es. (3+4i)*(1-2i), e^(i*pi/3), sqrt(-16)..."
+                        class="flex-1 bg-[#070b14] border border-[#1e293b] focus:border-amber-400 rounded-xl px-3 py-1.5 font-mono text-xs text-white placeholder-slate-600 focus:outline-none">
+                    <button id="btn-eval-expr" type="button"
+                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow transition shrink-0">
+                        Calcola
+                    </button>
+                </div>
+
+                <!-- Esempi Rapidi Cliccabili -->
+                <div class="flex flex-wrap gap-1">
+                    <button type="button" data-cexpr="(3 + 4i) * (1 - 2i)" class="cexpr-chip px-2 py-0.5 rounded bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-[10px] text-slate-300">(3+4i)(1-2i)</button>
+                    <button type="button" data-cexpr="e^(i*pi/3)" class="cexpr-chip px-2 py-0.5 rounded bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-[10px] text-slate-300">e^(i·π/3)</button>
+                    <button type="button" data-cexpr="(1 + i)^4" class="cexpr-chip px-2 py-0.5 rounded bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-[10px] text-slate-300">(1+i)⁴</button>
+                    <button type="button" data-cexpr="sqrt(-9)" class="cexpr-chip px-2 py-0.5 rounded bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-[10px] text-slate-300">√(-9)</button>
+                    <button type="button" data-cexpr="z1 * z2" class="cexpr-chip px-2 py-0.5 rounded bg-[#070b14] hover:bg-[#1e293b] border border-[#1e293b] font-mono text-[10px] text-sky-300">z1 * z2</button>
+                </div>
+
+                <!-- Output Risultato Espressione w -->
+                <div id="expr-result-box" class="p-2.5 rounded-xl bg-[#070b14] border border-amber-500/30 font-mono text-[11px] space-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-amber-300 font-bold" id="expr-res-alg">w = -4.00 + 0.00i</span>
+                        <span class="text-slate-400" id="expr-res-pol">4.00 ∠ 180.0°</span>
+                    </div>
+                    <div class="text-purple-300" id="expr-res-eul">w = 4.00 · e^(i · π rad)</div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+
+    <script>
+        /**
+         * ComplexLab 360 — Motore Matematico Complesso, Trigonometrico e Grafico
+         * 100% Client-Side, zero librerie esterne, aritmetica complessa completa e Canvas HD.
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            // =========================================================================
+            // 1. LIBRERIA DI ARITMETICA COMPLESSA (C)
+            // =========================================================================
+            const CMath = {
+                create: (re, im = 0) => ({ re, im }),
+                fromPolar: (r, thetaRad) => ({
+                    re: r * Math.cos(thetaRad),
+                    im: r * Math.sin(thetaRad)
+                }),
+                abs: (z) => Math.hypot(z.re, z.im),
+                arg: (z) => Math.atan2(z.im, z.re), // [-pi, pi]
+                conj: (z) => ({ re: z.re, im: -z.im }),
+                neg: (z) => ({ re: -z.re, im: -z.im }),
+                add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
+                sub: (a, b) => ({ re: a.re - b.re, im: a.im - b.im }),
+                mul: (a, b) => ({
+                    re: a.re * b.re - a.im * b.im,
+                    im: a.re * b.im + a.im * b.re
+                }),
+                div: (a, b) => {
+                    const denom = b.re * b.re + b.im * b.im;
+                    if (denom < 1e-14) return { re: NaN, im: NaN };
+                    return {
+                        re: (a.re * b.re + a.im * b.im) / denom,
+                        im: (a.im * b.re - a.re * b.im) / denom
+                    };
+                },
+                inv: (z) => CMath.div({ re: 1, im: 0 }, z),
+                powReal: (z, n) => {
+                    const r = CMath.abs(z);
+                    const th = CMath.arg(z);
+                    if (r === 0 && n === 0) return { re: 1, im: 0 };
+                    if (r === 0) return { re: 0, im: 0 };
+                    const rn = Math.pow(r, n);
+                    return { re: rn * Math.cos(n * th), im: rn * Math.sin(n * th) };
+                },
+                powComplex: (base, exp) => {
+                    // base^exp = e^(exp * ln(base))
+                    const r = CMath.abs(base);
+                    if (r < 1e-14) {
+                        if (Math.abs(exp.re) < 1e-14 && Math.abs(exp.im) < 1e-14) return { re: 1, im: 0 };
+                        return { re: 0, im: 0 };
+                    }
+                    const lnBase = { re: Math.log(r), im: CMath.arg(base) };
+                    const prod = CMath.mul(exp, lnBase);
+                    return CMath.exp(prod);
+                },
+                exp: (z) => {
+                    const er = Math.exp(z.re);
+                    return { re: er * Math.cos(z.im), im: er * Math.sin(z.im) };
+                },
+                ln: (z) => {
+                    const r = CMath.abs(z);
+                    if (r < 1e-14) return { re: NaN, im: NaN };
+                    return { re: Math.log(r), im: CMath.arg(z) };
+                },
+                sqrt: (z) => CMath.powReal(z, 0.5),
+                sin: (z) => {
+                    // sin(a + bi) = sin(a)cosh(b) + i cos(a)sinh(b)
+                    return {
+                        re: Math.sin(z.re) * Math.cosh(z.im),
+                        im: Math.cos(z.re) * Math.sinh(z.im)
+                    };
+                },
+                cos: (z) => {
+                    // cos(a + bi) = cos(a)cosh(b) - i sin(a)sinh(b)
+                    return {
+                        re: Math.cos(z.re) * Math.cosh(z.im),
+                        im: -Math.sin(z.re) * Math.sinh(z.im)
+                    };
+                },
+                tan: (z) => CMath.div(CMath.sin(z), CMath.cos(z))
+            };
+
+            // =========================================================================
+            // 2. FORMATTAZIONE MATEMATICA (ALGEBRICA, TRIGONOMETRICA, FRAZIONI DI π)
+            // =========================================================================
+            function cleanZero(n) {
+                return Math.abs(n) < 1e-9 ? 0 : n;
+            }
+
+            function formatAlg(z, digits = 2) {
+                if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) return 'Indefinito (÷ 0)';
+                const a = cleanZero(z.re);
+                const b = cleanZero(z.im);
+                const sign = b >= 0 ? '+' : '−';
+                return `${a.toFixed(digits)} ${sign} ${Math.abs(b).toFixed(digits)}i`;
+            }
+
+            // Riconosce frazioni esatte di π (denominatori fino a 12)
+            function formatPiFraction(rad) {
+                const ratio = rad / Math.PI;
+                if (Math.abs(ratio) < 1e-4) return '0';
+                for (let den = 1; den <= 12; den++) {
+                    const num = Math.round(ratio * den);
+                    if (Math.abs(ratio - num / den) < 0.004) {
+                        if (num === 0) return '0';
+                        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+                        const sign = num < 0 ? '-' : '';
+                        const absN = Math.abs(num);
+                        const g = gcd(absN, den);
+                        const n = absN / g;
+                        const d = den / g;
+                        const nStr = n === 1 ? '' : String(n);
+                        return d === 1 ? `${sign}${nStr}π` : `${sign}${nStr}π/${d}`;
+                    }
+                }
+                return `${rad.toFixed(2)} rad`;
+            }
+
+            function formatPolarShort(z) {
+                if (!Number.isFinite(z.re) || !Number.isFinite(z.im)) return '—';
+                const r = CMath.abs(z);
+                const deg = CMath.arg(z) * 180 / Math.PI;
+                return `${r.toFixed(2)} ∠ ${cleanZero(deg).toFixed(1)}°`;
+            }
+
+            // =========================================================================
+            // 3. PARSER ESPRESSIONI COMPLESSE LIBERE (ES. (1+i)^4, e^(i*pi/3), sqrt(-9))
+            // =========================================================================
+            function evaluateComplexExpression(raw, scopeVars = {}) {
+                let expr = raw
+                    .replace(/−|–/g, '-')
+                    .replace(/×|·/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/²/g, '^2')
+                    .replace(/³/g, '^3')
+                    .replace(/√\(/g, 'sqrt(')
+                    .replace(/√([0-9a-zA-Zπ]+)/g, 'sqrt($1)');
+
+                const tokens = [];
+                let i = 0;
+                while (i < expr.length) {
+                    const ch = expr[i];
+                    if (/\s/.test(ch)) { i++; continue; }
+                    if (/[0-9.]/.test(ch)) {
+                        let num = '';
+                        while (i < expr.length && /[0-9.]/.test(expr[i])) num += expr[i++];
+                        tokens.push({ type: 'num', val: parseFloat(num) });
+                        continue;
+                    }
+                    if (/[a-zA-Zπ_]/.test(ch)) {
+                        let id = '';
+                        while (i < expr.length && /[a-zA-Z0-9π_]/.test(expr[i])) id += expr[i++];
+                        tokens.push({ type: 'id', val: id });
+                        continue;
+                    }
+                    if ('+-*/^()'.includes(ch)) {
+                        tokens.push({ type: 'op', val: ch });
+                        i++;
+                        continue;
+                    }
+                    throw new Error(`Simbolo non valido: ${ch}`);
+                }
+
+                // Espande identificatori (funzioni, i, pi, e, z1, z2)
+                const funcs = new Set(['sin', 'cos', 'tan', 'sqrt', 'exp', 'ln', 'log', 'abs', 'conj', 're', 'im', 'arg']);
+                const expanded = [];
+                tokens.forEach(tok => {
+                    if (tok.type === 'id') {
+                        const low = tok.val.toLowerCase();
+                        if (funcs.has(low)) expanded.push({ type: 'func', val: low });
+                        else if (low === 'i') expanded.push({ type: 'cplx', val: { re: 0, im: 1 } });
+                        else if (low === 'pi' || low === 'π') expanded.push({ type: 'cplx', val: { re: Math.PI, im: 0 } });
+                        else if (low === 'e') expanded.push({ type: 'cplx', val: { re: Math.E, im: 0 } });
+                        else if (low in scopeVars) expanded.push({ type: 'cplx', val: scopeVars[low] });
+                        else throw new Error(`Identificatore sconosciuto: ${tok.val}`);
+                    } else if (tok.type === 'num') {
+                        expanded.push({ type: 'cplx', val: { re: tok.val, im: 0 } });
+                    } else {
+                        expanded.push(tok);
+                    }
+                });
+
+                // Inserisce moltiplicazione implicita (es. 4i -> 4 * i, (1+i)(2-i) -> (1+i)*(2-i))
+                const finalToks = [];
+                const isValEnd = (t) => t && (t.type === 'cplx' || (t.type === 'op' && t.val === ')'));
+                const isValStart = (t) => t && (t.type === 'cplx' || t.type === 'func' || (t.type === 'op' && t.val === '('));
+                for (let idx = 0; idx < expanded.length; idx++) {
+                    if (idx > 0 && isValEnd(expanded[idx - 1]) && isValStart(expanded[idx])) {
+                        finalToks.push({ type: 'op', val: '*' });
+                    }
+                    finalToks.push(expanded[idx]);
+                }
+
+                let pos = 0;
+                const peek = () => finalToks[pos];
+                const next = () => finalToks[pos++];
+
+                function parseAddSub() {
+                    let left = parseMulDiv();
+                    while (peek() && peek().type === 'op' && (peek().val === '+' || peek().val === '-')) {
+                        const op = next().val;
+                        const right = parseMulDiv();
+                        left = op === '+' ? CMath.add(left, right) : CMath.sub(left, right);
+                    }
+                    return left;
+                }
+
+                function parseMulDiv() {
+                    let left = parsePow();
+                    while (peek() && peek().type === 'op' && (peek().val === '*' || peek().val === '/')) {
+                        const op = next().val;
+                        const right = parsePow();
+                        left = op === '*' ? CMath.mul(left, right) : CMath.div(left, right);
+                    }
+                    return left;
+                }
+
+                function parsePow() {
+                    let base = parseUnary();
+                    if (peek() && peek().type === 'op' && peek().val === '^') {
+                        next();
+                        const exp = parsePow();
+                        return CMath.powComplex(base, exp);
+                    }
+                    return base;
+                }
+
+                function parseUnary() {
+                    if (peek() && peek().type === 'op' && peek().val === '+') { next(); return parseUnary(); }
+                    if (peek() && peek().type === 'op' && peek().val === '-') { next(); return CMath.neg(parseUnary()); }
+                    return parseAtom();
+                }
+
+                function parseAtom() {
+                    const tok = peek();
+                    if (!tok) throw new Error('Espressione incompleta');
+                    if (tok.type === 'cplx') { next(); return tok.val; }
+                    if (tok.type === 'func') {
+                        const fn = next().val;
+                        if (!peek() || peek().val !== '(') throw new Error(`Parentesi mancante dopo ${fn}`);
+                        next();
+                        const arg = parseAddSub();
+                        if (!peek() || peek().val !== ')') throw new Error('Parentesi chiusa mancante');
+                        next();
+                        if (fn === 'sin') return CMath.sin(arg);
+                        if (fn === 'cos') return CMath.cos(arg);
+                        if (fn === 'tan') return CMath.tan(arg);
+                        if (fn === 'sqrt') return CMath.sqrt(arg);
+                        if (fn === 'exp') return CMath.exp(arg);
+                        if (fn === 'ln' || fn === 'log') return CMath.ln(arg);
+                        if (fn === 'abs') return { re: CMath.abs(arg), im: 0 };
+                        if (fn === 'conj') return CMath.conj(arg);
+                        if (fn === 're') return { re: arg.re, im: 0 };
+                        if (fn === 'im') return { re: arg.im, im: 0 };
+                        if (fn === 'arg') return { re: CMath.arg(arg), im: 0 };
+                    }
+                    if (tok.type === 'op' && tok.val === '(') {
+                        next();
+                        const inner = parseAddSub();
+                        if (!peek() || peek().val !== ')') throw new Error('Parentesi chiusa mancante');
+                        next();
+                        return inner;
+                    }
+                    throw new Error(`Token inatteso: ${tok.val}`);
+                }
+
+                const res = parseAddSub();
+                if (pos < finalToks.length) throw new Error('Sintassi non valida');
+                return res;
+            }
+
+            // =========================================================================
+            // 4. STATO GLOBALE DELL'APPLICAZIONE
+            // =========================================================================
+            const state = {
+                mode: 'explore', // 'explore' | 'operations' | 'demoivre' | 'trig'
+                z1: { re: 1.5, im: 2.0 },
+                z2: { re: -1.5, im: 1.0 },
+                wExpr: { re: -4.0, im: 0.0 },
+                showW: true,
+                // Piano di Gauss View
+                view: {
+                    centerX: 0,
+                    centerY: 0,
+                    scale: 78 // pixel per unità
+                },
+                snapEnabled: false,
+                overlays: {
+                    conj: false,
+                    neg: false,
+                    inv: false,
+                    ipowers: false
+                },
+                // Modalità 2: Operazioni
+                activeOp: 'add', // 'add' | 'sub' | 'mul' | 'div'
+                // Modalità 3: De Moivre & Radici
+                dmSubMode: 'roots', // 'power' | 'roots'
+                dmN: 4,
+                selectedRootK: 0,
+                // Modalità 4: Trigonometria & Animazione
+                animatingTheta: false,
+                showPhasors: true,
+                // Interazione Mouse / Touch sul Piano di Gauss
+                draggingTarget: null, // 'z1' | 'z2' | 'pan'
+                hoveredTarget: null,
+                panStartScreen: { x: 0, y: 0 },
+                panStartCenter: { x: 0, y: 0 }
+            };
+
+            // =========================================================================
+            // 5. RENDERING PIANO DI GAUSS AD ALTA RISOLUZIONE (CANVAS 2D)
+            // =========================================================================
+            const canvas = document.getElementById('gauss-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                const parent = canvas.parentElement;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.floor(parent.clientWidth * dpr);
+                canvas.height = Math.floor(parent.clientHeight * dpr);
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                drawGaussPlane();
+            }
+
+            const toScreenX = (re) => canvas.clientWidth / 2 + (re - state.view.centerX) * state.view.scale;
+            const toScreenY = (im) => canvas.clientHeight / 2 - (im - state.view.centerY) * state.view.scale;
+            const toMathRe = (sx) => state.view.centerX + (sx - canvas.clientWidth / 2) / state.view.scale;
+            const toMathIm = (sy) => state.view.centerY - (sy - canvas.clientHeight / 2) / state.view.scale;
+
+            // Disegna freccia vettoriale elegante dal punto (x1, y1) a (x2, y2) in coordinate matematiche
+            function drawComplexVector(zFrom, zTo, color, label = '', options = {}) {
+                const x1 = toScreenX(zFrom.re);
+                const y1 = toScreenY(zFrom.im);
+                const x2 = toScreenX(zTo.re);
+                const y2 = toScreenY(zTo.im);
+
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = options.lineWidth || 2.6;
+                if (options.dashed) ctx.setLineDash([6, 5]);
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Punta della freccia
+                if (len > 10) {
+                    const angle = Math.atan2(dy, dx);
+                    const headLen = options.headLen || 11;
+                    ctx.beginPath();
+                    ctx.moveTo(x2, y2);
+                    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 7), y2 - headLen * Math.sin(angle - Math.PI / 7));
+                    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 7), y2 - headLen * Math.sin(angle + Math.PI / 7));
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Pallino terminale trascinabile o evidenziato
+                if (options.draggable || options.dot) {
+                    const rad = options.hovered ? 7.5 : 5.5;
+                    ctx.beginPath();
+                    ctx.arc(x2, y2, rad, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#070b14';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    if (options.draggable) {
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.arc(x2, y2, rad + 4, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+
+                // Etichetta del vettore
+                if (label) {
+                    ctx.font = '700 12px "JetBrains Mono", monospace';
+                    const offsetX = dx >= 0 ? 12 : -12;
+                    const offsetY = dy <= 0 ? -12 : 18;
+                    ctx.textAlign = dx >= 0 ? 'left' : 'right';
+
+                    const metrics = ctx.measureText(label);
+                    const pad = 5;
+                    const bx = (dx >= 0 ? x2 + offsetX - pad : x2 + offsetX - metrics.width - pad);
+                    const by = y2 + offsetY - 12;
+
+                    ctx.fillStyle = 'rgba(7, 11, 20, 0.85)';
+                    ctx.beginPath();
+                    ctx.roundRect(bx, by, metrics.width + pad * 2, 18, 6);
+                    ctx.fill();
+
+                    ctx.fillStyle = color;
+                    ctx.fillText(label, x2 + offsetX, y2 + offsetY);
+                }
+
+                ctx.restore();
+            }
+
+            // Disegna l'arco dell'angolo θ da 0 a thetaRad
+            function drawAngleArc(thetaRad, radiusPx, color, labelText = '') {
+                if (Math.abs(thetaRad) < 0.02) return;
+                const ox = toScreenX(0);
+                const oy = toScreenY(0);
+
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = 2;
+
+                // Sul canvas Y punta in basso, quindi gli angoli matematici sono negati
+                const anticlockwise = thetaRad > 0;
+                ctx.beginPath();
+                ctx.arc(ox, oy, radiusPx, 0, -thetaRad, anticlockwise);
+                ctx.stroke();
+
+                // Settore semitrasparente
+                ctx.globalAlpha = 0.12;
+                ctx.beginPath();
+                ctx.moveTo(ox, oy);
+                ctx.arc(ox, oy, radiusPx, 0, -thetaRad, anticlockwise);
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                if (labelText) {
+                    const midAngle = -thetaRad / 2;
+                    const lx = ox + (radiusPx + 18) * Math.cos(midAngle);
+                    const ly = oy + (radiusPx + 18) * Math.sin(midAngle);
+                    ctx.font = '600 11px "JetBrains Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(labelText, lx, ly + 4);
+                }
+                ctx.restore();
+            }
+
+            // Disegna Griglia, Assi Re/Im e Cerchio Unitario
+            function drawBaseGrid() {
+                const w = canvas.clientWidth;
+                const h = canvas.clientHeight;
+                ctx.fillStyle = '#070b14';
+                ctx.fillRect(0, 0, w, h);
+
+                const reMin = toMathRe(0);
+                const reMax = toMathRe(w);
+                const imMin = toMathIm(h);
+                const imMax = toMathIm(0);
+
+                // Calcolo passo griglia adattivo
+                const rawStep = 75 / state.view.scale;
+                const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+                const norm = rawStep / mag;
+                const step = (norm > 5 ? 10 : norm > 2 ? 5 : norm > 1 ? 2 : 1) * mag;
+                const subStep = step / 2;
+
+                // Griglia secondaria
+                ctx.strokeStyle = 'rgba(30, 41, 59, 0.35)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let x = Math.floor(reMin / subStep) * subStep; x <= reMax; x += subStep) {
+                    const sx = toScreenX(x);
+                    ctx.moveTo(sx, 0); ctx.lineTo(sx, h);
+                }
+                for (let y = Math.floor(imMin / subStep) * subStep; y <= imMax; y += subStep) {
+                    const sy = toScreenY(y);
+                    ctx.moveTo(0, sy); ctx.lineTo(w, sy);
+                }
+                ctx.stroke();
+
+                // Griglia primaria
+                ctx.strokeStyle = 'rgba(51, 65, 85, 0.55)';
+                ctx.beginPath();
+                for (let x = Math.floor(reMin / step) * step; x <= reMax; x += step) {
+                    const sx = toScreenX(x);
+                    ctx.moveTo(sx, 0); ctx.lineTo(sx, h);
+                }
+                for (let y = Math.floor(imMin / step) * step; y <= imMax; y += step) {
+                    const sy = toScreenY(y);
+                    ctx.moveTo(0, sy); ctx.lineTo(w, sy);
+                }
+                ctx.stroke();
+
+                const ox = toScreenX(0);
+                const oy = toScreenY(0);
+
+                // Cerchio Goniometrico Unitario (r = 1) evidenziato
+                const unitRadiusPx = state.view.scale;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(168, 85, 247, 0.48)';
+                ctx.lineWidth = 1.6;
+                ctx.setLineDash([5, 4]);
+                ctx.beginPath();
+                ctx.arc(ox, oy, unitRadiusPx, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+
+                // Assi Re(z) e Im(z)
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 1.6;
+                ctx.beginPath();
+                if (oy >= 0 && oy <= h) { ctx.moveTo(0, oy); ctx.lineTo(w, oy); }
+                if (ox >= 0 && ox <= w) { ctx.moveTo(ox, 0); ctx.lineTo(ox, h); }
+                ctx.stroke();
+
+                // Etichette Assi Re(z) e Im(z)
+                ctx.font = '700 12px "Inter", sans-serif';
+                ctx.fillStyle = '#94a3b8';
+                if (oy >= 15 && oy <= h - 10) {
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Re(z)', w - 12, oy - 8);
+                }
+                if (ox >= 10 && ox <= w - 45) {
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Im(z)', ox + 8, 18);
+                }
+
+                // Tacche numeriche
+                ctx.font = '500 10px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#64748b';
+                const dec = Math.max(0, -Math.floor(Math.log10(step)));
+                const clampedY = Math.min(Math.max(oy + 14, 14), h - 6);
+                ctx.textAlign = 'center';
+                for (let x = Math.floor(reMin / step) * step; x <= reMax; x += step) {
+                    if (Math.abs(x) < step * 1e-4) continue;
+                    const sx = toScreenX(x);
+                    if (sx < 24 || sx > w - 35) continue;
+                    ctx.fillText(x.toFixed(dec), sx, clampedY);
+                }
+
+                const clampedX = Math.min(Math.max(ox - 6, 36), w - 8);
+                ctx.textAlign = ox < 42 ? 'left' : 'right';
+                const offX = ox < 42 ? 6 : clampedX;
+                for (let y = Math.floor(imMin / step) * step; y <= imMax; y += step) {
+                    if (Math.abs(y) < step * 1e-4) continue;
+                    const sy = toScreenY(y);
+                    if (sy < 24 || sy > h - 14) continue;
+                    ctx.fillText(`${y.toFixed(dec)}i`, offX, sy + 3);
+                }
+
+                // Punti cardinali sul cerchio unitario (1, i, -1, -i)
+                const cardinals = [
+                    { re: 1, im: 0, lbl: '1' },
+                    { re: 0, im: 1, lbl: 'i' },
+                    { re: -1, im: 0, lbl: '-1' },
+                    { re: 0, im: -1, lbl: '-i' }
+                ];
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.85)';
+                ctx.font = '600 10px "JetBrains Mono", monospace';
+                cardinals.forEach(c => {
+                    const cx = toScreenX(c.re);
+                    const cy = toScreenY(c.im);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Disegna Overlay Geometrici Opzionali (Coniugato, Opposto, Reciproco, Potenze di i)
+            function drawGeometricOverlays() {
+                const z = state.z1;
+                if (state.overlays.conj) {
+                    const zc = CMath.conj(z);
+                    drawComplexVector({ re: 0, im: 0 }, zc, '#f472b6', `z̄ (${formatAlg(zc, 1)})`, { dashed: true, dot: true, lineWidth: 2 });
+                }
+                if (state.overlays.neg) {
+                    const zn = CMath.neg(z);
+                    drawComplexVector({ re: 0, im: 0 }, zn, '#fb7185', `-z (${formatAlg(zn, 1)})`, { dashed: true, dot: true, lineWidth: 2 });
+                }
+                if (state.overlays.inv) {
+                    const zi = CMath.inv(z);
+                    if (Number.isFinite(zi.re)) {
+                        drawComplexVector({ re: 0, im: 0 }, zi, '#22d3ee', `1/z (${formatAlg(zi, 2)})`, { dashed: true, dot: true, lineWidth: 2 });
+                    }
+                }
+                if (state.overlays.ipowers) {
+                    const powers = [
+                        { z: { re: 1, im: 0 }, lbl: 'i⁰ = 1' },
+                        { z: { re: 0, im: 1 }, lbl: 'i¹ = i' },
+                        { z: { re: -1, im: 0 }, lbl: 'i² = -1' },
+                        { z: { re: 0, im: -1 }, lbl: 'i³ = -i' }
+                    ];
+                    powers.forEach(p => {
+                        drawComplexVector({ re: 0, im: 0 }, p.z, '#f59e0b', p.lbl, { lineWidth: 1.8, dot: true });
+                    });
+                }
+            }
+
+            // Disegna Proiezioni Ortogonali di z1 sugli assi Re e Im
+            function drawProjectionsForZ1() {
+                const z = state.z1;
+                const sx = toScreenX(z.re);
+                const sy = toScreenY(z.im);
+                const ox = toScreenX(0);
+                const oy = toScreenY(0);
+
+                ctx.save();
+                ctx.setLineDash([4, 4]);
+                ctx.lineWidth = 1.4;
+
+                // Proiezione verticale sull'asse Re(z)
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.7)';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx, oy);
+                ctx.stroke();
+
+                // Proiezione orizzontale sull'asse Im(z)
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(ox, sy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Cerchio polare concentrico di raggio r = |z1|
+                const r = CMath.abs(z);
+                if (r > 0.05) {
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.arc(ox, oy, r * state.view.scale, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                // Etichette proiezioni r·cos(θ) e r·sin(θ)
+                if (Math.abs(z.re) > 0.25) {
+                    ctx.font = '600 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = '#34d399';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`r·cosθ = ${z.re.toFixed(2)}`, sx, oy + (z.im >= 0 ? 15 : -7));
+                }
+                if (Math.abs(z.im) > 0.25) {
+                    ctx.font = '600 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = '#fb7185';
+                    ctx.textAlign = z.re >= 0 ? 'right' : 'left';
+                    ctx.fillText(`r·sinθ = ${z.im.toFixed(2)}`, ox + (z.re >= 0 ? -8 : 8), sy + 3);
+                }
+                ctx.restore();
+            }
+
+            // Disegno Principale del Piano di Gauss in base alla Modalità Attiva
+            function drawGaussPlane() {
+                drawBaseGrid();
+                drawGeometricOverlays();
+
+                const z1 = state.z1;
+                const z2 = state.z2;
+                const th1 = CMath.arg(z1);
+                const th2 = CMath.arg(z2);
+
+                if (state.mode === 'explore') {
+                    drawProjectionsForZ1();
+                    drawAngleArc(th1, Math.min(46, CMath.abs(z1) * state.view.scale * 0.45), '#a855f7', formatPiFraction(th1));
+                    drawComplexVector({ re: 0, im: 0 }, z1, '#38bdf8', `z₁ = ${formatAlg(z1)}`, {
+                        draggable: true,
+                        hovered: state.hoveredTarget === 'z1' || state.draggingTarget === 'z1',
+                        lineWidth: 3
+                    });
+                }
+                else if (state.mode === 'operations') {
+                    // Disegna archi angolari di z1 e z2
+                    drawAngleArc(th1, 34, '#38bdf8', 'θ₁');
+                    drawAngleArc(th2, 46, '#a855f7', 'θ₂');
+
+                    if (state.activeOp === 'add') {
+                        const res = CMath.add(z1, z2);
+                        // Regola del parallelogramma
+                        drawComplexVector(z1, res, 'rgba(168, 85, 247, 0.55)', '', { dashed: true, lineWidth: 1.6, headLen: 7 });
+                        drawComplexVector(z2, res, 'rgba(56, 189, 248, 0.55)', '', { dashed: true, lineWidth: 1.6, headLen: 7 });
+                        drawComplexVector({ re: 0, im: 0 }, res, '#10b981', `z₁ + z₂ = ${formatAlg(res)}`, { dot: true, lineWidth: 3 });
+                    }
+                    else if (state.activeOp === 'sub') {
+                        const negZ2 = CMath.neg(z2);
+                        const res = CMath.sub(z1, z2);
+                        drawComplexVector({ re: 0, im: 0 }, negZ2, 'rgba(244, 63, 94, 0.55)', '-z₂', { dashed: true, lineWidth: 1.6 });
+                        drawComplexVector(z1, res, 'rgba(244, 63, 94, 0.45)', '', { dashed: true, lineWidth: 1.5, headLen: 7 });
+                        drawComplexVector({ re: 0, im: 0 }, res, '#10b981', `z₁ − z₂ = ${formatAlg(res)}`, { dot: true, lineWidth: 3 });
+                    }
+                    else if (state.activeOp === 'mul') {
+                        const res = CMath.mul(z1, z2);
+                        const thSum = th1 + th2;
+                        drawAngleArc(thSum, 58, '#10b981', 'θ₁+θ₂');
+                        drawComplexVector({ re: 0, im: 0 }, res, '#10b981', `z₁·z₂ = ${formatAlg(res)}`, { dot: true, lineWidth: 3 });
+                    }
+                    else if (state.activeOp === 'div') {
+                        const res = CMath.div(z1, z2);
+                        if (Number.isFinite(res.re)) {
+                            const thDiff = th1 - th2;
+                            drawAngleArc(thDiff, 58, '#10b981', 'θ₁−θ₂');
+                            drawComplexVector({ re: 0, im: 0 }, res, '#10b981', `z₁/z₂ = ${formatAlg(res)}`, { dot: true, lineWidth: 3 });
+                        }
+                    }
+
+                    // Vettori sorgente trascinabili z1 e z2
+                    drawComplexVector({ re: 0, im: 0 }, z1, '#38bdf8', `z₁`, {
+                        draggable: true,
+                        hovered: state.hoveredTarget === 'z1' || state.draggingTarget === 'z1'
+                    });
+                    drawComplexVector({ re: 0, im: 0 }, z2, '#a855f7', `z₂`, {
+                        draggable: true,
+                        hovered: state.hoveredTarget === 'z2' || state.draggingTarget === 'z2'
+                    });
+                }
+                else if (state.mode === 'demoivre') {
+                    const n = state.dmN;
+                    const r = CMath.abs(z1);
+                    const th = CMath.arg(z1);
+
+                    if (state.dmSubMode === 'power') {
+                        // Spirale delle potenze z^1, z^2, ..., z^n
+                        let prev = { re: 1, im: 0 };
+                        for (let k = 1; k <= n; k++) {
+                            const zk = CMath.powReal(z1, k);
+                            const isFinal = k === n;
+                            drawComplexVector({ re: 0, im: 0 }, zk, isFinal ? '#f59e0b' : 'rgba(245, 158, 11, 0.35)', isFinal ? `z₁^${n} = ${formatAlg(zk, 1)}` : `z^${k}`, {
+                                lineWidth: isFinal ? 3 : 1.5,
+                                dot: true,
+                                headLen: isFinal ? 11 : 7
+                            });
+                            if (k > 1) {
+                                ctx.save();
+                                ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+                                ctx.setLineDash([4, 4]);
+                                ctx.beginPath();
+                                ctx.moveTo(toScreenX(prev.re), toScreenY(prev.im));
+                                ctx.lineTo(toScreenX(zk.re), toScreenY(zk.im));
+                                ctx.stroke();
+                                ctx.restore();
+                            }
+                            prev = zk;
+                        }
+                    } else {
+                        // Radici n-esime: Poligono regolare inscritto nella circonferenza di raggio r^(1/n)
+                        const rootR = Math.pow(r, 1 / n);
+                        const ox = toScreenX(0);
+                        const oy = toScreenY(0);
+
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+                        ctx.lineWidth = 1.5;
+                        ctx.setLineDash([5, 4]);
+                        ctx.beginPath();
+                        ctx.arc(ox, oy, rootR * state.view.scale, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+
+                        const roots = [];
+                        for (let k = 0; k < n; k++) {
+                            const angleK = (th + 2 * Math.PI * k) / n;
+                            roots.push(CMath.fromPolar(rootR, angleK));
+                        }
+
+                        // Disegna poligono regolare tra le radici
+                        if (roots.length >= 2) {
+                            ctx.save();
+                            ctx.strokeStyle = 'rgba(16, 185, 129, 0.65)';
+                            ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+                            ctx.lineWidth = 1.8;
+                            ctx.beginPath();
+                            roots.forEach((pt, idx) => {
+                                const px = toScreenX(pt.re);
+                                const py = toScreenY(pt.im);
+                                if (idx === 0) ctx.moveTo(px, py);
+                                else ctx.lineTo(px, py);
+                            });
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+
+                        // Disegna vettori delle singole radici w_k
+                        roots.forEach((wk, k) => {
+                            const isSel = k === state.selectedRootK;
+                            drawComplexVector({ re: 0, im: 0 }, wk, isSel ? '#10b981' : '#f59e0b', `w_${k}`, {
+                                lineWidth: isSel ? 3 : 1.8,
+                                dot: true,
+                                hovered: isSel
+                            });
+                        });
+                    }
+
+                    // Vettore generatore z1 sempre trascinabile
+                    drawComplexVector({ re: 0, im: 0 }, z1, '#38bdf8', 'z₁', {
+                        draggable: true,
+                        hovered: state.hoveredTarget === 'z1' || state.draggingTarget === 'z1'
+                    });
+                }
+                else if (state.mode === 'trig') {
+                    // Mostra fasore unitario e^(iθ) e opzionalmente i due fasori controrotanti di Eulero
+                    const unitZ = CMath.fromPolar(1, th1);
+                    drawProjectionsForZ1();
+                    drawAngleArc(th1, 42, '#a855f7', formatPiFraction(th1));
+
+                    if (state.showPhasors) {
+                        const ePlus = CMath.fromPolar(0.5, th1);
+                        const eMinus = CMath.fromPolar(0.5, -th1);
+                        const cosPt = { re: Math.cos(th1), im: 0 };
+                        drawComplexVector({ re: 0, im: 0 }, ePlus, '#f59e0b', '½e^(iθ)', { lineWidth: 2, dot: true });
+                        drawComplexVector(ePlus, cosPt, '#fb7185', '½e^(-iθ)', { dashed: true, lineWidth: 2, dot: true });
+                    }
+
+                    drawComplexVector({ re: 0, im: 0 }, z1, '#38bdf8', `z₁`, {
+                        draggable: true,
+                        hovered: state.hoveredTarget === 'z1' || state.draggingTarget === 'z1'
+                    });
+                }
+
+                // Proiezione eventuale risultato w dalla Calcolatrice Espressioni Rapida
+                if (state.showW && state.wExpr && Number.isFinite(state.wExpr.re) && Number.isFinite(state.wExpr.im)) {
+                    drawComplexVector({ re: 0, im: 0 }, state.wExpr, '#f59e0b', `w = ${formatAlg(state.wExpr, 2)}`, {
+                        dashed: true,
+                        dot: true,
+                        lineWidth: 2.2
+                    });
+                }
+            }
+
+            // =========================================================================
+            // 6. CANVAS ONDE TRIGONOMETRICHE SINCRONIZZATE (TAB 4)
+            // =========================================================================
+            const wavesCanvas = document.getElementById('trig-waves-canvas');
+            const wCtx = wavesCanvas.getContext('2d');
+
+            function drawTrigWaves() {
+                if (state.mode !== 'trig') return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                const w = wavesCanvas.clientWidth || 380;
+                const h = wavesCanvas.clientHeight || 176;
+                wavesCanvas.width = Math.floor(w * dpr);
+                wavesCanvas.height = Math.floor(h * dpr);
+                wCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                wCtx.fillStyle = '#050811';
+                wCtx.fillRect(0, 0, w, h);
+
+                const midY = h / 2;
+                const amp = h * 0.36;
+                const th = CMath.arg(state.z1);
+
+                // Asse centrale
+                wCtx.strokeStyle = '#1e293b';
+                wCtx.lineWidth = 1;
+                wCtx.beginPath();
+                wCtx.moveTo(0, midY);
+                wCtx.lineTo(w, midY);
+                wCtx.stroke();
+
+                // Traccia onde cos(x) e sin(x) su [0, 2π]
+                const padX = 16;
+                const plotW = w - padX * 2;
+
+                // Onda cos(x) in Smeraldo
+                wCtx.strokeStyle = '#10b981';
+                wCtx.lineWidth = 2;
+                wCtx.beginPath();
+                for (let px = 0; px <= plotW; px += 2) {
+                    const ang = (px / plotW) * Math.PI * 2;
+                    const y = midY - Math.cos(ang) * amp;
+                    if (px === 0) wCtx.moveTo(padX + px, y);
+                    else wCtx.lineTo(padX + px, y);
+                }
+                wCtx.stroke();
+
+                // Onda sin(x) in Rosa
+                wCtx.strokeStyle = '#f43f5e';
+                wCtx.lineWidth = 2;
+                wCtx.beginPath();
+                for (let px = 0; px <= plotW; px += 2) {
+                    const ang = (px / plotW) * Math.PI * 2;
+                    const y = midY - Math.sin(ang) * amp;
+                    if (px === 0) wCtx.moveTo(padX + px, y);
+                    else wCtx.lineTo(padX + px, y);
+                }
+                wCtx.stroke();
+
+                // Cursore verticale all'angolo corrente θ ∈ [0, 2π)
+                const normTh = ((th % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                const curX = padX + (normTh / (Math.PI * 2)) * plotW;
+
+                wCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+                wCtx.setLineDash([4, 4]);
+                wCtx.beginPath();
+                wCtx.moveTo(curX, 6);
+                wCtx.lineTo(curX, h - 6);
+                wCtx.stroke();
+                wCtx.setLineDash([]);
+
+                // Punti evidenziati su cos(θ) e sin(θ)
+                const cosY = midY - Math.cos(normTh) * amp;
+                const sinY = midY - Math.sin(normTh) * amp;
+
+                wCtx.fillStyle = '#10b981';
+                wCtx.beginPath(); wCtx.arc(curX, cosY, 4.5, 0, Math.PI * 2); wCtx.fill();
+
+                wCtx.fillStyle = '#f43f5e';
+                wCtx.beginPath(); wCtx.arc(curX, sinY, 4.5, 0, Math.PI * 2); wCtx.fill();
+            }
+
+            // =========================================================================
+            // 7. AGGIORNAMENTO UI & FORMULE DINAMICHE
+            // =========================================================================
+            function syncAllUI() {
+                const z1 = state.z1;
+                const z2 = state.z2;
+                const r1 = CMath.abs(z1);
+                const th1 = CMath.arg(z1);
+                const deg1 = th1 * 180 / Math.PI;
+
+                // Aggiorna Tab 1 (Esplora & Forme) senza sovrascrivere un input attualmente focalizzato
+                const activeEl = document.activeElement;
+                if (activeEl?.id !== 'inp-z1-a') document.getElementById('inp-z1-a').value = cleanZero(z1.re).toFixed(2);
+                if (activeEl?.id !== 'inp-z1-b') document.getElementById('inp-z1-b').value = cleanZero(z1.im).toFixed(2);
+                document.getElementById('sld-z1-a').value = Math.max(-6, Math.min(6, z1.re));
+                document.getElementById('sld-z1-b').value = Math.max(-6, Math.min(6, z1.im));
+
+                if (activeEl?.id !== 'inp-z1-r') document.getElementById('inp-z1-r').value = r1.toFixed(2);
+                if (activeEl?.id !== 'inp-z1-deg') document.getElementById('inp-z1-deg').value = cleanZero(deg1).toFixed(1);
+                document.getElementById('sld-z1-r').value = Math.min(8, r1);
+                document.getElementById('sld-z1-deg').value = deg1;
+
+                const piStr = formatPiFraction(th1);
+                document.getElementById('badge-pi-fraction').textContent = `θ = ${piStr}`;
+
+                // 3 Rappresentazioni di z1
+                document.getElementById('repr-algebraic').textContent = `z = ${formatAlg(z1)}`;
+                document.getElementById('repr-trig').textContent = `z = ${r1.toFixed(2)} · (cos(${cleanZero(deg1).toFixed(1)}°) + i·sin(${cleanZero(deg1).toFixed(1)}°))`;
+                document.getElementById('repr-euler').textContent = `z = ${r1.toFixed(2)} · e^(i · ${piStr})`;
+
+                // Aggiorna Tab 2 (Operazioni & Calcolo)
+                if (activeEl?.id !== 'op-z1-a') document.getElementById('op-z1-a').value = cleanZero(z1.re).toFixed(2);
+                if (activeEl?.id !== 'op-z1-b') document.getElementById('op-z1-b').value = cleanZero(z1.im).toFixed(2);
+                if (activeEl?.id !== 'op-z2-a') document.getElementById('op-z2-a').value = cleanZero(z2.re).toFixed(2);
+                if (activeEl?.id !== 'op-z2-b') document.getElementById('op-z2-b').value = cleanZero(z2.im).toFixed(2);
+
+                updateOperationsPanel();
+                updateDeMoivrePanel();
+                updateTrigPanel();
+                drawGaussPlane();
+                drawTrigWaves();
+            }
+
+            // Aggiorna Calcolo Passo-Passo Tab 2
+            function updateOperationsPanel() {
+                const z1 = state.z1;
+                const z2 = state.z2;
+                const r1 = CMath.abs(z1), th1 = CMath.arg(z1) * 180 / Math.PI;
+                const r2 = CMath.abs(z2), th2 = CMath.arg(z2) * 180 / Math.PI;
+
+                const sum = CMath.add(z1, z2);
+                const diff = CMath.sub(z1, z2);
+                const prod = CMath.mul(z1, z2);
+                const quot = CMath.div(z1, z2);
+
+                const stepBox = document.getElementById('op-step-by-step');
+                if (state.activeOp === 'add') {
+                    stepBox.innerHTML = `
+                        <div class="font-bold text-emerald-300">Addizione (Regola del Parallelogramma)</div>
+                        <div class="font-mono text-[11px] text-slate-300 space-y-1">
+                            <div>z₁ + z₂ = (a + c) + (b + d)i</div>
+                            <div>= (${z1.re.toFixed(2)} + ${z2.re.toFixed(2)}) + (${z1.im.toFixed(2)} + ${z2.im.toFixed(2)})i</div>
+                            <div class="text-emerald-300 font-bold text-xs pt-1">= ${formatAlg(sum)}  <span class="text-slate-400 font-normal">(${formatPolarShort(sum)})</span></div>
+                        </div>
+                    `;
+                } else if (state.activeOp === 'sub') {
+                    stepBox.innerHTML = `
+                        <div class="font-bold text-emerald-300">Sottrazione Vettoriale (z₁ + (-z₂))</div>
+                        <div class="font-mono text-[11px] text-slate-300 space-y-1">
+                            <div>z₁ − z₂ = (a − c) + (b − d)i</div>
+                            <div>= (${z1.re.toFixed(2)} − ${z2.re.toFixed(2)}) + (${z1.im.toFixed(2)} − ${z2.im.toFixed(2)})i</div>
+                            <div class="text-emerald-300 font-bold text-xs pt-1">= ${formatAlg(diff)}  <span class="text-slate-400 font-normal">(${formatPolarShort(diff)})</span></div>
+                        </div>
+                    `;
+                } else if (state.activeOp === 'mul') {
+                    stepBox.innerHTML = `
+                        <div class="font-bold text-emerald-300">Moltiplicazione (Rotazione + Dilatazione)</div>
+                        <div class="font-mono text-[11px] text-slate-300 space-y-1">
+                            <div>Algebrica: (ac − bd) + (ad + bc)i</div>
+                            <div>Polare: (r₁·r₂) ∠ (θ₁ + θ₂) = (${r1.toFixed(2)}·${r2.toFixed(2)}) ∠ (${th1.toFixed(1)}° + ${th2.toFixed(1)}°)</div>
+                            <div class="text-emerald-300 font-bold text-xs pt-1">= ${formatAlg(prod)}  <span class="text-slate-400 font-normal">(${formatPolarShort(prod)})</span></div>
+                        </div>
+                    `;
+                } else if (state.activeOp === 'div') {
+                    const denom = z2.re * z2.re + z2.im * z2.im;
+                    stepBox.innerHTML = `
+                        <div class="font-bold text-emerald-300">Divisione (Razionalizzazione con z̄₂)</div>
+                        <div class="font-mono text-[11px] text-slate-300 space-y-1">
+                            <div>z₁ / z₂ = (z₁ · z̄₂) / |z₂|²   con |z₂|² = ${denom.toFixed(2)}</div>
+                            <div>Polare: (r₁/r₂) ∠ (θ₁ − θ₂) = (${r1.toFixed(2)}/${r2.toFixed(2)}) ∠ (${th1.toFixed(1)}° − ${th2.toFixed(1)}°)</div>
+                            <div class="text-emerald-300 font-bold text-xs pt-1">= ${formatAlg(quot)}  <span class="text-slate-400 font-normal">(${formatPolarShort(quot)})</span></div>
+                        </div>
+                    `;
+                }
+
+                // Tabella riassuntiva simultanea
+                const rows = [
+                    { label: 'z₁ + z₂', val: sum },
+                    { label: 'z₁ − z₂', val: diff },
+                    { label: 'z₁ · z₂', val: prod },
+                    { label: 'z₁ / z₂', val: quot }
+                ];
+                document.getElementById('op-summary-table').innerHTML = rows.map(r => `
+                    <div class="px-3 py-2 flex items-center justify-between gap-2">
+                        <span class="text-slate-400 font-bold">${r.label}</span>
+                        <span class="text-white">${formatAlg(r.val)}</span>
+                        <span class="text-sky-300">${formatPolarShort(r.val)}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Aggiorna Pannello De Moivre & Radici (Tab 3)
+            function updateDeMoivrePanel() {
+                const n = state.dmN;
+                const r = CMath.abs(state.z1);
+                const th = CMath.arg(state.z1);
+                const deg = th * 180 / Math.PI;
+
+                document.getElementById('dm-n-badge').textContent = `n = ${n}`;
+                const formulaBox = document.getElementById('dm-formula-box');
+                const itemsList = document.getElementById('dm-items-list');
+                const listTitle = document.getElementById('dm-list-title');
+
+                if (state.dmSubMode === 'power') {
+                    const zn = CMath.powReal(state.z1, n);
+                    formulaBox.innerHTML = `
+                        <div class="font-bold text-amber-300">Formula di De Moivre per le Potenze</div>
+                        <div class="font-mono text-[11px] text-slate-300">zⁿ = rⁿ · (cos(nθ) + i·sin(nθ))</div>
+                        <div class="font-mono text-xs text-white pt-1">
+                            z₁^${n} = ${Math.pow(r, n).toFixed(2)} ∠ ${(n * deg).toFixed(1)}° = <strong class="text-amber-300">${formatAlg(zn)}</strong>
+                        </div>
+                    `;
+                    listTitle.textContent = `Progressione Potenze z₁¹, z₁², ..., z₁^${n}:`;
+                    let html = '';
+                    for (let k = 1; k <= n; k++) {
+                        const zk = CMath.powReal(state.z1, k);
+                        html += `
+                            <div class="px-3 py-1.5 rounded-xl bg-[#070b14] border border-[#1e293b] flex items-center justify-between font-mono text-[11px]">
+                                <span class="text-amber-300 font-bold">z₁^${k}</span>
+                                <span class="text-white">${formatAlg(zk)}</span>
+                                <span class="text-slate-400">${formatPolarShort(zk)}</span>
+                            </div>
+                        `;
+                    }
+                    itemsList.innerHTML = html;
+                } else {
+                    const rootR = Math.pow(r, 1 / n);
+                    formulaBox.innerHTML = `
+                        <div class="font-bold text-emerald-300">Formula delle Radici n-esime Complesse</div>
+                        <div class="font-mono text-[11px] text-slate-300">wₖ = ⁿ√r · [cos((θ + 2kπ)/n) + i·sin((θ + 2kπ)/n)]</div>
+                        <div class="font-mono text-[11px] text-slate-400 pt-0.5">Raggio poligono: ⁿ√${r.toFixed(2)} = <strong class="text-white">${rootR.toFixed(3)}</strong> • Passo angolare: <strong class="text-white">${(360 / n).toFixed(1)}°</strong></div>
+                    `;
+                    listTitle.textContent = `Le ${n} Radici Distinte (clicca per evidenziare):`;
+                    if (state.selectedRootK >= n) state.selectedRootK = 0;
+
+                    let html = '';
+                    for (let k = 0; k < n; k++) {
+                        const angleK = (th + 2 * Math.PI * k) / n;
+                        const degK = angleK * 180 / Math.PI;
+                        const wk = CMath.fromPolar(rootR, angleK);
+                        const isSel = k === state.selectedRootK;
+                        html += `
+                            <button type="button" data-rootk="${k}" class="root-item-btn w-full px-3 py-2 rounded-xl ${isSel ? 'bg-emerald-500/20 border-emerald-400/50' : 'bg-[#070b14] border-[#1e293b] hover:border-slate-600'} border flex items-center justify-between font-mono text-[11px] transition">
+                                <span class="${isSel ? 'text-emerald-300' : 'text-amber-300'} font-bold">w_${k} (k=${k})</span>
+                                <span class="text-white">${formatAlg(wk)}</span>
+                                <span class="text-slate-400">${rootR.toFixed(2)} ∠ ${degK.toFixed(1)}°</span>
+                            </button>
+                        `;
+                    }
+                    itemsList.innerHTML = html;
+                    itemsList.querySelectorAll('.root-item-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            state.selectedRootK = parseInt(btn.dataset.rootk, 10);
+                            updateDeMoivrePanel();
+                            drawGaussPlane();
+                        });
+                    });
+                }
+            }
+
+            // Aggiorna Pannello Trigonometria & Eulero (Tab 4)
+            function updateTrigPanel() {
+                const th = CMath.arg(state.z1);
+                const deg = th * 180 / Math.PI;
+                document.getElementById('euler-cos-calc').textContent = `cos(${deg.toFixed(1)}°) = ${Math.cos(th).toFixed(4)}`;
+                document.getElementById('euler-sin-calc').textContent = `sin(${deg.toFixed(1)}°) = ${Math.sin(th).toFixed(4)}`;
+            }
+
+            // =========================================================================
+            // 8. INTERAZIONE MOUSE & TOUCH SUL PIANO DI GAUSS
+            // =========================================================================
+            function applySnap(re, im) {
+                if (!state.snapEnabled) return { re, im };
+                // Snap a griglia 0.5 oppure agli angoli notevoli (multipli di 15° = π/12)
+                const r = Math.hypot(re, im);
+                const th = Math.atan2(im, re);
+                const step15 = Math.PI / 12;
+                const nearestAngle = Math.round(th / step15) * step15;
+                if (Math.abs(th - nearestAngle) < 0.06 && r > 0.3) {
+                    const snappedR = Math.round(r * 2) / 2;
+                    return CMath.fromPolar(snappedR, nearestAngle);
+                }
+                return {
+                    re: Math.round(re * 2) / 2,
+                    im: Math.round(im * 2) / 2
+                };
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+
+                const d1 = Math.hypot(sx - toScreenX(state.z1.re), sy - toScreenY(state.z1.im));
+                const d2 = state.mode === 'operations'
+                    ? Math.hypot(sx - toScreenX(state.z2.re), sy - toScreenY(state.z2.im))
+                    : Infinity;
+
+                if (d1 < 18 && d1 <= d2) {
+                    state.draggingTarget = 'z1';
+                    canvas.style.cursor = 'grabbing';
+                } else if (d2 < 18) {
+                    state.draggingTarget = 'z2';
+                    canvas.style.cursor = 'grabbing';
+                } else {
+                    state.draggingTarget = 'pan';
+                    state.panStartScreen = { x: e.clientX, y: e.clientY };
+                    state.panStartCenter = { x: state.view.centerX, y: state.view.centerY };
+                    canvas.style.cursor = 'grabbing';
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+                const mRe = toMathRe(sx);
+                const mIm = toMathIm(sy);
+
+                document.getElementById('hud-cursor-complex').textContent = formatAlg({ re: mRe, im: mIm });
+
+                if (state.draggingTarget === 'z1') {
+                    state.z1 = applySnap(mRe, mIm);
+                    syncAllUI();
+                    return;
+                }
+                if (state.draggingTarget === 'z2') {
+                    state.z2 = applySnap(mRe, mIm);
+                    syncAllUI();
+                    return;
+                }
+                if (state.draggingTarget === 'pan') {
+                    const dx = e.clientX - state.panStartScreen.x;
+                    const dy = e.clientY - state.panStartScreen.y;
+                    state.view.centerX = state.panStartCenter.x - dx / state.view.scale;
+                    state.view.centerY = state.panStartCenter.y + dy / state.view.scale;
+                    drawGaussPlane();
+                    return;
+                }
+
+                // Hover sui vettori trascinabili
+                if (sx >= 0 && sx <= canvas.clientWidth && sy >= 0 && sy <= canvas.clientHeight) {
+                    const d1 = Math.hypot(sx - toScreenX(state.z1.re), sy - toScreenY(state.z1.im));
+                    const d2 = state.mode === 'operations'
+                        ? Math.hypot(sx - toScreenX(state.z2.re), sy - toScreenY(state.z2.im))
+                        : Infinity;
+                    const newHover = d1 < 18 ? 'z1' : (d2 < 18 ? 'z2' : null);
+                    if (newHover !== state.hoveredTarget) {
+                        state.hoveredTarget = newHover;
+                        canvas.style.cursor = newHover ? 'grab' : 'crosshair';
+                        drawGaussPlane();
+                    }
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (state.draggingTarget) {
+                    state.draggingTarget = null;
+                    canvas.style.cursor = state.hoveredTarget ? 'grab' : 'crosshair';
+                    drawGaussPlane();
+                }
+            });
+
+            // Zoom con rotella mouse centrato sul cursore
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.clientX - rect.left;
+                const sy = e.clientY - rect.top;
+                const reBefore = toMathRe(sx);
+                const imBefore = toMathIm(sy);
+
+                const factor = e.deltaY < 0 ? 1.14 : 1 / 1.14;
+                state.view.scale = Math.max(15, Math.min(450, state.view.scale * factor));
+                state.view.centerX = reBefore - (sx - canvas.clientWidth / 2) / state.view.scale;
+                state.view.centerY = imBefore + (sy - canvas.clientHeight / 2) / state.view.scale;
+                drawGaussPlane();
+            }, { passive: false });
+
+            // Supporto Touch per trascinare vettori e spostare il piano
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.touches[0].clientX - rect.left;
+                const sy = e.touches[0].clientY - rect.top;
+                const d1 = Math.hypot(sx - toScreenX(state.z1.re), sy - toScreenY(state.z1.im));
+                const d2 = state.mode === 'operations'
+                    ? Math.hypot(sx - toScreenX(state.z2.re), sy - toScreenY(state.z2.im))
+                    : Infinity;
+                if (d1 < 26) state.draggingTarget = 'z1';
+                else if (d2 < 26) state.draggingTarget = 'z2';
+                else {
+                    state.draggingTarget = 'pan';
+                    state.panStartScreen = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    state.panStartCenter = { x: state.view.centerX, y: state.view.centerY };
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length !== 1 || !state.draggingTarget) return;
+                const rect = canvas.getBoundingClientRect();
+                const sx = e.touches[0].clientX - rect.left;
+                const sy = e.touches[0].clientY - rect.top;
+                if (state.draggingTarget === 'z1') {
+                    state.z1 = applySnap(toMathRe(sx), toMathIm(sy));
+                    syncAllUI();
+                } else if (state.draggingTarget === 'z2') {
+                    state.z2 = applySnap(toMathRe(sx), toMathIm(sy));
+                    syncAllUI();
+                } else if (state.draggingTarget === 'pan') {
+                    const dx = e.touches[0].clientX - state.panStartScreen.x;
+                    const dy = e.touches[0].clientY - state.panStartScreen.y;
+                    state.view.centerX = state.panStartCenter.x - dx / state.view.scale;
+                    state.view.centerY = state.panStartCenter.y + dy / state.view.scale;
+                    drawGaussPlane();
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchend', () => { state.draggingTarget = null; });
+
+            // =========================================================================
+            // 9. EVENT LISTENERS CONTROLLI & INPUT SINCRONIZZATI
+            // =========================================================================
+            // Cambio Modalità (4 Tabs)
+            document.querySelectorAll('.mode-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.mode = btn.dataset.mode;
+                    document.querySelectorAll('.mode-tab-btn').forEach(b => {
+                        b.className = 'mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white border border-transparent whitespace-nowrap transition';
+                    });
+                    btn.className = 'mode-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-400/40 whitespace-nowrap transition';
+
+                    ['explore', 'operations', 'demoivre', 'trig'].forEach(m => {
+                        document.getElementById(`panel-${m}`).classList.toggle('hidden', m !== state.mode);
+                    });
+
+                    // Se si entra in Trigonometria, imposta r = 1 se lontano da 1 per chiarezza didattica
+                    if (state.mode === 'trig') {
+                        const th = CMath.arg(state.z1);
+                        state.z1 = CMath.fromPolar(1, th);
+                        state.animatingTheta = true;
+                        updateAnimButtons();
+                    }
+                    syncAllUI();
+                });
+            });
+
+            // Input & Slider Cartesiani z1
+            function setZ1Cartesian(re, im) {
+                if (Number.isFinite(re)) state.z1.re = re;
+                if (Number.isFinite(im)) state.z1.im = im;
+                syncAllUI();
+            }
+            document.getElementById('inp-z1-a').addEventListener('input', e => setZ1Cartesian(parseFloat(e.target.value), state.z1.im));
+            document.getElementById('sld-z1-a').addEventListener('input', e => setZ1Cartesian(parseFloat(e.target.value), state.z1.im));
+            document.getElementById('inp-z1-b').addEventListener('input', e => setZ1Cartesian(state.z1.re, parseFloat(e.target.value)));
+            document.getElementById('sld-z1-b').addEventListener('input', e => setZ1Cartesian(state.z1.re, parseFloat(e.target.value)));
+
+            // Input & Slider Polari z1
+            function setZ1Polar(r, deg) {
+                const validR = Number.isFinite(r) ? Math.max(0, r) : CMath.abs(state.z1);
+                const validDeg = Number.isFinite(deg) ? deg : (CMath.arg(state.z1) * 180 / Math.PI);
+                state.z1 = CMath.fromPolar(validR, validDeg * Math.PI / 180);
+                syncAllUI();
+            }
+            document.getElementById('inp-z1-r').addEventListener('input', e => setZ1Polar(parseFloat(e.target.value), NaN));
+            document.getElementById('sld-z1-r').addEventListener('input', e => setZ1Polar(parseFloat(e.target.value), NaN));
+            document.getElementById('inp-z1-deg').addEventListener('input', e => setZ1Polar(NaN, parseFloat(e.target.value)));
+            document.getElementById('sld-z1-deg').addEventListener('input', e => setZ1Polar(NaN, parseFloat(e.target.value)));
+
+            // Preset Notevoli z1
+            document.querySelectorAll('.z-preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const p = btn.dataset.zpreset;
+                    if (p === 'i') state.z1 = { re: 0, im: 1 };
+                    else if (p === 'deg30') state.z1 = CMath.fromPolar(2, Math.PI / 6);
+                    else if (p === 'deg45') state.z1 = { re: 1, im: 1 };
+                    else if (p === 'deg60') state.z1 = CMath.fromPolar(2, Math.PI / 3);
+                    else if (p === 'deg120') state.z1 = CMath.fromPolar(1, (2 * Math.PI) / 3);
+                    else if (p === 'euler') state.z1 = { re: -1, im: 0 };
+                    else if (p === 'golden') {
+                        const phi = (1 + Math.sqrt(5)) / 2;
+                        state.z1 = { re: phi, im: 1 / phi };
+                    }
+                    syncAllUI();
+                });
+            });
+
+            // Input Operazioni Tab 2
+            document.getElementById('op-z1-a').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { state.z1.re = v; syncAllUI(); } });
+            document.getElementById('op-z1-b').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { state.z1.im = v; syncAllUI(); } });
+            document.getElementById('op-z2-a').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { state.z2.re = v; syncAllUI(); } });
+            document.getElementById('op-z2-b').addEventListener('input', e => { const v = parseFloat(e.target.value); if (Number.isFinite(v)) { state.z2.im = v; syncAllUI(); } });
+
+            document.querySelectorAll('.op-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.activeOp = btn.dataset.op;
+                    document.querySelectorAll('.op-select-btn').forEach(b => {
+                        b.className = 'op-select-btn py-2 rounded-xl bg-[#070b14] border border-[#1e293b] text-slate-300 hover:text-white font-mono text-xs font-bold transition';
+                    });
+                    btn.className = 'op-select-btn py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 font-mono text-xs font-bold transition';
+                    syncAllUI();
+                });
+            });
+
+            // Controlli De Moivre & Radici Tab 3
+            document.querySelectorAll('.dm-mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.dmSubMode = btn.dataset.dm;
+                    document.querySelectorAll('.dm-mode-btn').forEach(b => {
+                        b.className = 'dm-mode-btn py-1.5 rounded-lg text-slate-400 hover:text-white text-xs font-bold transition';
+                    });
+                    btn.className = 'dm-mode-btn py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-400/40 text-xs font-bold transition';
+                    syncAllUI();
+                });
+            });
+            document.getElementById('sld-dm-n').addEventListener('input', e => {
+                state.dmN = parseInt(e.target.value, 10);
+                syncAllUI();
+            });
+
+            // Overlay Geometrici sul Piano di Gauss
+            document.querySelectorAll('.geo-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const key = btn.dataset.overlay;
+                    state.overlays[key] = !state.overlays[key];
+                    btn.classList.toggle('bg-sky-500/20', state.overlays[key]);
+                    btn.classList.toggle('text-sky-300', state.overlays[key]);
+                    btn.classList.toggle('border-sky-400/40', state.overlays[key]);
+                    btn.classList.toggle('text-slate-400', !state.overlays[key]);
+                    drawGaussPlane();
+                });
+            });
+
+            document.getElementById('chk-snap-grid').addEventListener('change', e => {
+                state.snapEnabled = e.target.checked;
+            });
+            document.getElementById('chk-show-phasors').addEventListener('change', e => {
+                state.showPhasors = e.target.checked;
+                drawGaussPlane();
+            });
+
+            // Controlli Zoom & Sidebar Mobile
+            document.getElementById('btn-zoom-in').addEventListener('click', () => { state.view.scale = Math.min(450, state.view.scale * 1.25); drawGaussPlane(); });
+            document.getElementById('btn-zoom-out').addEventListener('click', () => { state.view.scale = Math.max(15, state.view.scale / 1.25); drawGaussPlane(); });
+            document.getElementById('btn-reset-view').addEventListener('click', () => { state.view.centerX = 0; state.view.centerY = 0; state.view.scale = 78; drawGaussPlane(); });
+            document.getElementById('btn-toggle-right-panel').addEventListener('click', () => {
+                document.getElementById('control-panel').classList.toggle('translate-x-full');
+            });
+
+            // Copia Formule negli Appunti
+            document.querySelectorAll('.copy-repr-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const text = document.getElementById(btn.dataset.copytarget).textContent;
+                    const temp = document.createElement('textarea');
+                    temp.value = text;
+                    temp.style.position = 'fixed';
+                    temp.style.left = '-9999px';
+                    document.body.appendChild(temp);
+                    temp.select();
+                    try { document.execCommand('copy'); } catch (e) {}
+                    document.body.removeChild(temp);
+
+                    const toast = document.getElementById('toast-banner');
+                    document.getElementById('toast-text').textContent = `Copiato: ${text}`;
+                    toast.classList.remove('opacity-0', 'translate-y-2');
+                    toast.classList.add('opacity-100', 'translate-y-0');
+                    setTimeout(() => {
+                        toast.classList.remove('opacity-100', 'translate-y-0');
+                        toast.classList.add('opacity-0', 'translate-y-2');
+                    }, 1800);
+                });
+            });
+
+            // Calcolatrice Espressioni Complesse Rapida
+            function runQuickExpression() {
+                const raw = document.getElementById('complex-expr-input').value.trim();
+                if (!raw) {
+                    state.showW = false;
+                    drawGaussPlane();
+                    return;
+                }
+                try {
+                    const res = evaluateComplexExpression(raw, { z1: state.z1, z2: state.z2 });
+                    state.wExpr = res;
+                    state.showW = true;
+                    const r = CMath.abs(res);
+                    const piStr = formatPiFraction(CMath.arg(res));
+                    document.getElementById('expr-res-alg').textContent = `w = ${formatAlg(res)}`;
+                    document.getElementById('expr-res-alg').className = 'text-amber-300 font-bold';
+                    document.getElementById('expr-res-pol').textContent = formatPolarShort(res);
+                    document.getElementById('expr-res-eul').textContent = `w = ${r.toFixed(2)} · e^(i · ${piStr})`;
+                    drawGaussPlane();
+                } catch (err) {
+                    document.getElementById('expr-res-alg').textContent = `⚠ ${err.message}`;
+                    document.getElementById('expr-res-alg').className = 'text-rose-400 font-bold';
+                    document.getElementById('expr-res-pol').textContent = '';
+                    document.getElementById('expr-res-eul').textContent = '';
+                }
+            }
+
+            document.getElementById('btn-eval-expr').addEventListener('click', runQuickExpression);
+            document.getElementById('complex-expr-input').addEventListener('keydown', e => { if (e.key === 'Enter') runQuickExpression(); });
+            document.getElementById('btn-clear-expr').addEventListener('click', () => {
+                state.showW = false;
+                document.getElementById('complex-expr-input').value = '';
+                document.getElementById('expr-res-alg').textContent = 'w nascosto dal piano';
+                document.getElementById('expr-res-pol').textContent = '';
+                document.getElementById('expr-res-eul').textContent = '';
+                drawGaussPlane();
+            });
+            document.querySelectorAll('.cexpr-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.getElementById('complex-expr-input').value = chip.dataset.cexpr;
+                    runQuickExpression();
+                });
+            });
+
+            // Animazione Rotazione Automatica θ(t)
+            function updateAnimButtons() {
+                document.getElementById('anim-theta-icon').textContent = state.animatingTheta ? '⏸' : '▶';
+                document.getElementById('anim-theta-label').textContent = state.animatingTheta ? 'Pausa' : 'Ruota θ(t)';
+            }
+            document.getElementById('btn-animate-theta').addEventListener('click', () => {
+                state.animatingTheta = !state.animatingTheta;
+                updateAnimButtons();
+            });
+            document.getElementById('btn-trig-anim').addEventListener('click', () => {
+                state.animatingTheta = !state.animatingTheta;
+                updateAnimButtons();
+            });
+
+            let lastTime = performance.now();
+            function tick(now) {
+                requestAnimationFrame(tick);
+                const dt = Math.min(0.05, (now - lastTime) / 1000);
+                lastTime = now;
+
+                if (state.animatingTheta && !state.draggingTarget) {
+                    const r = CMath.abs(state.z1) || 1;
+                    let th = CMath.arg(state.z1) + 0.85 * dt;
+                    if (th > Math.PI) th -= Math.PI * 2;
+                    state.z1 = CMath.fromPolar(r, th);
+                    syncAllUI();
+                }
+            }
+
+            // Inizializzazione
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                drawTrigWaves();
+            });
+            resizeCanvas();
+            runQuickExpression();
+            syncAllUI();
+            requestAnimationFrame(tick);
+        });
+    </script>
+</body>
+</html>
