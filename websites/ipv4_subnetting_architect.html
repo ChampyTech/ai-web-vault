@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPv4 & Subnetting Architect — Console di Ingegneria di Rete</title>
+    <style>
+        /* =====================================================================
+           DESIGN SYSTEM & VARIABILI SEMANTICHE
+           ===================================================================== */
+        :root {
+            --bg-deep: #070b14;
+            --bg-surface: rgba(15, 23, 42, 0.72);
+            --bg-surface-solid: #0f172a;
+            --bg-input: #090e1a;
+            --border-subtle: #1e293b;
+            --border-highlight: #334155;
+
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            /* Accenti Semantici Bit */
+            --net-color: #38bdf8;       /* Blu elettrico / Ciano - Network ID */
+            --net-bg: rgba(56, 189, 248, 0.14);
+            --net-border: rgba(56, 189, 248, 0.4);
+
+            --host-color: #10b981;      /* Smeraldo / Verde neon - Host ID */
+            --host-bg: rgba(16, 185, 129, 0.14);
+            --host-border: rgba(16, 185, 129, 0.4);
+
+            --sub-color: #f59e0b;       /* Ambra / Oro - Bit prestati / Subnetting */
+            --sub-bg: rgba(245, 158, 11, 0.16);
+            --sub-border: rgba(245, 158, 11, 0.45);
+
+            --bcast-color: #a855f7;     /* Viola / Magenta - Broadcast & Speciali */
+            --bcast-bg: rgba(168, 85, 247, 0.15);
+            --bcast-border: rgba(168, 85, 247, 0.4);
+
+            --danger-color: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 15%, rgba(168, 85, 247, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                linear-gradient(rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+        }
+
+        /* =====================================================================
+           LAYOUT & GLASSMORPHISM CONTAINERS
+           ===================================================================== */
+        .app-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .app-container {
+                padding: 2rem;
+                gap: 1.75rem;
+            }
+        }
+
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 18px 40px -15px rgba(0, 0, 0, 0.65);
+            padding: 1.25rem;
+            transition: border-color 0.25s ease;
+        }
+
+        @media (min-width: 768px) {
+            .glass-panel {
+                padding: 1.65rem;
+            }
+        }
+
+        .glass-panel:hover {
+            border-color: var(--border-highlight);
+        }
+
+        /* =====================================================================
+           HEADER CONSOLE
+           ===================================================================== */
+        .console-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+            border: 1px solid var(--net-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--net-color);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #f8fafc 0%, #38bdf8 60%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* =====================================================================
+           BUTTONS & BADGES
+           ===================================================================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.55rem 0.95rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.83rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-subtle);
+            background: rgba(30, 41, 59, 0.65);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .btn:hover {
+            background: rgba(51, 65, 85, 0.85);
+            border-color: var(--text-secondary);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.35));
+            border-color: var(--net-border);
+            color: #e0f2fe;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(14, 165, 233, 0.5));
+            border-color: var(--net-color);
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-preset {
+            font-family: var(--font-mono);
+            font-size: 0.76rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-input);
+        }
+
+        .btn-preset:hover {
+            border-color: var(--net-color);
+            color: var(--net-color);
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 0.3rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.18s ease;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover {
+            color: var(--net-color);
+            background: var(--net-bg);
+            border-color: var(--net-border);
+        }
+
+        .copy-btn.copied {
+            color: var(--host-color);
+            background: var(--host-bg);
+            border-color: var(--host-border);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            letter-spacing: 0.02em;
+        }
+
+        .badge-net { background: var(--net-bg); color: var(--net-color); border: 1px solid var(--net-border); }
+        .badge-host { background: var(--host-bg); color: var(--host-color); border: 1px solid var(--host-border); }
+        .badge-sub { background: var(--sub-bg); color: var(--sub-color); border: 1px solid var(--sub-border); }
+        .badge-bcast { background: var(--bcast-bg); color: var(--bcast-color); border: 1px solid var(--bcast-border); }
+        .badge-danger { background: var(--danger-bg); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.4); }
+
+        /* =====================================================================
+           SECTION TITLES
+           ===================================================================== */
+        .section-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1.15rem;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-primary);
+        }
+
+        .section-title svg {
+            color: var(--net-color);
+        }
+
+        /* =====================================================================
+           1. INPUT & CIDR CONTROLS
+           ===================================================================== */
+        .presets-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .presets-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-right: 0.25rem;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 900px) {
+            .controls-grid {
+                grid-template-columns: 1.2fr 1.1fr 1.2fr;
+                align-items: end;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .mono-input, .mono-select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .mono-input:focus, .mono-select:focus {
+            border-color: var(--net-color);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+        }
+
+        .mono-input.invalid {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+        }
+
+        .error-hint {
+            font-size: 0.76rem;
+            color: var(--danger-color);
+            font-family: var(--font-mono);
+            min-height: 1.1rem;
+        }
+
+        /* Custom Range Slider for CIDR */
+        .slider-wrapper {
+            background: var(--bg-input);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.65rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .slider-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+        }
+
+        .cidr-pill {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--net-color);
+        }
+
+        input[type="range"].cyber-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1e293b;
+            border-radius: 999px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"].cyber-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--net-color);
+            border: 2px solid #070b14;
+            box-shadow: 0 0 10px var(--net-color);
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"].cyber-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"].cyber-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--net-color);
+            border: 2px solid #070b14;
+            box-shadow: 0 0 10px var(--net-color);
+            cursor: pointer;
+        }
+
+        /* =====================================================================
+           2. DASHBOARD METRICHE & RISULTATI
+           ===================================================================== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 0.9rem;
+        }
+
+        @media (min-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .metrics-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .metric-card {
+            background: rgba(9, 14, 26, 0.78);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.95rem 1.05rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0.45rem;
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-highlight);
+        }
+
+        .metric-card.accent-net { border-left: 3px solid var(--net-color); }
+        .metric-card.accent-host { border-left: 3px solid var(--host-color); }
+        .metric-card.accent-sub { border-left: 3px solid var(--sub-color); }
+        .metric-card.accent-bcast { border-left: 3px solid var(--bcast-color); }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .metric-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .classification-strip {
+            margin-top: 1.15rem;
+            padding: 0.9rem 1.1rem;
+            border-radius: var(--radius-md);
+            background: rgba(9, 14, 26, 0.85);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+        }
+
+        .class-badges {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* =====================================================================
+           3. VISUALIZZATORE INTERATTIVO A 32 BIT (BIT-LEVEL INSPECTOR)
+           ===================================================================== */
+        .ratio-bar-container {
+            margin-bottom: 1.35rem;
+        }
+
+        .ratio-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-family: var(--font-mono);
+            margin-bottom: 0.45rem;
+            color: var(--text-secondary);
+        }
+
+        .ratio-track {
+            width: 100%;
+            height: 12px;
+            border-radius: 999px;
+            background: var(--bg-input);
+            overflow: hidden;
+            display: flex;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .ratio-seg-net {
+            background: var(--net-color);
+            height: 100%;
+            transition: width 0.25s ease;
+        }
+
+        .ratio-seg-sub {
+            background: var(--sub-color);
+            height: 100%;
+            transition: width 0.25s ease;
+        }
+
+        .ratio-seg-host {
+            background: var(--host-color);
+            height: 100%;
+            transition: width 0.25s ease;
+        }
+
+        .bit-inspector-scroll {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .bit-matrix {
+            min-width: 860px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .bit-row {
+            display: grid;
+            grid-template-columns: 155px repeat(4, 1fr);
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .bit-row-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bit-row-label span {
+            font-size: 0.68rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .octet-box {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 3px;
+            background: var(--bg-input);
+            padding: 5px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .octet-header-box {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 0.2rem;
+        }
+
+        .bit-cell {
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .bit-cell.type-net {
+            background: var(--net-bg);
+            color: var(--net-color);
+            border-color: rgba(56, 189, 248, 0.25);
+        }
+
+        .bit-cell.type-sub {
+            background: var(--sub-bg);
+            color: var(--sub-color);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .bit-cell.type-host {
+            background: var(--host-bg);
+            color: var(--host-color);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .bit-cell.clickable-mask {
+            cursor: pointer;
+        }
+
+        .bit-cell.clickable-mask:hover {
+            transform: scale(1.14);
+            z-index: 2;
+            box-shadow: 0 0 10px currentColor;
+            border-color: currentColor;
+        }
+
+        .bit-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.9rem;
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        /* =====================================================================
+           4 & 5. DUE COLONNE INFERIORI: SUBNET DIVIDER & SAME-SUBNET CHECKER
+           ===================================================================== */
+        .bottom-tools-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1120px) {
+            .bottom-tools-grid {
+                grid-template-columns: 1.55fr 1fr;
+                align-items: start;
+            }
+        }
+
+        .vlsm-controls {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .vlsm-controls {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+        .vlsm-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            font-family: var(--font-mono);
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            max-height: 410px;
+            overflow-y: auto;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: var(--bg-input);
+        }
+
+        table.subnet-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            text-align: left;
+        }
+
+        table.subnet-table th {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            color: var(--text-secondary);
+            font-weight: 700;
+            padding: 0.7rem 0.85rem;
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 2;
+            white-space: nowrap;
+        }
+
+        table.subnet-table td {
+            padding: 0.6rem 0.85rem;
+            border-bottom: 1px solid rgba(30, 41, 59, 0.55);
+            white-space: nowrap;
+        }
+
+        table.subnet-table tr:hover td {
+            background: rgba(56, 189, 248, 0.06);
+        }
+
+        /* Checker L2/L3 Box */
+        .checker-result-box {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-input);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checker-verdict {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .checker-binary-compare {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--border-subtle);
+            overflow-x: auto;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: #0f172a;
+            color: var(--host-color);
+            border: 1px solid var(--host-border);
+            padding: 0.7rem 1.15rem;
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            font-weight: 600;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            transform: translateY(15px);
+            pointer-events: none;
+            transition: all 0.25s ease;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 7px;
+            height: 7px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-deep);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- =====================================================================
+         HEADER CONSOLE
+         ===================================================================== -->
+    <header class="console-header">
+        <div class="brand-group">
+            <div class="brand-logo" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="6" rx="1.5"></rect>
+                    <rect x="2" y="15" width="20" height="6" rx="1.5"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    <path d="M12 9v6"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="brand-title">IPv4 & Subnetting Architect</h1>
+                <p class="brand-subtitle">32-BIT UNSIGNED BITWISE ENGINE // CIDR & VLSM ANALYZER</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button id="btn-random-ip" class="btn" title="Genera un indirizzo IPv4 e CIDR casuale">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+                IP Casuale
+            </button>
+            <button id="btn-copy-report" class="btn btn-primary" title="Copia l'intero report tecnico negli appunti">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copia Report Completo
+            </button>
+        </div>
+    </header>
+
+    <!-- =====================================================================
+         1. INPUT INTELLIGENTE E SINCRONIZZATO
+         ===================================================================== -->
+    <section class="glass-panel" aria-label="Configurazione Indirizzo e Maschera">
+        <div class="presets-bar">
+            <span class="presets-label">Preset Rapidi:</span>
+            <button class="btn btn-preset" data-ip="192.168.1.15" data-cidr="24">Rete Domestica (192.168.1.15/24)</button>
+            <button class="btn btn-preset" data-ip="172.16.45.200" data-cidr="20">Aziendale Classe B (172.16.45.200/20)</button>
+            <button class="btn btn-preset" data-ip="10.0.0.1" data-cidr="30">Point-to-Point (10.0.0.1/30)</button>
+            <button class="btn btn-preset" data-ip="10.255.255.2" data-cidr="31">Link RFC 3021 (10.255.255.2/31)</button>
+            <button class="btn btn-preset" data-ip="8.8.8.8" data-cidr="32">Host Singolo (8.8.8.8/32)</button>
+            <button class="btn btn-preset" data-ip="100.64.12.5" data-cidr="22">CGNAT (100.64.12.5/22)</button>
+        </div>
+
+        <div class="controls-grid">
+            <!-- Input IPv4 / CIDR -->
+            <div class="input-group">
+                <label class="input-label" for="input-ip">
+                    <span>Indirizzo IPv4 (supporta incolla /CIDR)</span>
+                    <span id="ip-valid-badge" class="badge badge-host">VALIDO</span>
+                </label>
+                <input type="text" id="input-ip" class="mono-input" value="192.168.10.45" placeholder="es. 192.168.10.45 o 10.0.0.5/26" spellcheck="false" autocomplete="off">
+                <div id="ip-error" class="error-hint"></div>
+            </div>
+
+            <!-- Slider CIDR + Select -->
+            <div class="input-group">
+                <label class="input-label" for="select-cidr">
+                    <span>Prefisso CIDR & Selettore Rapido</span>
+                    <span id="cidr-class-delta" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--sub-color);"></span>
+                </label>
+                <div class="slider-wrapper">
+                    <div class="slider-top">
+                        <span id="cidr-display" class="cidr-pill">/24</span>
+                        <select id="select-cidr" class="mono-select" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.85rem;"></select>
+                    </div>
+                    <input type="range" id="slider-cidr" class="cyber-slider" min="0" max="32" value="24">
+                </div>
+                <div class="error-hint" style="color: var(--text-muted);">Trascina lo slider o clicca sui bit sotto</div>
+            </div>
+
+            <!-- Subnet Mask Decimale Puntata -->
+            <div class="input-group">
+                <label class="input-label" for="input-mask">
+                    <span>Subnet Mask (Decimale Puntato)</span>
+                    <span id="mask-valid-badge" class="badge badge-net">CONTIGUA</span>
+                </label>
+                <input type="text" id="input-mask" class="mono-input" value="255.255.255.0" placeholder="es. 255.255.255.192" spellcheck="false" autocomplete="off">
+                <div id="mask-error" class="error-hint"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         2. DASHBOARD RISULTATI COMPLETI
+         ===================================================================== -->
+    <section class="glass-panel" aria-label="Dashboard Parametri di Rete">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Parametri Calcolati & Indirizzamento
+            </h2>
+            <span id="special-rfc-note" class="badge badge-net">Standard RFC 950 / CIDR</span>
+        </div>
+
+        <div class="metrics-grid" id="metrics-grid">
+            <!-- Popolato dinamicamente dal motore JS -->
+        </div>
+
+        <!-- Striscia Analisi Classful & Tipologia IP -->
+        <div class="classification-strip">
+            <div class="class-badges" id="classification-badges">
+                <!-- Badge Classe, Ambito, RFC -->
+            </div>
+            <div id="classification-desc" style="font-size: 0.82rem; color: var(--text-secondary);"></div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         3. VISUALIZZATORE INTERATTIVO A 32 BIT (BIT-LEVEL INSPECTOR)
+         ===================================================================== -->
+    <section class="glass-panel" aria-label="Ispettore Binario a 32 Bit">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"></polyline>
+                    <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+                Ispettore Binario a 32 Bit (Bit-Level Inspector)
+            </h2>
+            <span style="font-size: 0.78rem; color: var(--text-secondary); font-family: var(--font-mono);">
+                Suggerimento: clicca su un bit della Subnet Mask per impostare il prefisso /CIDR
+            </span>
+        </div>
+
+        <!-- Barra Proporzionale Bit Rete vs Bit Host -->
+        <div class="ratio-bar-container">
+            <div class="ratio-labels">
+                <span id="ratio-net-label" style="color: var(--net-color);">Rete: 24 bit (75.0%)</span>
+                <span id="ratio-sub-label" style="color: var(--sub-color);"></span>
+                <span id="ratio-host-label" style="color: var(--host-color);">Host: 8 bit (25.0%)</span>
+            </div>
+            <div class="ratio-track">
+                <div id="ratio-seg-net" class="ratio-seg-net" style="width: 75%;"></div>
+                <div id="ratio-seg-sub" class="ratio-seg-sub" style="width: 0%;"></div>
+                <div id="ratio-seg-host" class="ratio-seg-host" style="width: 25%;"></div>
+            </div>
+        </div>
+
+        <!-- Griglia 32-bit divisa in 4 Ottetti -->
+        <div class="bit-inspector-scroll">
+            <div class="bit-matrix" id="bit-matrix">
+                <!-- Popolato dinamicamente -->
+            </div>
+        </div>
+
+        <div class="bit-legend">
+            <div class="legend-item"><span class="legend-dot" style="background: var(--net-color);"></span> Bit di Rete Naturale (Network)</div>
+            <div class="legend-item"><span class="legend-dot" style="background: var(--sub-color);"></span> Bit Prestati (Subnetting rispetto alla classe)</div>
+            <div class="legend-item"><span class="legend-dot" style="background: var(--host-color);"></span> Bit di Host (Host ID)</div>
+        </div>
+    </section>
+
+    <!-- =====================================================================
+         4 & 5. GENERATORE VLSM & VERIFICATORE STESSA RETE (L2/L3)
+         ===================================================================== -->
+    <div class="bottom-tools-grid">
+
+        <!-- 4. GENERATORE & ESPLORATORE DI SOTTORETI (SUBNETTING / VLSM DIVIDER) -->
+        <section class="glass-panel" aria-label="Generatore e Esploratore di Sottoreti">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="6" y1="3" x2="6" y2="15"></line>
+                        <circle cx="18" cy="6" r="3"></circle>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <path d="M18 9a9 9 0 0 1-9 9"></path>
+                    </svg>
+                    Divisore Sottoreti (Subnetting / VLSM)
+                </h2>
+            </div>
+
+            <div class="vlsm-controls">
+                <div class="input-group">
+                    <label class="input-label" for="vlsm-target-cidr">Prefisso Target</label>
+                    <select id="vlsm-target-cidr" class="mono-select" style="font-size: 0.88rem; padding: 0.55rem 0.75rem;"></select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="vlsm-min-subnets">Oppure Min. Sottoreti</label>
+                    <input type="number" id="vlsm-min-subnets" class="mono-input" min="1" max="65536" placeholder="es. 4" style="font-size: 0.88rem; padding: 0.55rem 0.75rem;">
+                </div>
+                <div class="input-group">
+                    <label class="input-label" for="vlsm-min-hosts">Oppure Min. Host / Rete</label>
+                    <input type="number" id="vlsm-min-hosts" class="mono-input" min="1" max="16777214" placeholder="es. 30" style="font-size: 0.88rem; padding: 0.55rem 0.75rem;">
+                </div>
+            </div>
+
+            <div class="vlsm-summary" id="vlsm-summary">
+                <!-- Riepilogo sottoreti generate -->
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <input type="text" id="vlsm-filter" class="mono-input" placeholder="Filtra sottoreti per IP, Network ID o indice #..." style="font-size: 0.82rem; padding: 0.5rem 0.85rem;">
+            </div>
+
+            <div class="table-container">
+                <table class="subnet-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Network ID</th>
+                            <th>Range Host Usabili</th>
+                            <th>Broadcast</th>
+                            <th>Azione</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vlsm-table-body">
+                        <!-- Righe generate dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. VERIFICATORE "APPARTIENE ALLA STESSA RETE?" (IP IN SUBNET CHECKER) -->
+        <section class="glass-panel" aria-label="Verificatore Appartenenza Rete">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    Verifica Stessa Rete (L2 vs L3)
+                </h2>
+            </div>
+
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                Inserisci un secondo indirizzo IPv4 per verificare se appartiene alla stessa sottorete dell'IP principale (<strong id="checker-ref-net" style="color: var(--net-color); font-family: var(--font-mono);">192.168.10.0/24</strong>).
+            </p>
+
+            <div class="input-group">
+                <label class="input-label" for="checker-ip-input">
+                    <span>Secondo Indirizzo IPv4 da confrontare</span>
+                </label>
+                <input type="text" id="checker-ip-input" class="mono-input" value="192.168.10.120" placeholder="es. 192.168.10.200" spellcheck="false" autocomplete="off">
+            </div>
+
+            <div class="checker-result-box" id="checker-result-box">
+                <!-- Esito L2/L3 e confronto binario -->
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+<!-- Toast Feedback -->
+<div id="toast" class="toast" role="status" aria-live="polite">Copiato negli appunti!</div>
+
+<script>
+/**
+ * ============================================================================
+ * MOTORE MATEMATICO BITWISE A 32-BIT SENZA SEGNO (UNSIGNED >>> 0)
+ * ============================================================================
+ */
+(() => {
+    "use strict";
+
+    // Stato globale dell'applicazione
+    const state = {
+        ipInt: 0xC0A80A2D, // 192.168.10.45
+        cidr: 24,
+        vlsmTargetCidr: 26,
+        checkerIpStr: "192.168.10.120",
+        lastReportText: ""
+    };
+
+    // Riferimenti DOM
+    const dom = {
+        inputIp: document.getElementById("input-ip"),
+        ipError: document.getElementById("ip-error"),
+        ipValidBadge: document.getElementById("ip-valid-badge"),
+
+        sliderCidr: document.getElementById("slider-cidr"),
+        selectCidr: document.getElementById("select-cidr"),
+        cidrDisplay: document.getElementById("cidr-display"),
+        cidrClassDelta: document.getElementById("cidr-class-delta"),
+
+        inputMask: document.getElementById("input-mask"),
+        maskError: document.getElementById("mask-error"),
+        maskValidBadge: document.getElementById("mask-valid-badge"),
+
+        metricsGrid: document.getElementById("metrics-grid"),
+        specialRfcNote: document.getElementById("special-rfc-note"),
+        classBadges: document.getElementById("classification-badges"),
+        classDesc: document.getElementById("classification-desc"),
+
+        ratioNetLabel: document.getElementById("ratio-net-label"),
+        ratioSubLabel: document.getElementById("ratio-sub-label"),
+        ratioHostLabel: document.getElementById("ratio-host-label"),
+        ratioSegNet: document.getElementById("ratio-seg-net"),
+        ratioSegSub: document.getElementById("ratio-seg-sub"),
+        ratioSegHost: document.getElementById("ratio-seg-host"),
+        bitMatrix: document.getElementById("bit-matrix"),
+
+        vlsmTargetCidr: document.getElementById("vlsm-target-cidr"),
+        vlsmMinSubnets: document.getElementById("vlsm-min-subnets"),
+        vlsmMinHosts: document.getElementById("vlsm-min-hosts"),
+        vlsmSummary: document.getElementById("vlsm-summary"),
+        vlsmFilter: document.getElementById("vlsm-filter"),
+        vlsmTableBody: document.getElementById("vlsm-table-body"),
+
+        checkerRefNet: document.getElementById("checker-ref-net"),
+        checkerIpInput: document.getElementById("checker-ip-input"),
+        checkerResultBox: document.getElementById("checker-result-box"),
+
+        btnRandomIp: document.getElementById("btn-random-ip"),
+        btnCopyReport: document.getElementById("btn-copy-report"),
+        toast: document.getElementById("toast")
+    };
+
+    /* ------------------------------------------------------------------------
+       FUNZIONI DI CONVERSIONE E VALIDAZIONE IPv4
+       ------------------------------------------------------------------------ */
+
+    /**
+     * Converte un intero a 32-bit senza segno in stringa decimale puntata (es. "192.168.1.1")
+     */
+    function intToIp(int32) {
+        const u = int32 >>> 0;
+        return [
+            (u >>> 24) & 0xFF,
+            (u >>> 16) & 0xFF,
+            (u >>> 8) & 0xFF,
+            u & 0xFF
+        ].join(".");
+    }
+
+    /**
+     * Valida e converte una stringa IPv4 decimale puntata in intero a 32-bit senza segno.
+     * Restituisce null se non valida.
+     */
+    function parseIpToInt(str) {
+        if (typeof str !== "string") return null;
+        const trimmed = str.trim();
+        const parts = trimmed.split(".");
+        if (parts.length !== 4) return null;
+
+        let result = 0;
+        for (let i = 0; i < 4; i++) {
+            const p = parts[i];
+            if (!/^\d{1,3}$/.test(p)) return null;
+            // Evita zeri iniziali ambigui tipo "010" tranne "0"
+            if (p.length > 1 && p.startsWith("0")) return null;
+            const num = Number(p);
+            if (num < 0 || num > 255) return null;
+            result = ((result << 8) | num) >>> 0;
+        }
+        return result >>> 0;
+    }
+
+    /**
+     * Genera la maschera a 32-bit senza segno dato il prefisso CIDR (0..32)
+     */
+    function cidrToMaskInt(cidr) {
+        if (cidr <= 0) return 0 >>> 0;
+        if (cidr >= 32) return 0xFFFFFFFF >>> 0;
+        return (0xFFFFFFFF << (32 - cidr)) >>> 0;
+    }
+
+    /**
+     * Valida una Subnet Mask decimale puntata verificando che i bit a 1 siano contigui da sinistra.
+     * Restituisce { valid: boolean, cidr: number, maskInt: number, reason: string }
+     */
+    function validateAndParseMask(maskStr) {
+        const maskInt = parseIpToInt(maskStr);
+        if (maskInt === null) {
+            return { valid: false, reason: "Formato decimale puntato non valido (attesi 4 ottetti 0-255)." };
+        }
+        if (maskInt === 0) {
+            return { valid: true, cidr: 0, maskInt: 0 };
+        }
+        // Per una maschera contigua: invertendo i bit (~maskInt >>> 0) otteniamo 00...011...1
+        // Sommando 1 otteniamo una potenza esatta di 2: ((inv + 1) & inv) === 0
+        const inv = (~maskInt) >>> 0;
+        const isContiguous = (((inv + 1) >>> 0) & inv) === 0;
+        if (!isContiguous) {
+            return {
+                valid: false,
+                reason: "Maschera non contigua: i bit '1' devono essere tutti consecutivi da sinistra."
+            };
+        }
+        // Conta i bit a 1
+        let cidr = 0;
+        let temp = maskInt;
+        while (temp !== 0) {
+            cidr += (temp & 1);
+            temp >>>= 1;
+        }
+        return { valid: true, cidr, maskInt };
+    }
+
+    /**
+     * Formatta un intero 32-bit in stringa binaria a 32 caratteri con padding di zeri
+     */
+    function intToBin32(int32) {
+        return (int32 >>> 0).toString(2).padStart(32, "0");
+    }
+
+    /**
+     * Formatta un intero 32-bit in stringa esadecimale 0xXXXXXXXX
+     */
+    function intToHex32(int32) {
+        return "0x" + (int32 >>> 0).toString(16).toUpperCase().padStart(8, "0");
+    }
+
+    /**
+     * Analizza la Classe Naturale (Classful) e l'Ambito RFC dell'indirizzo IPv4
+     */
+    function analyzeIpClassification(ipInt) {
+        const firstOctet = (ipInt >>> 24) & 0xFF;
+        const secondOctet = (ipInt >>> 16) & 0xFF;
+        const thirdOctet = (ipInt >>> 8) & 0xFF;
+
+        let naturalClass = "A";
+        let defaultCidr = 8;
+        let classDesc = "Classe A (0.0.0.0 – 127.255.255.255) • Maschera naturale /8";
+
+        if (firstOctet >= 128 && firstOctet <= 191) {
+            naturalClass = "B";
+            defaultCidr = 16;
+            classDesc = "Classe B (128.0.0.0 – 191.255.255.255) • Maschera naturale /16";
+        } else if (firstOctet >= 192 && firstOctet <= 223) {
+            naturalClass = "C";
+            defaultCidr = 24;
+            classDesc = "Classe C (192.0.0.0 – 223.255.255.255) • Maschera naturale /24";
+        } else if (firstOctet >= 224 && firstOctet <= 239) {
+            naturalClass = "D";
+            defaultCidr = null;
+            classDesc = "Classe D (224.0.0.0 – 239.255.255.255) • Riservata al traffico Multicast (RFC 5771)";
+        } else if (firstOctet >= 240) {
+            naturalClass = "E";
+            defaultCidr = null;
+            classDesc = "Classe E (240.0.0.0 – 255.255.255.255) • Riservata per uso futuro / sperimentale (RFC 1112)";
+        }
+
+        // Identificazione Ambito / Special Use
+        let scope = "Pubblico Instradabile (Global Unicast)";
+        let scopeBadgeClass = "badge-net";
+        let rfcRef = "Internet Globale";
+
+        if (firstOctet === 0) {
+            scope = "Rete Corrente / Sorgente ('This Network')";
+            scopeBadgeClass = "badge-sub";
+            rfcRef = "RFC 1122";
+        } else if (firstOctet === 10) {
+            scope = "Privato (Rete Locale)";
+            scopeBadgeClass = "badge-host";
+            rfcRef = "RFC 1918 (10.0.0.0/8)";
+        } else if (firstOctet === 100 && secondOctet >= 64 && secondOctet <= 127) {
+            scope = "Carrier-Grade NAT (CGNAT / Shared Address)";
+            scopeBadgeClass = "badge-sub";
+            rfcRef = "RFC 6598 (100.64.0.0/10)";
+        } else if (firstOctet === 127) {
+            scope = "Loopback (Interfaccia Locale)";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 1122 (127.0.0.0/8)";
+        } else if (firstOctet === 169 && secondOctet === 254) {
+            scope = "Link-Local / APIPA (Auto-configurazione)";
+            scopeBadgeClass = "badge-sub";
+            rfcRef = "RFC 3927 (169.254.0.0/16)";
+        } else if (firstOctet === 172 && secondOctet >= 16 && secondOctet <= 31) {
+            scope = "Privato (Rete Locale)";
+            scopeBadgeClass = "badge-host";
+            rfcRef = "RFC 1918 (172.16.0.0/12)";
+        } else if (firstOctet === 192 && secondOctet === 0 && thirdOctet === 0) {
+            scope = "IETF Protocol Assignments";
+            scopeBadgeClass = "badge-sub";
+            rfcRef = "RFC 6890 (192.0.0.0/24)";
+        } else if (firstOctet === 192 && secondOctet === 0 && thirdOctet === 2) {
+            scope = "Documentazione (TEST-NET-1)";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 5737 (192.0.2.0/24)";
+        } else if (firstOctet === 192 && secondOctet === 168) {
+            scope = "Privato (Rete Locale)";
+            scopeBadgeClass = "badge-host";
+            rfcRef = "RFC 1918 (192.168.0.0/16)";
+        } else if (firstOctet === 198 && (secondOctet === 18 || secondOctet === 19)) {
+            scope = "Benchmarking di Rete";
+            scopeBadgeClass = "badge-sub";
+            rfcRef = "RFC 2544 (198.18.0.0/15)";
+        } else if (firstOctet === 198 && secondOctet === 51 && thirdOctet === 100) {
+            scope = "Documentazione (TEST-NET-2)";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 5737 (198.51.100.0/24)";
+        } else if (firstOctet === 203 && secondOctet === 0 && thirdOctet === 113) {
+            scope = "Documentazione (TEST-NET-3)";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 5737 (203.0.113.0/24)";
+        } else if (firstOctet >= 224 && firstOctet <= 239) {
+            scope = "Multicast";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 5771 (224.0.0.0/4)";
+        } else if (ipInt === 0xFFFFFFFF) {
+            scope = "Limited Broadcast";
+            scopeBadgeClass = "badge-bcast";
+            rfcRef = "RFC 919 (255.255.255.255/32)";
+        } else if (firstOctet >= 240) {
+            scope = "Riservato / Sperimentale";
+            scopeBadgeClass = "badge-danger";
+            rfcRef = "RFC 1112 (240.0.0.0/4)";
+        }
+
+        return { naturalClass, defaultCidr, classDesc, scope, scopeBadgeClass, rfcRef };
+    }
+
+    /**
+     * Calcola tutti i parametri IPv4 dati ipInt e cidr
+     */
+    function calculateSubnetDetails(ipInt, cidr) {
+        const maskInt = cidrToMaskInt(cidr);
+        const wildcardInt = (~maskInt) >>> 0;
+        const networkInt = (ipInt & maskInt) >>> 0;
+        const broadcastInt = (networkInt | wildcardInt) >>> 0;
+        const hostIdInt = (ipInt & wildcardInt) >>> 0;
+
+        const netBits = cidr;
+        const hostBits = 32 - cidr;
+        const totalAddresses = Math.pow(2, hostBits);
+
+        let usableHosts = 0;
+        let firstHostInt = null;
+        let lastHostInt = null;
+        let broadcastDisplay = intToIp(broadcastInt);
+        let rangeDisplay = "";
+        let specialNote = "Standard CIDR";
+
+        if (cidr === 32) {
+            usableHosts = 1;
+            firstHostInt = networkInt;
+            lastHostInt = networkInt;
+            broadcastDisplay = "N/A (Host singolo /32)";
+            rangeDisplay = `${intToIp(networkInt)} (Host unico)`;
+            specialNote = "RFC 3021 / Host Route (/32)";
+        } else if (cidr === 31) {
+            usableHosts = 2;
+            firstHostInt = networkInt;
+            lastHostInt = broadcastInt;
+            broadcastDisplay = "N/A (Link PtP RFC 3021)";
+            rangeDisplay = `${intToIp(firstHostInt)} — ${intToIp(lastHostInt)}`;
+            specialNote = "RFC 3021 Point-to-Point (/31)";
+        } else {
+            usableHosts = Math.max(0, totalAddresses - 2);
+            firstHostInt = (networkInt + 1) >>> 0;
+            lastHostInt = (broadcastInt - 1) >>> 0;
+            rangeDisplay = `${intToIp(firstHostInt)} — ${intToIp(lastHostInt)}`;
+            if (cidr === 0) specialNote = "Default Route (0.0.0.0/0)";
+        }
+
+        // Ruolo dell'IP inserito all'interno della subnet
+        let ipRole = "Host Indirizzabile";
+        if (cidr < 31) {
+            if (ipInt === networkInt) ipRole = "Indirizzo di Rete (Network ID)";
+            else if (ipInt === broadcastInt) ipRole = "Indirizzo di Broadcast";
+        } else if (cidr === 31) {
+            ipRole = ipInt === networkInt ? "Endpoint A (RFC 3021)" : "Endpoint B (RFC 3021)";
+        } else {
+            ipRole = "Host Unico (/32)";
+        }
+
+        // PTR Record per Reverse DNS
+        const octets = intToIp(ipInt).split(".");
+        const ptrRecord = `${octets[3]}.${octets[2]}.${octets[1]}.${octets[0]}.in-addr.arpa`;
+
+        // Classificazione
+        const classification = analyzeIpClassification(ipInt);
+
+        // Calcolo bit prestati (subnetting) o supernetting rispetto alla classe naturale
+        let subnetBorrowedBits = 0;
+        let supernetBits = 0;
+        if (classification.defaultCidr !== null) {
+            if (cidr > classification.defaultCidr) {
+                subnetBorrowedBits = cidr - classification.defaultCidr;
+            } else if (cidr < classification.defaultCidr) {
+                supernetBits = classification.defaultCidr - cidr;
+            }
+        }
+
+        return {
+            ipInt,
+            ipStr: intToIp(ipInt),
+            cidr,
+            maskInt,
+            maskStr: intToIp(maskInt),
+            wildcardInt,
+            wildcardStr: intToIp(wildcardInt),
+            networkInt,
+            networkStr: intToIp(networkInt),
+            broadcastInt,
+            broadcastStr: intToIp(broadcastInt),
+            broadcastDisplay,
+            hostIdInt,
+            hostIdStr: intToIp(hostIdInt),
+            hostOrdinal: hostIdInt, // Valore numerico dell'offset nella rete
+            firstHostStr: firstHostInt !== null ? intToIp(firstHostInt) : "N/A",
+            lastHostStr: lastHostInt !== null ? intToIp(lastHostInt) : "N/A",
+            rangeDisplay,
+            netBits,
+            hostBits,
+            totalAddresses,
+            usableHosts,
+            ipRole,
+            specialNote,
+            ipHex: intToHex32(ipInt),
+            maskHex: intToHex32(maskInt),
+            ipDecimal32: (ipInt >>> 0).toString(10),
+            ptrRecord,
+            classification,
+            subnetBorrowedBits,
+            supernetBits
+        };
+    }
+
+    /* ------------------------------------------------------------------------
+       RENDERING INTERFACCIA E AGGIORNAMENTO SINCRONIZZATO
+       ------------------------------------------------------------------------ */
+
+    function initCidrDropdown() {
+        dom.selectCidr.innerHTML = "";
+        for (let c = 0; c <= 32; c++) {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = `/${c} — ${intToIp(cidrToMaskInt(c))}`;
+            dom.selectCidr.appendChild(opt);
+        }
+    }
+
+    function formatNumberIT(num) {
+        return num.toLocaleString("it-IT");
+    }
+
+    function renderDashboard(data) {
+        dom.specialRfcNote.textContent = data.specialNote;
+
+        const cards = [
+            {
+                label: "Network ID (Rete)",
+                value: `${data.networkStr}/${data.cidr}`,
+                copyVal: data.networkStr,
+                sub: `Ruolo IP: ${data.ipRole}`,
+                accent: "accent-net"
+            },
+            {
+                label: "Broadcast Address",
+                value: data.broadcastDisplay,
+                copyVal: data.broadcastStr,
+                sub: data.cidr >= 31 ? `Raw: ${data.broadcastStr}` : "Ultimo indirizzo della subnet",
+                accent: "accent-bcast"
+            },
+            {
+                label: "Primo Host Usabile",
+                value: data.firstHostStr,
+                copyVal: data.firstHostStr,
+                sub: data.cidr >= 31 ? "Primo endpoint utile" : "Network ID + 1",
+                accent: "accent-host"
+            },
+            {
+                label: "Ultimo Host Usabile",
+                value: data.lastHostStr,
+                copyVal: data.lastHostStr,
+                sub: data.cidr >= 31 ? "Secondo endpoint utile" : "Broadcast - 1",
+                accent: "accent-host"
+            },
+            {
+                label: "Range Host Indirizzabili",
+                value: data.rangeDisplay,
+                copyVal: data.rangeDisplay,
+                sub: `Intervallo operativo`,
+                accent: "accent-host"
+            },
+            {
+                label: "Host Indirizzabili (Usabili)",
+                value: formatNumberIT(data.usableHosts),
+                copyVal: String(data.usableHosts),
+                sub: `Totale IP nella subnet: ${formatNumberIT(data.totalAddresses)} (2^${data.hostBits})`,
+                accent: "accent-host"
+            },
+            {
+                label: "Ripartizione Bit (Net / Host)",
+                value: `${data.netBits} bit Rete / ${data.hostBits} bit Host`,
+                copyVal: `${data.netBits}/${data.hostBits}`,
+                sub: data.subnetBorrowedBits > 0
+                    ? `+${data.subnetBorrowedBits} bit prestati (Subnetting)`
+                    : (data.supernetBits > 0 ? `-${data.supernetBits} bit aggregati (Supernetting)` : "Allineato alla classe naturale"),
+                accent: data.subnetBorrowedBits > 0 ? "accent-sub" : "accent-net"
+            },
+            {
+                label: "Host-ID Isolato",
+                value: data.hostIdStr,
+                copyVal: data.hostIdStr,
+                sub: `Offset nella subnet: Host #${formatNumberIT(data.hostOrdinal)}`,
+                accent: "accent-host"
+            },
+            {
+                label: "Subnet Mask & CIDR",
+                value: `${data.maskStr} (/${data.cidr})`,
+                copyVal: data.maskStr,
+                sub: `Hex Mask: ${data.maskHex}`,
+                accent: "accent-net"
+            },
+            {
+                label: "Wildcard Mask (Cisco / OSPF)",
+                value: data.wildcardStr,
+                copyVal: data.wildcardStr,
+                sub: `Inversa bit-a-bit (~Mask)`,
+                accent: "accent-sub"
+            },
+            {
+                label: "Esadecimale & Intero 32-bit",
+                value: data.ipHex,
+                copyVal: data.ipHex,
+                sub: `Decimale 32-bit: ${data.ipDecimal32}`,
+                accent: ""
+            },
+            {
+                label: "Reverse DNS (PTR Record)",
+                value: data.ptrRecord,
+                copyVal: data.ptrRecord,
+                sub: "Zona inversa ARPA IPv4",
+                accent: ""
+            }
+        ];
+
+        dom.metricsGrid.innerHTML = cards.map(c => `
+            <div class="metric-card ${c.accent}">
+                <div class="metric-header">
+                    <span class="metric-label">${c.label}</span>
+                    <button class="copy-btn" data-copy="${escapeHtml(c.copyVal)}" title="Copia ${escapeHtml(c.label)}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="metric-value">${escapeHtml(c.value)}</div>
+                <div class="metric-sub">${escapeHtml(c.sub)}</div>
+            </div>
+        `).join("");
+
+        // Classificazione IP
+        const cls = data.classification;
+        dom.classBadges.innerHTML = `
+            <span class="badge badge-net">CLASSE ${cls.naturalClass}</span>
+            <span class="badge ${cls.scopeBadgeClass}">${escapeHtml(cls.scope)}</span>
+            <span class="badge badge-sub">${escapeHtml(cls.rfcRef)}</span>
+        `;
+        dom.classDesc.textContent = cls.classDesc;
+
+        // Delta CIDR rispetto alla classe naturale
+        if (cls.defaultCidr !== null) {
+            if (data.subnetBorrowedBits > 0) {
+                dom.cidrClassDelta.textContent = `Subnetting (+${data.subnetBorrowedBits} bit su Classe ${cls.naturalClass})`;
+                dom.cidrClassDelta.style.color = "var(--sub-color)";
+            } else if (data.supernetBits > 0) {
+                dom.cidrClassDelta.textContent = `Supernetting (-${data.supernetBits} bit su Classe ${cls.naturalClass})`;
+                dom.cidrClassDelta.style.color = "var(--bcast-color)";
+            } else {
+                dom.cidrClassDelta.textContent = `Maschera naturale Classe ${cls.naturalClass} (/${cls.defaultCidr})`;
+                dom.cidrClassDelta.style.color = "var(--host-color)";
+            }
+        } else {
+            dom.cidrClassDelta.textContent = `Indirizzamento Speciale Classe ${cls.naturalClass}`;
+            dom.cidrClassDelta.style.color = "var(--bcast-color)";
+        }
+
+        // Genera testo per Report Completo
+        state.lastReportText = [
+            `=== REPORT ANALISI IPv4 & SUBNETTING ===`,
+            `Indirizzo IPv4:       ${data.ipStr}/${data.cidr}`,
+            `Subnet Mask:          ${data.maskStr}`,
+            `Wildcard Mask:        ${data.wildcardStr}`,
+            `Network ID:           ${data.networkStr}`,
+            `Broadcast Address:    ${data.broadcastDisplay}`,
+            `Primo Host Usabile:   ${data.firstHostStr}`,
+            `Ultimo Host Usabile:  ${data.lastHostStr}`,
+            `Range Host:           ${data.rangeDisplay}`,
+            `Host Indirizzabili:   ${formatNumberIT(data.usableHosts)} (Totale IP: ${formatNumberIT(data.totalAddresses)})`,
+            `Bit Rete / Bit Host:  ${data.netBits} / ${data.hostBits}`,
+            `Host-ID Isolato:      ${data.hostIdStr} (Host #${data.hostOrdinal})`,
+            `Classe & Ambito:      Classe ${cls.naturalClass} - ${cls.scope} (${cls.rfcRef})`,
+            `Esadecimale / Int32:  ${data.ipHex} / ${data.ipDecimal32}`,
+            `PTR Reverse DNS:      ${data.ptrRecord}`
+        ].join("\n");
+    }
+
+    function renderBitInspector(data) {
+        const naturalNetBits = data.classification.defaultCidr !== null
+            ? Math.min(data.cidr, data.classification.defaultCidr)
+            : data.cidr;
+        const borrowedBits = Math.max(0, data.cidr - naturalNetBits);
+        const hostBits = 32 - data.cidr;
+
+        const netPct = ((naturalNetBits / 32) * 100).toFixed(1);
+        const subPct = ((borrowedBits / 32) * 100).toFixed(1);
+        const hostPct = ((hostBits / 32) * 100).toFixed(1);
+
+        dom.ratioNetLabel.textContent = `Rete Base: ${naturalNetBits} bit (${netPct}%)`;
+        dom.ratioSubLabel.textContent = borrowedBits > 0 ? `Subnet Prestati: +${borrowedBits} bit (${subPct}%)` : "";
+        dom.ratioHostLabel.textContent = `Host: ${hostBits} bit (${hostPct}%)`;
+
+        dom.ratioSegNet.style.width = `${(naturalNetBits / 32) * 100}%`;
+        dom.ratioSegSub.style.width = `${(borrowedBits / 32) * 100}%`;
+        dom.ratioSegHost.style.width = `${(hostBits / 32) * 100}%`;
+
+        const rows = [
+            { title: "Indirizzo IPv4", sub: data.ipStr, bin: intToBin32(data.ipInt), clickable: false },
+            { title: "Subnet Mask", sub: `${data.maskStr} (/${data.cidr})`, bin: intToBin32(data.maskInt), clickable: true },
+            { title: "Network ID (AND)", sub: data.networkStr, bin: intToBin32(data.networkInt), clickable: false },
+            { title: "Wildcard Mask", sub: data.wildcardStr, bin: intToBin32(data.wildcardInt), clickable: false },
+            { title: "Broadcast Address", sub: data.broadcastStr, bin: intToBin32(data.broadcastInt), clickable: false }
+        ];
+
+        const ipOctets = data.ipStr.split(".");
+        const maskOctets = data.maskStr.split(".");
+
+        // Intestazione Ottetti
+        let html = `
+            <div class="bit-row">
+                <div class="bit-row-label">OTTETTI (32 BIT)<span>Posizione 1 → 32</span></div>
+                <div class="octet-header-box">Ottetto 1 (1..8) • IP: ${ipOctets[0]}</div>
+                <div class="octet-header-box">Ottetto 2 (9..16) • IP: ${ipOctets[1]}</div>
+                <div class="octet-header-box">Ottetto 3 (17..24) • IP: ${ipOctets[2]}</div>
+                <div class="octet-header-box">Ottetto 4 (25..32) • IP: ${ipOctets[3]}</div>
+            </div>
+        `;
+
+        rows.forEach(row => {
+            html += `<div class="bit-row">`;
+            html += `<div class="bit-row-label">${row.title}<span>${row.sub}</span></div>`;
+
+            for (let oct = 0; oct < 4; oct++) {
+                html += `<div class="octet-box">`;
+                for (let b = 0; b < 8; b++) {
+                    const bitIndex = oct * 8 + b; // 0..31
+                    const bitChar = row.bin[bitIndex];
+
+                    let bitClass = "type-host";
+                    if (bitIndex < naturalNetBits) {
+                        bitClass = "type-net";
+                    } else if (bitIndex < data.cidr) {
+                        bitClass = "type-sub";
+                    }
+
+                    if (row.clickable) {
+                        const targetCidr = bitIndex + 1;
+                        html += `<div class="bit-cell ${bitClass} clickable-mask" data-set-cidr="${targetCidr}" title="Imposta CIDR /${targetCidr} (Bit #${targetCidr})">${bitChar}</div>`;
+                    } else {
+                        html += `<div class="bit-cell ${bitClass}" title="Bit #${bitIndex + 1}">${bitChar}</div>`;
+                    }
+                }
+                html += `</div>`;
+            }
+            html += `</div>`;
+        });
+
+        dom.bitMatrix.innerHTML = html;
+    }
+
+    /* ------------------------------------------------------------------------
+       4. GENERATORE & ESPLORATORE DI SOTTORETI (VLSM / SUBNET DIVIDER)
+       ------------------------------------------------------------------------ */
+
+    function updateVlsmOptions(baseCidr) {
+        dom.vlsmTargetCidr.innerHTML = "";
+        if (baseCidr >= 32) {
+            const opt = document.createElement("option");
+            opt.value = 32;
+            opt.textContent = "/32 (Nessuna suddivisione possibile)";
+            dom.vlsmTargetCidr.appendChild(opt);
+            state.vlsmTargetCidr = 32;
+            return;
+        }
+
+        if (state.vlsmTargetCidr <= baseCidr) {
+            state.vlsmTargetCidr = Math.min(32, baseCidr + 2);
+        }
+
+        for (let c = baseCidr + 1; c <= 32; c++) {
+            const borrowed = c - baseCidr;
+            const numSubnets = Math.pow(2, borrowed);
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = `/${c} (${formatNumberIT(numSubnets)} sottoreti)`;
+            if (c === state.vlsmTargetCidr) opt.selected = true;
+            dom.vlsmTargetCidr.appendChild(opt);
+        }
+    }
+
+    function renderVlsmTable(data) {
+        const baseCidr = data.cidr;
+        const targetCidr = state.vlsmTargetCidr;
+
+        if (baseCidr >= 32 || targetCidr <= baseCidr) {
+            dom.vlsmSummary.innerHTML = `<span style="color: var(--sub-color);">Una rete /32 rappresenta un singolo host e non può essere ulteriormente suddivisa.</span>`;
+            dom.vlsmTableBody.innerHTML = "";
+            return;
+        }
+
+        const borrowedBits = targetCidr - baseCidr;
+        const totalSubnets = Math.pow(2, borrowedBits);
+        const subHostBits = 32 - targetCidr;
+        const subBlockSize = Math.pow(2, subHostBits);
+        const subUsableHosts = targetCidr === 32 ? 1 : (targetCidr === 31 ? 2 : Math.max(0, subBlockSize - 2));
+
+        const maxRender = 256;
+        const renderCount = Math.min(totalSubnets, maxRender);
+        const filterQuery = dom.vlsmFilter.value.trim().toLowerCase();
+
+        dom.vlsmSummary.innerHTML = `
+            <div>Sottoreti generate: <strong style="color: var(--sub-color);">${formatNumberIT(totalSubnets)}</strong> (+${borrowedBits} bit)</div>
+            <div>Host usabili / sottorete: <strong style="color: var(--host-color);">${formatNumberIT(subUsableHosts)}</strong></div>
+            <div>Mask target: <strong style="color: var(--net-color);">${intToIp(cidrToMaskInt(targetCidr))}</strong></div>
+        `;
+
+        let rowsHtml = "";
+        let shown = 0;
+
+        for (let i = 0; i < renderCount; i++) {
+            // Calcolo sicuro senza overflow usando moltiplicazione su numero JS (fino a 2^53)
+            const subNetNum = data.networkInt + (i * subBlockSize);
+            const subNetInt = subNetNum >>> 0;
+            const subBcastInt = (subNetNum + subBlockSize - 1) >>> 0;
+
+            const subNetStr = intToIp(subNetInt);
+            const subBcastStr = intToIp(subBcastInt);
+
+            let rangeStr = "";
+            if (targetCidr === 32) {
+                rangeStr = `${subNetStr} (Unico)`;
+            } else if (targetCidr === 31) {
+                rangeStr = `${subNetStr} — ${subBcastStr}`;
+            } else {
+                const fHost = intToIp((subNetNum + 1) >>> 0);
+                const lHost = intToIp((subNetNum + subBlockSize - 2) >>> 0);
+                rangeStr = `${fHost} — ${lHost}`;
+            }
+
+            const idxStr = `#${i + 1}`;
+            if (filterQuery) {
+                const hay = `${idxStr} ${subNetStr} ${rangeStr} ${subBcastStr}`.toLowerCase();
+                if (!hay.includes(filterQuery)) continue;
+            }
+
+            shown++;
+            // Evidenzia la sottorete che contiene l'IP principale corrente
+            const containsCurrentIp = (data.ipInt >= subNetInt && data.ipInt <= subBcastInt);
+
+            rowsHtml += `
+                <tr style="${containsCurrentIp ? "background: rgba(56, 189, 248, 0.11);" : ""}">
+                    <td style="color: var(--text-muted);">${idxStr} ${containsCurrentIp ? '<span class="badge badge-net" style="padding: 1px 5px; font-size: 0.65rem;">IP ATTUALE</span>' : ''}</td>
+                    <td style="color: var(--net-color); font-weight: 700;">${subNetStr}/${targetCidr}</td>
+                    <td style="color: var(--host-color);">${rangeStr}</td>
+                    <td style="color: var(--bcast-color);">${targetCidr >= 31 ? "N/A (RFC 3021)" : subBcastStr}</td>
+                    <td>
+                        <button class="btn btn-preset" data-load-subnet-ip="${subNetStr}" data-load-subnet-cidr="${targetCidr}" style="padding: 0.25rem 0.55rem; font-size: 0.72rem;">
+                            Analizza
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        if (totalSubnets > maxRender) {
+            rowsHtml += `
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--sub-color); padding: 0.85rem;">
+                        Visualizzate le prime ${maxRender} sottoreti su ${formatNumberIT(totalSubnets)} totali per prestazioni ottimali.
+                    </td>
+                </tr>
+            `;
+        } else if (shown === 0) {
+            rowsHtml = `
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1rem;">
+                        Nessuna sottorete corrisponde al filtro "${escapeHtml(filterQuery)}".
+                    </td>
+                </tr>
+            `;
+        }
+
+        dom.vlsmTableBody.innerHTML = rowsHtml;
+    }
+
+    /* ------------------------------------------------------------------------
+       5. VERIFICATORE "APPARTIENE ALLA STESSA RETE?" (LAYER 2 vs LAYER 3)
+       ------------------------------------------------------------------------ */
+
+    function renderSameSubnetChecker(data) {
+        dom.checkerRefNet.textContent = `${data.networkStr}/${data.cidr}`;
+        const secondIpStr = dom.checkerIpInput.value.trim();
+        const secondIpInt = parseIpToInt(secondIpStr);
+
+        if (secondIpInt === null) {
+            dom.checkerIpInput.classList.add("invalid");
+            dom.checkerResultBox.innerHTML = `
+                <div class="checker-verdict" style="color: var(--danger-color);">
+                    <span>Indirizzo IPv4 secondario non valido. Inserisci 4 ottetti (0–255).</span>
+                </div>
+            `;
+            return;
+        }
+
+        dom.checkerIpInput.classList.remove("invalid");
+        const secondNetInt = (secondIpInt & data.maskInt) >>> 0;
+        const secondNetStr = intToIp(secondNetInt);
+        const sameSubnet = (secondNetInt === data.networkInt);
+
+        // Confronto binario con evidenziazione della parte di rete
+        const bin1 = formatBinDotted(data.ipInt);
+        const bin2 = formatBinDotted(secondIpInt);
+        const binMask = formatBinDotted(data.maskInt);
+
+        if (sameSubnet) {
+            dom.checkerResultBox.innerHTML = `
+                <div class="checker-verdict" style="color: var(--host-color);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>STESSA SOTTORETE — Comunicazione Diretta (Layer 2 / ARP)</span>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                    Entrambi gli host condividono lo stesso Network ID (<strong style="color: var(--net-color); font-family: var(--font-mono);">${data.networkStr}/${data.cidr}</strong>). I pacchetti vengono consegnati direttamente tramite switch/ARP senza passare dal Default Gateway.
+                </p>
+                <div class="checker-binary-compare">
+                    <div><span style="color: var(--text-muted);">IP 1 (${data.ipStr}):</span> <span style="color: var(--net-color);">${bin1}</span></div>
+                    <div><span style="color: var(--text-muted);">IP 2 (${secondIpStr}):</span> <span style="color: var(--host-color);">${bin2}</span></div>
+                    <div><span style="color: var(--text-muted);">Mask (/${data.cidr}):</span> <span style="color: var(--text-secondary);">${binMask}</span></div>
+                </div>
+            `;
+        } else {
+            dom.checkerResultBox.innerHTML = `
+                <div class="checker-verdict" style="color: var(--sub-color);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>RETE DIVERSA — Richiede Routing / Default Gateway (Layer 3)</span>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                    L'IP 1 appartiene a <strong style="color: var(--net-color); font-family: var(--font-mono);">${data.networkStr}/${data.cidr}</strong>, mentre l'IP 2 appartiene alla rete <strong style="color: var(--sub-color); font-family: var(--font-mono);">${secondNetStr}/${data.cidr}</strong>. Il traffico deve essere inoltrato al Router.
+                </p>
+                <div class="checker-binary-compare">
+                    <div><span style="color: var(--text-muted);">Net 1 (${data.networkStr}):</span> <span style="color: var(--net-color);">${formatBinDotted(data.networkInt)}</span></div>
+                    <div><span style="color: var(--text-muted);">Net 2 (${secondNetStr}):</span> <span style="color: var(--sub-color);">${formatBinDotted(secondNetInt)}</span></div>
+                    <div><span style="color: var(--text-muted);">Mask  (/${data.cidr}):</span> <span style="color: var(--text-secondary);">${binMask}</span></div>
+                </div>
+            `;
+        }
+    }
+
+    function formatBinDotted(int32) {
+        const b = intToBin32(int32);
+        return `${b.slice(0, 8)}.${b.slice(8, 16)}.${b.slice(16, 24)}.${b.slice(24, 32)}`;
+    }
+
+    /* ------------------------------------------------------------------------
+       ORCHESTRAZIONE COMPLETA DELL'AGGIORNAMENTO
+       ------------------------------------------------------------------------ */
+
+    function updateAll(source = "all") {
+        // Sincronizza controlli CIDR e Mask
+        dom.sliderCidr.value = state.cidr;
+        dom.selectCidr.value = state.cidr;
+        dom.cidrDisplay.textContent = `/${state.cidr}`;
+
+        if (source !== "maskInput") {
+            dom.inputMask.value = intToIp(cidrToMaskInt(state.cidr));
+            dom.inputMask.classList.remove("invalid");
+            dom.maskError.textContent = "";
+            dom.maskValidBadge.textContent = "CONTIGUA";
+            dom.maskValidBadge.className = "badge badge-net";
+        }
+
+        const data = calculateSubnetDetails(state.ipInt, state.cidr);
+
+        renderDashboard(data);
+        renderBitInspector(data);
+        updateVlsmOptions(state.cidr);
+        renderVlsmTable(data);
+        renderSameSubnetChecker(data);
+    }
+
+    /* ------------------------------------------------------------------------
+       GESTIONE EVENTI & INTERAZIONI UTENTE
+       ------------------------------------------------------------------------ */
+
+    // 1. Input Indirizzo IPv4 (con supporto automatico per notazione CIDR "x.x.x.x/yy")
+    dom.inputIp.addEventListener("input", () => {
+        const raw = dom.inputIp.value.trim();
+
+        if (raw.includes("/")) {
+            const [ipPart, cidrPart] = raw.split("/");
+            const parsedIp = parseIpToInt(ipPart);
+            const parsedCidr = Number(cidrPart);
+
+            if (parsedIp !== null && /^\d{1,2}$/.test(cidrPart) && parsedCidr >= 0 && parsedCidr <= 32) {
+                state.ipInt = parsedIp;
+                state.cidr = parsedCidr;
+                dom.inputIp.value = intToIp(parsedIp);
+                setIpValidState(true);
+                updateAll("ipInput");
+                showToast(`Estratto IP ${intToIp(parsedIp)} e CIDR /${parsedCidr}`);
+                return;
+            }
+        }
+
+        const parsed = parseIpToInt(raw);
+        if (parsed === null) {
+            setIpValidState(false, "Indirizzo IPv4 non valido (formato richiesto: A.B.C.D, 0-255)");
+            return;
+        }
+
+        state.ipInt = parsed;
+        setIpValidState(true);
+        updateAll("ipInput");
+    });
+
+    function setIpValidState(isValid, errorMsg = "") {
+        if (isValid) {
+            dom.inputIp.classList.remove("invalid");
+            dom.ipError.textContent = "";
+            dom.ipValidBadge.textContent = "VALIDO";
+            dom.ipValidBadge.className = "badge badge-host";
+        } else {
+            dom.inputIp.classList.add("invalid");
+            dom.ipError.textContent = errorMsg;
+            dom.ipValidBadge.textContent = "ERRORE";
+            dom.ipValidBadge.className = "badge badge-danger";
+        }
+    }
+
+    // 2. Slider CIDR & Dropdown CIDR
+    dom.sliderCidr.addEventListener("input", () => {
+        state.cidr = Number(dom.sliderCidr.value);
+        updateAll("slider");
+    });
+
+    dom.selectCidr.addEventListener("change", () => {
+        state.cidr = Number(dom.selectCidr.value);
+        updateAll("select");
+    });
+
+    // 3. Input Subnet Mask Decimale Puntata
+    dom.inputMask.addEventListener("input", () => {
+        const res = validateAndParseMask(dom.inputMask.value);
+        if (!res.valid) {
+            dom.inputMask.classList.add("invalid");
+            dom.maskError.textContent = res.reason;
+            dom.maskValidBadge.textContent = "NON VALIDA";
+            dom.maskValidBadge.className = "badge badge-danger";
+            return;
+        }
+
+        dom.inputMask.classList.remove("invalid");
+        dom.maskError.textContent = "";
+        dom.maskValidBadge.textContent = `/${res.cidr} VALIDA`;
+        dom.maskValidBadge.className = "badge badge-net";
+
+        state.cidr = res.cidr;
+        updateAll("maskInput");
+    });
+
+    // 4. Preset Rapidi
+    document.querySelectorAll("[data-ip][data-cidr]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const ipStr = btn.getAttribute("data-ip");
+            const cidr = Number(btn.getAttribute("data-cidr"));
+            const parsed = parseIpToInt(ipStr);
+            if (parsed !== null) {
+                state.ipInt = parsed;
+                state.cidr = cidr;
+                dom.inputIp.value = ipStr;
+                setIpValidState(true);
+                updateAll("preset");
+            }
+        });
+    });
+
+    // 5. Click sui Bit della Subnet Mask nell'Ispettore Binario
+    dom.bitMatrix.addEventListener("click", (e) => {
+        const cell = e.target.closest("[data-set-cidr]");
+        if (!cell) return;
+        const newCidr = Number(cell.getAttribute("data-set-cidr"));
+        // Se si clicca sull'attuale ultimo bit attivo e si è su /1, permette di scendere a /0
+        if (newCidr === 1 && state.cidr === 1) {
+            state.cidr = 0;
+        } else {
+            state.cidr = newCidr;
+        }
+        updateAll("bitClick");
+    });
+
+    // 6. Controlli VLSM / Divisore Sottoreti
+    dom.vlsmTargetCidr.addEventListener("change", () => {
+        state.vlsmTargetCidr = Number(dom.vlsmTargetCidr.value);
+        dom.vlsmMinSubnets.value = "";
+        dom.vlsmMinHosts.value = "";
+        renderVlsmTable(calculateSubnetDetails(state.ipInt, state.cidr));
+    });
+
+    dom.vlsmMinSubnets.addEventListener("input", () => {
+        const reqSubnets = Number(dom.vlsmMinSubnets.value);
+        if (!reqSubnets || reqSubnets < 1 || state.cidr >= 32) return;
+        const neededBits = Math.ceil(Math.log2(reqSubnets));
+        const target = Math.min(32, state.cidr + Math.max(1, neededBits));
+        state.vlsmTargetCidr = target;
+        dom.vlsmTargetCidr.value = target;
+        dom.vlsmMinHosts.value = "";
+        renderVlsmTable(calculateSubnetDetails(state.ipInt, state.cidr));
+    });
+
+    dom.vlsmMinHosts.addEventListener("input", () => {
+        const reqHosts = Number(dom.vlsmMinHosts.value);
+        if (!reqHosts || reqHosts < 1 || state.cidr >= 32) return;
+        // Trova i bit host minimi necessari
+        let hostBits = 1;
+        while (hostBits <= 32) {
+            const usable = hostBits === 1 ? 2 : (Math.pow(2, hostBits) - 2);
+            if (usable >= reqHosts) break;
+            hostBits++;
+        }
+        const target = Math.max(state.cidr + 1, Math.min(32, 32 - hostBits));
+        state.vlsmTargetCidr = target;
+        dom.vlsmTargetCidr.value = target;
+        dom.vlsmMinSubnets.value = "";
+        renderVlsmTable(calculateSubnetDetails(state.ipInt, state.cidr));
+    });
+
+    dom.vlsmFilter.addEventListener("input", () => {
+        renderVlsmTable(calculateSubnetDetails(state.ipInt, state.cidr));
+    });
+
+    // Bottone "Analizza" dentro la tabella VLSM
+    dom.vlsmTableBody.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-load-subnet-ip]");
+        if (!btn) return;
+        const ipStr = btn.getAttribute("data-load-subnet-ip");
+        const cidr = Number(btn.getAttribute("data-load-subnet-cidr"));
+        const parsed = parseIpToInt(ipStr);
+        if (parsed !== null) {
+            state.ipInt = parsed;
+            state.cidr = cidr;
+            dom.inputIp.value = ipStr;
+            setIpValidState(true);
+            updateAll("vlsmLoad");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            showToast(`Caricata sottorete ${ipStr}/${cidr}`);
+        }
+    });
+
+    // 7. Checker IP secondario
+    dom.checkerIpInput.addEventListener("input", () => {
+        renderSameSubnetChecker(calculateSubnetDetails(state.ipInt, state.cidr));
+    });
+
+    // 8. Generatore IP Casuale
+    dom.btnRandomIp.addEventListener("click", () => {
+        const scenarios = [
+            { oct1: 10, cidr: Math.floor(Math.random() * 17) + 8 },
+            { oct1: 172, oct2: 16 + Math.floor(Math.random() * 16), cidr: Math.floor(Math.random() * 13) + 16 },
+            { oct1: 192, oct2: 168, cidr: Math.floor(Math.random() * 7) + 24 },
+            { oct1: 45 + Math.floor(Math.random() * 150), cidr: Math.floor(Math.random() * 15) + 16 }
+        ];
+        const pick = scenarios[Math.floor(Math.random() * scenarios.length)];
+        const o1 = pick.oct1;
+        const o2 = pick.oct2 !== undefined ? pick.oct2 : Math.floor(Math.random() * 256);
+        const o3 = Math.floor(Math.random() * 256);
+        const o4 = 1 + Math.floor(Math.random() * 254);
+
+        const ipStr = `${o1}.${o2}.${o3}.${o4}`;
+        state.ipInt = parseIpToInt(ipStr);
+        state.cidr = pick.cidr;
+        dom.inputIp.value = ipStr;
+        setIpValidState(true);
+        updateAll("random");
+    });
+
+    // 9. Gestione Copia negli Appunti (Compatibile iFrame via execCommand + fallback)
+    function copyTextToClipboard(text, buttonEl = null) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand("copy");
+            if (buttonEl) {
+                buttonEl.classList.add("copied");
+                setTimeout(() => buttonEl.classList.remove("copied"), 1100);
+            }
+            showToast(`Copiato: ${text.length > 42 ? text.slice(0, 42) + "..." : text}`);
+        } catch (err) {
+            showToast("Impossibile copiare automaticamente");
+        }
+        document.body.removeChild(textarea);
+    }
+
+    dom.metricsGrid.addEventListener("click", (e) => {
+        const copyBtn = e.target.closest(".copy-btn");
+        if (!copyBtn) return;
+        const val = copyBtn.getAttribute("data-copy");
+        copyTextToClipboard(val, copyBtn);
+    });
+
+    dom.btnCopyReport.addEventListener("click", () => {
+        copyTextToClipboard(state.lastReportText);
+    });
+
+    let toastTimer = null;
+    function showToast(msg) {
+        dom.toast.textContent = msg;
+        dom.toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            dom.toast.classList.remove("show");
+        }, 2100);
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    // Inizializzazione al caricamento
+    initCidrDropdown();
+    updateAll("init");
+})();
+</script>
+</body>
+</html>
