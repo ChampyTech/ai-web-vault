@@ -1,0 +1,1774 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatrice Voti & Analisi Statistica</title>
+    <style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+
+            --indigo: #4f46e5;
+            --indigo-hover: #4338ca;
+            --indigo-soft: #eef2ff;
+            --indigo-border: #c7d2fe;
+
+            --emerald: #10b981;
+            --emerald-dark: #047857;
+            --emerald-soft: #ecfdf5;
+            --emerald-border: #a7f3d0;
+
+            --amber: #f59e0b;
+            --amber-dark: #b45309;
+            --amber-soft: #fffbeb;
+            --amber-border: #fde68a;
+
+            --coral: #ef4444;
+            --coral-dark: #b91c1c;
+            --coral-soft: #fef2f2;
+            --coral-border: #fecaca;
+
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Header */
+        .app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--indigo), #3730a3);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+        }
+
+        .brand-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .brand-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: var(--font-sans);
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background-color: var(--indigo);
+            border-color: var(--indigo);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--indigo-hover);
+            border-color: var(--indigo-hover);
+            color: #ffffff;
+        }
+
+        .btn-soft-indigo {
+            background-color: var(--indigo-soft);
+            border-color: var(--indigo-border);
+            color: var(--indigo);
+        }
+
+        .btn-soft-indigo:hover {
+            background-color: #e0e7ff;
+            color: var(--indigo-hover);
+        }
+
+        .btn-danger-soft {
+            background-color: var(--coral-soft);
+            border-color: var(--coral-border);
+            color: var(--coral-dark);
+        }
+
+        .btn-danger-soft:hover {
+            background-color: #fee2e2;
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            padding: 1.5rem;
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 960px) {
+            .top-grid {
+                grid-template-columns: 5fr 7fr;
+            }
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--indigo);
+            display: inline-block;
+        }
+
+        .badge-count {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            background-color: var(--bg-subtle);
+            color: var(--text-secondary);
+        }
+
+        /* Input Form */
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .grade-input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.65rem 0.95rem;
+            border-radius: var(--radius-md);
+            border: 1px solid #cbd5e1;
+            background-color: var(--bg-page);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .grade-input:focus {
+            outline: none;
+            border-color: var(--indigo);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .feedback-msg {
+            min-height: 1.35rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feedback-error { color: var(--coral-dark); }
+        .feedback-success { color: var(--emerald-dark); }
+
+        .quick-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.45rem;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.4rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .quick-btn {
+            padding: 0.42rem 0.25rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: transform 0.1s ease, background-color 0.15s ease;
+        }
+
+        .quick-btn:active { transform: scale(0.96); }
+
+        .quick-btn-suff {
+            background-color: var(--emerald-soft);
+            color: var(--emerald-dark);
+            border-color: var(--emerald-border);
+        }
+        .quick-btn-suff:hover { background-color: #d1fae5; }
+
+        .quick-btn-insuff {
+            background-color: var(--coral-soft);
+            color: var(--coral-dark);
+            border-color: var(--coral-border);
+        }
+        .quick-btn-insuff:hover { background-color: #fee2e2; }
+
+        /* Grades List */
+        .grades-box {
+            min-height: 135px;
+            max-height: 220px;
+            overflow-y: auto;
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.85rem;
+        }
+
+        .empty-list-state {
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .grades-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .grade-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.5rem 0.35rem 0.7rem;
+            border-radius: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .chip-suff {
+            background-color: var(--emerald-soft);
+            color: var(--emerald-dark);
+            border-color: var(--emerald-border);
+        }
+
+        .chip-insuff {
+            background-color: var(--coral-soft);
+            color: var(--coral-dark);
+            border-color: var(--coral-border);
+        }
+
+        .chip-index {
+            font-size: 0.68rem;
+            opacity: 0.65;
+        }
+
+        .chip-remove {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-size: 0.95rem;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chip-remove:hover {
+            background-color: rgba(15, 23, 42, 0.1);
+        }
+
+        /* Verdict Banner Card */
+        .verdict-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-width: 2px;
+            transition: border-color 0.25s ease, background-color 0.25s ease;
+        }
+
+        .verdict-empty {
+            border-style: dashed;
+            border-color: #cbd5e1;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 320px;
+        }
+
+        .verdict-suff {
+            border-color: var(--emerald-border);
+            background: linear-gradient(145deg, #ffffff 45%, var(--emerald-soft) 100%);
+        }
+
+        .verdict-almost {
+            border-color: var(--amber-border);
+            background: linear-gradient(145deg, #ffffff 45%, var(--amber-soft) 100%);
+        }
+
+        .verdict-insuff {
+            border-color: var(--coral-border);
+            background: linear-gradient(145deg, #ffffff 45%, var(--coral-soft) 100%);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .pill-suff { background-color: #d1fae5; color: var(--emerald-dark); }
+        .pill-almost { background-color: #fef3c7; color: var(--amber-dark); }
+        .pill-insuff { background-color: #fee2e2; color: var(--coral-dark); }
+
+        .verdict-main-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .verdict-headline {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.35rem;
+        }
+
+        .verdict-subtext {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            max-width: 540px;
+        }
+
+        .big-avg-box {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1.15rem;
+            text-align: right;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+
+        .big-avg-label {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .big-avg-num {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        /* Progress bar */
+        .progress-wrapper {
+            margin-top: 0.75rem;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 14px;
+            background-color: #e2e8f0;
+            border-radius: 999px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.35s ease;
+        }
+
+        .threshold-tick {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 60%;
+            width: 2.5px;
+            background-color: var(--text-main);
+            z-index: 2;
+        }
+
+        .recovery-box {
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .recovery-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-secondary);
+            margin-bottom: 0.65rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .recovery-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .recovery-step {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.75rem;
+            text-align: center;
+        }
+
+        .recovery-step small {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .recovery-step strong {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        /* 9 Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 1rem;
+        }
+
+        @media (min-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 960px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.15rem 1.25rem;
+            box-shadow: var(--shadow-card);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+        }
+
+        .stat-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .stat-val {
+            font-family: var(--font-mono);
+            font-size: 1.55rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-desc {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+        }
+
+        /* Charts & Bottom Grid */
+        .analytics-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 960px) {
+            .analytics-row {
+                grid-template-columns: 7fr 5fr;
+            }
+        }
+
+        .right-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background-color: var(--text-main);
+            color: #ffffff;
+            padding: 0.4rem 0.65rem;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        /* Donut Row */
+        .donut-flex {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .donut-bars {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .mini-bar-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .mini-bar-track {
+            width: 100%;
+            height: 8px;
+            background-color: var(--bg-subtle);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        /* Median Sequence */
+        .sorted-sequence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .seq-item {
+            padding: 0.45rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 700;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .seq-item.is-median {
+            background-color: var(--indigo-soft);
+            border: 2px solid var(--indigo);
+            color: var(--indigo);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+        }
+
+        .seq-item span {
+            display: block;
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            margin-top: 0.1rem;
+        }
+
+        /* What-If Simulator */
+        .whatif-card {
+            background: linear-gradient(160deg, #ffffff 0%, var(--indigo-soft) 100%);
+            border-color: var(--indigo-border);
+        }
+
+        .whatif-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 999px;
+            outline: none;
+            cursor: pointer;
+            margin: 0.75rem 0 0.35rem;
+        }
+
+        .whatif-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--indigo);
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+        }
+
+        .whatif-slider::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--indigo);
+            border: 3px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+            cursor: pointer;
+        }
+
+        .slider-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .whatif-results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background-color: #ffffff;
+            border: 1px solid var(--indigo-border);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .whatif-cell small {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .whatif-cell strong {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .whatif-delta {
+            display: block;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            background-color: var(--text-main);
+            color: #ffffff;
+            padding: 0.65rem 1.1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 50;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-icon">&Sigma;</div>
+                <div>
+                    <h1 class="brand-title">Calcolatrice Voti &amp; Analisi Statistica</h1>
+                    <p class="brand-subtitle">Monitoraggio rendimento scolastico, calcolo della media e piano di recupero</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" id="btn-load-example" class="btn btn-soft-indigo">Carica Esempio</button>
+                <button type="button" id="btn-copy-summary" class="btn">Copia Riepilogo</button>
+                <button type="button" id="btn-clear-all" class="btn btn-danger-soft">Svuota Tutto</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container">
+
+        <!-- TOP ROW: INPUT + VERDICT -->
+        <div class="top-grid">
+
+            <!-- LEFT: GRADE INPUT & LIST -->
+            <section class="card">
+                <div class="section-heading">
+                    <h2 class="section-title"><span class="dot-indicator"></span> Inserimento Voti (0 – 10)</h2>
+                    <span id="grades-count-badge" class="badge-count">0 voti</span>
+                </div>
+
+                <form id="grade-form" novalidate>
+                    <div class="input-row">
+                        <input
+                            type="text"
+                            id="grade-input"
+                            class="grade-input"
+                            inputmode="decimal"
+                            placeholder="Es. 7.5 oppure 7,5"
+                            autocomplete="off"
+                            aria-label="Inserisci un voto da 0 a 10"
+                        >
+                        <button type="submit" class="btn btn-primary">+ Aggiungi</button>
+                    </div>
+                </form>
+
+                <div id="feedback-msg" class="feedback-msg" role="status" aria-live="polite"></div>
+
+                <span class="quick-label">Inserimento Rapido</span>
+                <div id="quick-grid" class="quick-grid"></div>
+
+                <div class="section-heading" style="margin-bottom: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Elenco Voti Cronologico</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Clicca &times; per rimuovere</span>
+                </div>
+
+                <div id="grades-box" class="grades-box">
+                    <div class="empty-list-state">
+                        <strong>Nessun voto inserito</strong>
+                        <span>Digita un voto da 0 a 10 oppure usa i pulsanti rapidi qui sopra.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT: VERDICT & RECOVERY PLANNER -->
+            <section id="verdict-card" class="card verdict-card verdict-empty">
+                <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">📊</div>
+                <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
+                    Inserisci almeno un voto per avviare l'analisi statistica
+                </h2>
+                <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 440px; margin-bottom: 1.25rem;">
+                    Aggiungi le tue valutazioni nel pannello a sinistra per calcolare istantaneamente media, mediana, deviazione standard e scoprire di quali voti hai bisogno per raggiungere la sufficienza.
+                </p>
+                <button type="button" id="btn-empty-example" class="btn btn-primary">Carica un esempio di voti</button>
+            </section>
+
+        </div>
+
+        <!-- ANALYTICS SECTION (SHOWN WHEN AT LEAST 1 GRADE IS ENTERED) -->
+        <div id="analytics-section" class="hidden" style="display: flex; flex-direction: column; gap: 1.5rem;">
+
+            <!-- 9 STATISTICS GRID -->
+            <section>
+                <div class="section-heading">
+                    <h2 class="section-title"><span class="dot-indicator"></span> Statistiche Complete</h2>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);">Aggiornamento automatico in tempo reale</span>
+                </div>
+                <div id="stats-grid" class="stats-grid"></div>
+            </section>
+
+            <!-- CHARTS + MEDIAN SEQUENCE + WHAT-IF SIMULATOR -->
+            <div class="analytics-row">
+
+                <!-- LEFT COLUMN: TREND SVG CHART + SORTED MEDIAN SEQUENCE -->
+                <div class="right-stack">
+                    <section class="card">
+                        <div class="section-heading">
+                            <div>
+                                <h3 class="section-title">Andamento Voti nel Tempo</h3>
+                                <p style="font-size: 0.76rem; color: var(--text-muted);">Linea tratteggiata verde: sufficienza (6.00) &bull; Linea indaco: media attuale</p>
+                            </div>
+                        </div>
+                        <div class="chart-box" id="trend-chart-box">
+                            <div id="chart-tooltip" class="chart-tooltip"></div>
+                            <div id="trend-svg-mount" style="width: 100%; height: 100%;"></div>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <div class="section-heading" style="margin-bottom: 0.35rem;">
+                            <h3 class="section-title">Sequenza Ordinata &amp; Calcolo Mediana</h3>
+                            <span id="median-badge" class="badge-count">Mediana: —</span>
+                        </div>
+                        <p id="median-explanation" style="font-size: 0.78rem; color: var(--text-secondary);">
+                            I voti vengono ordinati dal più piccolo al più grande per individuare il valore centrale.
+                        </p>
+                        <div id="sorted-sequence" class="sorted-sequence"></div>
+                    </section>
+                </div>
+
+                <!-- RIGHT COLUMN: DONUT DISTRIBUTION + WHAT-IF SIMULATOR -->
+                <div class="right-stack">
+                    <section class="card">
+                        <div class="section-heading" style="margin-bottom: 0.35rem;">
+                            <h3 class="section-title">Distribuzione Esiti</h3>
+                        </div>
+                        <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 1rem;">
+                            Rapporto percentuale tra voti sufficienti (&ge; 6.00) e insufficienti (&lt; 6.00)
+                        </p>
+                        <div id="donut-container"></div>
+                    </section>
+
+                    <section class="card whatif-card">
+                        <div class="section-heading" style="margin-bottom: 0.35rem;">
+                            <h3 class="section-title" style="color: #312e81;">Simulatore "What-If" (Prossimo Voto)</h3>
+                            <span id="whatif-val-badge" style="font-family: var(--font-mono); font-size: 0.85rem; font-weight: 800; background: var(--indigo); color: #fff; padding: 0.2rem 0.6rem; border-radius: 8px;">7.50</span>
+                        </div>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary);">
+                            Sposta lo slider per simulare l'impatto del prossimo compito prima di aggiungerlo:
+                        </p>
+
+                        <input type="range" id="whatif-slider" class="whatif-slider" min="0" max="10" step="0.25" value="7.5">
+                        <div class="slider-ticks">
+                            <span>0.00</span>
+                            <span>2.50</span>
+                            <span>5.00</span>
+                            <span style="color: var(--emerald-dark); font-weight: 700;">6.00</span>
+                            <span>7.50</span>
+                            <span>10.00</span>
+                        </div>
+
+                        <div id="whatif-results" class="whatif-results"></div>
+
+                        <button type="button" id="btn-whatif-add" class="btn btn-primary" style="width: 100%;">
+                            + Aggiungi questo voto
+                        </button>
+                    </section>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            // Stato iniziale rigorosamente VUOTO (0 voti)
+            let voti = [];
+
+            // Riferimenti DOM
+            const gradeForm = document.getElementById("grade-form");
+            const gradeInput = document.getElementById("grade-input");
+            const feedbackMsg = document.getElementById("feedback-msg");
+            const quickGrid = document.getElementById("quick-grid");
+            const gradesCountBadge = document.getElementById("grades-count-badge");
+            const gradesBox = document.getElementById("grades-box");
+            const verdictCard = document.getElementById("verdict-card");
+            const analyticsSection = document.getElementById("analytics-section");
+            const statsGrid = document.getElementById("stats-grid");
+            const trendSvgMount = document.getElementById("trend-svg-mount");
+            const chartTooltip = document.getElementById("chart-tooltip");
+            const medianBadge = document.getElementById("median-badge");
+            const medianExplanation = document.getElementById("median-explanation");
+            const sortedSequence = document.getElementById("sorted-sequence");
+            const donutContainer = document.getElementById("donut-container");
+            const whatifSlider = document.getElementById("whatif-slider");
+            const whatifValBadge = document.getElementById("whatif-val-badge");
+            const whatifResults = document.getElementById("whatif-results");
+            const toastEl = document.getElementById("toast");
+
+            let toastTimer = null;
+            function showToast(text) {
+                toastEl.textContent = text;
+                toastEl.classList.add("visible");
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toastEl.classList.remove("visible");
+                }, 2400);
+            }
+
+            function setFeedback(text, isError) {
+                feedbackMsg.textContent = text;
+                feedbackMsg.className = "feedback-msg " + (isError ? "feedback-error" : "feedback-success");
+            }
+
+            // Calcolo statistico completo
+            function computeStats(gradesList) {
+                const numVoti = gradesList.length;
+                if (numVoti === 0) {
+                    return { isEmpty: true, numVoti: 0 };
+                }
+
+                let numVotiSufficienti = 0;
+                let numVotiInsufficienti = 0;
+                let sommaVoti = 0;
+                let votoMin = 10;
+                let votoMax = 0;
+
+                for (let i = 0; i < numVoti; i++) {
+                    const v = gradesList[i];
+                    sommaVoti += v;
+                    if (v > votoMax) votoMax = v;
+                    if (v < votoMin) votoMin = v;
+                    if (v >= 6) {
+                        numVotiSufficienti++;
+                    } else {
+                        numVotiInsufficienti++;
+                    }
+                }
+
+                const mediaVoti = sommaVoti / numVoti;
+
+                // Ordinamento crescente per la mediana
+                const ordinati = [...gradesList].sort((a, b) => a - b);
+                let medianaVoti;
+                let medianIndices = [];
+
+                if (numVoti % 2 === 0) {
+                    const idx1 = numVoti / 2 - 1;
+                    const idx2 = numVoti / 2;
+                    medianaVoti = (ordinati[idx1] + ordinati[idx2]) / 2;
+                    medianIndices = [idx1, idx2];
+                } else {
+                    const idx = Math.floor(numVoti / 2);
+                    medianaVoti = ordinati[idx];
+                    medianIndices = [idx];
+                }
+
+                // Varianza (popolazione) e Deviazione Standard
+                let sommaScarti = 0;
+                for (let i = 0; i < numVoti; i++) {
+                    sommaScarti += Math.pow(gradesList[i] - mediaVoti, 2);
+                }
+                const varianza = sommaScarti / numVoti;
+                const deviazioneStandard = Math.sqrt(varianza);
+
+                // Verdetto sufficienza e calcolo compiti futuri necessari
+                let status = "sufficient";
+                let intro = "";
+                let detail = "";
+                let compitiNecessari = 0;
+                let votoNecessario = 0;
+
+                if (mediaVoti >= 6) {
+                    status = "sufficient";
+                    intro = "Bravo! Sei sufficiente :)";
+                    detail = "La tua media attuale raggiunge o supera la soglia minima del 6.00.";
+                } else {
+                    compitiNecessari = 1;
+                    while (true) {
+                        const puntiTotaliMancanti = (6.0 * (numVoti + compitiNecessari)) - sommaVoti;
+                        votoNecessario = puntiTotaliMancanti / compitiNecessari;
+                        if (votoNecessario <= 10.0 + 1e-9) {
+                            break;
+                        }
+                        compitiNecessari++;
+                    }
+
+                    if (mediaVoti > 5.5) {
+                        status = "almost";
+                        intro = "Hai quasi raggiunto la sufficienza. Continua così! ;)";
+                    } else {
+                        status = "insufficient";
+                        intro = "Non hai raggiunto la sufficienza :(";
+                    }
+
+                    if (compitiNecessari === 1) {
+                        detail = `Per arrivare alla media del 6 nel prossimo compito devi prendere minimo ${votoNecessario.toFixed(2)}.`;
+                    } else {
+                        detail = `Un solo 10 non basta: per arrivare alla media del 6 devi prendere almeno ${votoNecessario.toFixed(2)} in ciascuno dei prossimi ${compitiNecessari} compiti.`;
+                    }
+                }
+
+                const percentualeSufficiente = (numVotiSufficienti / numVoti) * 100;
+                const percentualeInsufficiente = 100 - percentualeSufficiente;
+
+                return {
+                    isEmpty: false,
+                    numVoti,
+                    sommaVoti,
+                    mediaVoti,
+                    medianaVoti,
+                    ordinati,
+                    medianIndices,
+                    varianza,
+                    deviazioneStandard,
+                    numVotiSufficienti,
+                    numVotiInsufficienti,
+                    percentualeSufficiente,
+                    percentualeInsufficiente,
+                    votoMax,
+                    votoMin,
+                    status,
+                    intro,
+                    detail,
+                    compitiNecessari,
+                    votoNecessario
+                };
+            }
+
+            // Validazione e aggiunta voto
+            function addGrade(rawInput) {
+                const str = String(rawInput).trim();
+                if (!str) {
+                    setFeedback("Hai inserito un valore non valido. Riprova.", true);
+                    return false;
+                }
+
+                const normalized = str.replace(",", ".");
+                const num = Number(normalized);
+
+                if (Number.isNaN(num) || !Number.isFinite(num)) {
+                    setFeedback("Hai inserito un valore non valido. Riprova.", true);
+                    return false;
+                }
+
+                if (num < 0 || num > 10) {
+                    setFeedback("Hai inserito un voto non valido (0-10).", true);
+                    return false;
+                }
+
+                const cleanGrade = Math.round(num * 100) / 100;
+                voti.push(cleanGrade);
+                setFeedback(`Voto ${cleanGrade.toFixed(2)} aggiunto con successo.`, false);
+                renderAll();
+                return true;
+            }
+
+            // Render pulsanti rapidi
+            function initQuickButtons() {
+                const presets = [4, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9, 10];
+                quickGrid.innerHTML = "";
+                presets.forEach(val => {
+                    const btn = document.createElement("button");
+                    btn.type = "button";
+                    btn.className = "quick-btn " + (val >= 6 ? "quick-btn-suff" : "quick-btn-insuff");
+                    btn.textContent = val.toString();
+                    btn.addEventListener("click", () => addGrade(val));
+                    quickGrid.appendChild(btn);
+                });
+            }
+
+            // Render elenco voti inseriti
+            function renderGradesList() {
+                const count = voti.length;
+                gradesCountBadge.textContent = `${count} ${count === 1 ? "voto" : "voti"}`;
+
+                if (count === 0) {
+                    gradesBox.innerHTML = `
+                        <div class="empty-list-state">
+                            <strong>Nessun voto inserito</strong>
+                            <span>Digita un voto da 0 a 10 oppure usa i pulsanti rapidi qui sopra.</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const chipsContainer = document.createElement("div");
+                chipsContainer.className = "grades-chips";
+
+                voti.forEach((v, idx) => {
+                    const isSuff = v >= 6;
+                    const chip = document.createElement("div");
+                    chip.className = "grade-chip " + (isSuff ? "chip-suff" : "chip-insuff");
+                    chip.innerHTML = `
+                        <span class="chip-index">#${idx + 1}</span>
+                        <span>${v.toFixed(2)}</span>
+                        <button type="button" class="chip-remove" title="Elimina voto #${idx + 1}" aria-label="Elimina voto ${v.toFixed(2)}">&times;</button>
+                    `;
+                    chip.querySelector(".chip-remove").addEventListener("click", () => {
+                        voti.splice(idx, 1);
+                        if (voti.length === 0) {
+                            feedbackMsg.textContent = "";
+                        }
+                        renderAll();
+                    });
+                    chipsContainer.appendChild(chip);
+                });
+
+                gradesBox.innerHTML = "";
+                gradesBox.appendChild(chipsContainer);
+            }
+
+            // Render Banner Verdetto e Piano di Recupero
+            function renderVerdict(stats) {
+                if (stats.isEmpty) {
+                    verdictCard.className = "card verdict-card verdict-empty";
+                    verdictCard.innerHTML = `
+                        <div style="font-size: 2.25rem; margin-bottom: 0.5rem;">📊</div>
+                        <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.4rem;">
+                            Inserisci almeno un voto per avviare l'analisi statistica
+                        </h2>
+                        <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 440px; margin-bottom: 1.25rem;">
+                            Aggiungi le tue valutazioni nel pannello a sinistra per calcolare istantaneamente media, mediana, deviazione standard e scoprire di quali voti hai bisogno per raggiungere la sufficienza.
+                        </p>
+                        <button type="button" id="btn-empty-example-dynamic" class="btn btn-primary">Carica un esempio di voti</button>
+                    `;
+                    const dynBtn = document.getElementById("btn-empty-example-dynamic");
+                    if (dynBtn) {
+                        dynBtn.addEventListener("click", loadExampleGrades);
+                    }
+                    return;
+                }
+
+                let cardClass = "card verdict-card ";
+                let pillClass = "status-pill ";
+                let pillText = "";
+                let accentColor = "";
+                let barColor = "";
+
+                if (stats.status === "sufficient") {
+                    cardClass += "verdict-suff";
+                    pillClass += "pill-suff";
+                    pillText = "Sufficiente (Media ≥ 6.00)";
+                    accentColor = "var(--emerald-dark)";
+                    barColor = "var(--emerald)";
+                } else if (stats.status === "almost") {
+                    cardClass += "verdict-almost";
+                    pillClass += "pill-almost";
+                    pillText = "Quasi Sufficiente (Media > 5.50)";
+                    accentColor = "var(--amber-dark)";
+                    barColor = "var(--amber)";
+                } else {
+                    cardClass += "verdict-insuff";
+                    pillClass += "pill-insuff";
+                    pillText = "Insufficiente (Media ≤ 5.50)";
+                    accentColor = "var(--coral-dark)";
+                    barColor = "var(--coral)";
+                }
+
+                const pct = Math.min(100, Math.max(0, (stats.mediaVoti / 10) * 100));
+
+                let recoverySection = "";
+                if (stats.status === "sufficient") {
+                    const margin = (stats.sommaVoti - 6.0 * stats.numVoti).toFixed(2);
+                    recoverySection = `
+                        <div class="recovery-box" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.82rem;">
+                            <span style="color: var(--emerald-dark); font-weight: 600;">
+                                Hai un margine positivo di <strong>+${margin}</strong> punti rispetto alla soglia minima del 6.00.
+                            </span>
+                            <span style="font-family: var(--font-mono); font-weight: 700; color: var(--emerald-dark); background: #d1fae5; padding: 0.2rem 0.6rem; border-radius: 6px;">
+                                Obiettivo Raggiunto
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    const maxShow = Math.min(stats.compitiNecessari, 10);
+                    let stepsHtml = "";
+                    for (let i = 1; i <= maxShow; i++) {
+                        stepsHtml += `
+                            <div class="recovery-step">
+                                <small>Compito +${i}</small>
+                                <strong style="color: ${accentColor};">&ge; ${stats.votoNecessario.toFixed(2)}</strong>
+                            </div>
+                        `;
+                    }
+                    if (stats.compitiNecessari > 10) {
+                        stepsHtml += `
+                            <div class="recovery-step" style="background: var(--bg-subtle);">
+                                <small>Altri</small>
+                                <strong style="color: var(--text-secondary);">+${stats.compitiNecessari - 10}</strong>
+                            </div>
+                        `;
+                    }
+
+                    recoverySection = `
+                        <div class="recovery-box">
+                            <div class="recovery-title">
+                                <span>Piano di Recupero (${stats.compitiNecessari} ${stats.compitiNecessari === 1 ? "compito" : "compiti"})</span>
+                                <span style="font-family: var(--font-mono);">Target: 6.00</span>
+                            </div>
+                            <div class="recovery-pills">${stepsHtml}</div>
+                        </div>
+                    `;
+                }
+
+                verdictCard.className = cardClass;
+                verdictCard.innerHTML = `
+                    <div>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                            <span class="${pillClass}">${pillText}</span>
+                            <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">
+                                Somma punti: <strong>${stats.sommaVoti.toFixed(2)}</strong> / ${(stats.numVoti * 10).toFixed(0)}
+                            </span>
+                        </div>
+
+                        <div class="verdict-main-row">
+                            <div>
+                                <h2 class="verdict-headline">${stats.intro}</h2>
+                                <p class="verdict-subtext">${stats.detail}</p>
+                            </div>
+                            <div class="big-avg-box">
+                                <span class="big-avg-label">Media Attuale</span>
+                                <span class="big-avg-num" style="color: ${accentColor};">${stats.mediaVoti.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div class="progress-wrapper">
+                            <div class="progress-labels">
+                                <span>0.00</span>
+                                <span style="color: var(--emerald-dark); font-weight: 700;">Sufficienza (6.00)</span>
+                                <span>10.00</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: ${pct}%; background-color: ${barColor};"></div>
+                                <div class="threshold-tick" title="Soglia 6.00"></div>
+                            </div>
+                        </div>
+                    </div>
+                    ${recoverySection}
+                `;
+            }
+
+            // Render Griglia 9 Statistiche
+            function renderStatsGrid(stats) {
+                const mediaColor = stats.mediaVoti >= 6 ? "var(--emerald-dark)" : (stats.mediaVoti > 5.5 ? "var(--amber-dark)" : "var(--coral-dark)");
+                const items = [
+                    {
+                        label: "Media Aritmetica",
+                        val: stats.mediaVoti.toFixed(2),
+                        desc: `Somma ${stats.sommaVoti.toFixed(2)} divisa per ${stats.numVoti} voti`,
+                        color: mediaColor
+                    },
+                    {
+                        label: "Mediana",
+                        val: stats.medianaVoti.toFixed(2),
+                        desc: stats.numVoti % 2 === 0 ? "Media dei 2 valori centrali ordinati" : "Valore centrale della sequenza ordinata",
+                        color: "var(--indigo)"
+                    },
+                    {
+                        label: "Varianza",
+                        val: stats.varianza.toFixed(2),
+                        desc: "Media degli scarti quadratici dalla media",
+                        color: "var(--text-main)"
+                    },
+                    {
+                        label: "Deviazione Standard",
+                        val: stats.deviazioneStandard.toFixed(2),
+                        desc: stats.deviazioneStandard < 0.8 ? "Andamento molto costante" : (stats.deviazioneStandard < 1.5 ? "Dispersione nella norma" : "Voti molto variabili"),
+                        color: "var(--text-main)"
+                    },
+                    {
+                        label: "Voti Totali",
+                        val: String(stats.numVoti),
+                        desc: "Numero complessivo di valutazioni",
+                        color: "var(--indigo)"
+                    },
+                    {
+                        label: "Voti Sufficienti",
+                        val: `${stats.numVotiSufficienti} (${stats.percentualeSufficiente.toFixed(1)}%)`,
+                        desc: "Valutazioni maggiori o uguali a 6.00",
+                        color: "var(--emerald-dark)"
+                    },
+                    {
+                        label: "Voti Insufficienti",
+                        val: `${stats.numVotiInsufficienti} (${stats.percentualeInsufficiente.toFixed(1)}%)`,
+                        desc: "Valutazioni strettamente inferiori a 6.00",
+                        color: "var(--coral-dark)"
+                    },
+                    {
+                        label: "Voto Migliore (Max)",
+                        val: stats.votoMax.toFixed(2),
+                        desc: "Valutazione più alta conseguita",
+                        color: "var(--emerald-dark)"
+                    },
+                    {
+                        label: "Voto Peggiore (Min)",
+                        val: stats.votoMin.toFixed(2),
+                        desc: "Valutazione più bassa conseguita",
+                        color: "var(--coral-dark)"
+                    }
+                ];
+
+                statsGrid.innerHTML = items.map(item => `
+                    <div class="stat-card">
+                        <div class="stat-label">${item.label}</div>
+                        <div class="stat-val" style="color: ${item.color};">${item.val}</div>
+                        <div class="stat-desc">${item.desc}</div>
+                    </div>
+                `).join("");
+            }
+
+            // Render Grafico SVG Andamento
+            function renderTrendChart(stats) {
+                const W = 620;
+                const H = 240;
+                const padL = 36;
+                const padR = 20;
+                const padT = 20;
+                const padB = 30;
+                const plotW = W - padL - padR;
+                const plotH = H - padT - padB;
+
+                const yPos = (val) => padT + plotH - (val / 10) * plotH;
+                const xPos = (idx) => {
+                    if (voti.length === 1) return padL + plotW / 2;
+                    return padL + (idx / (voti.length - 1)) * plotW;
+                };
+
+                let gridHtml = "";
+                [0, 2, 4, 6, 8, 10].forEach(tick => {
+                    const y = yPos(tick);
+                    const isSix = tick === 6;
+                    gridHtml += `
+                        <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"
+                              stroke="${isSix ? "#10b981" : "#e2e8f0"}"
+                              stroke-width="${isSix ? "2" : "1"}"
+                              ${isSix ? 'stroke-dasharray="6 4"' : ""} />
+                        <text x="${padL - 8}" y="${y + 4}" text-anchor="end"
+                              fill="${isSix ? "#047857" : "#64748b"}"
+                              font-family="SFMono-Regular, Consolas, monospace" font-size="11" font-weight="${isSix ? "700" : "400"}">
+                            ${tick}
+                        </text>
+                    `;
+                });
+
+                const avgY = yPos(stats.mediaVoti);
+                const avgLineHtml = `
+                    <line x1="${padL}" y1="${avgY}" x2="${W - padR}" y2="${avgY}"
+                          stroke="#4f46e5" stroke-width="1.6" stroke-dasharray="3 3" opacity="0.85" />
+                `;
+
+                const pts = voti.map((v, i) => `${xPos(i)},${yPos(v)}`);
+                let pathHtml = "";
+                if (voti.length > 1) {
+                    const areaD = `M ${xPos(0)},${yPos(0)} L ${pts.join(" L ")} L ${xPos(voti.length - 1)},${yPos(0)} Z`;
+                    pathHtml += `<path d="${areaD}" fill="url(#indigoArea)" />`;
+                    pathHtml += `<polyline fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${pts.join(" ")}" />`;
+                }
+
+                let circlesHtml = "";
+                voti.forEach((v, i) => {
+                    const cx = xPos(i);
+                    const cy = yPos(v);
+                    const fill = v >= 6 ? "#10b981" : "#ef4444";
+                    circlesHtml += `
+                        <circle class="chart-dot" data-idx="${i}" data-val="${v.toFixed(2)}"
+                                cx="${cx}" cy="${cy}" r="6.5" fill="${fill}" stroke="#ffffff" stroke-width="2.5"
+                                style="cursor: pointer;" />
+                        <text x="${cx}" y="${cy - 11}" text-anchor="middle" fill="#0f172a"
+                              font-family="SFMono-Regular, Consolas, monospace" font-size="11" font-weight="700">
+                            ${v.toFixed(1)}
+                        </text>
+                        <text x="${cx}" y="${H - 8}" text-anchor="middle" fill="#64748b"
+                              font-family="SFMono-Regular, Consolas, monospace" font-size="10">
+                            #${i + 1}
+                        </text>
+                    `;
+                });
+
+                trendSvgMount.innerHTML = `
+                    <svg viewBox="0 0 ${W} ${H}" style="width: 100%; height: 100%; overflow: visible;">
+                        <defs>
+                            <linearGradient id="indigoArea" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.18" />
+                                <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.0" />
+                            </linearGradient>
+                        </defs>
+                        ${gridHtml}
+                        ${avgLineHtml}
+                        ${pathHtml}
+                        ${circlesHtml}
+                    </svg>
+                `;
+
+                // Tooltip interattivo sui punti
+                trendSvgMount.querySelectorAll(".chart-dot").forEach(dot => {
+                    dot.addEventListener("mouseenter", (e) => {
+                        const idx = Number(dot.getAttribute("data-idx")) + 1;
+                        const val = dot.getAttribute("data-val");
+                        const statusText = Number(val) >= 6 ? "Sufficiente" : "Insufficiente";
+                        chartTooltip.textContent = `Voto #${idx}: ${val} (${statusText})`;
+                        chartTooltip.style.opacity = "1";
+                    });
+                    dot.addEventListener("mousemove", (e) => {
+                        const rect = trendSvgMount.getBoundingClientRect();
+                        chartTooltip.style.left = `${e.clientX - rect.left + 12}px`;
+                        chartTooltip.style.top = `${e.clientY - rect.top - 32}px`;
+                    });
+                    dot.addEventListener("mouseleave", () => {
+                        chartTooltip.style.opacity = "0";
+                    });
+                });
+            }
+
+            // Render Sequenza Ordinata e Mediana
+            function renderMedianSequence(stats) {
+                medianBadge.textContent = `Mediana: ${stats.medianaVoti.toFixed(2)}`;
+                if (stats.numVoti % 2 === 0) {
+                    const v1 = stats.ordinati[stats.medianIndices[0]].toFixed(2);
+                    const v2 = stats.ordinati[stats.medianIndices[1]].toFixed(2);
+                    medianExplanation.textContent = `Numero pari di voti (${stats.numVoti}): la mediana è la media dei due valori centrali (${v1} + ${v2}) / 2 = ${stats.medianaVoti.toFixed(2)}.`;
+                } else {
+                    medianExplanation.textContent = `Numero dispari di voti (${stats.numVoti}): la mediana corrisponde esattamente al valore centrale nella sequenza ordinata.`;
+                }
+
+                sortedSequence.innerHTML = stats.ordinati.map((v, idx) => {
+                    const isMed = stats.medianIndices.includes(idx);
+                    return `
+                        <div class="seq-item ${isMed ? "is-median" : ""}">
+                            ${v.toFixed(2)}
+                            <span>${isMed ? "Mediana" : `Pos. ${idx + 1}`}</span>
+                        </div>
+                    `;
+                }).join("");
+            }
+
+            // Render Grafico a Ciambella
+            function renderDonut(stats) {
+                const suffPct = stats.percentualeSufficiente;
+                const insuffPct = stats.percentualeInsufficiente;
+                const r = 36;
+                const circ = 2 * Math.PI * r;
+                const suffLen = (suffPct / 100) * circ;
+
+                donutContainer.innerHTML = `
+                    <div class="donut-flex">
+                        <div style="position: relative; width: 96px; height: 96px; flex-shrink: 0;">
+                            <svg viewBox="0 0 96 96" style="width: 96px; height: 96px; transform: rotate(-90deg);">
+                                <circle cx="48" cy="48" r="${r}" fill="none" stroke="#fee2e2" stroke-width="11" />
+                                <circle cx="48" cy="48" r="${r}" fill="none" stroke="#10b981" stroke-width="11"
+                                        stroke-dasharray="${suffLen} ${circ}" stroke-linecap="round" />
+                            </svg>
+                            <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <span style="font-family: var(--font-mono); font-size: 0.9rem; font-weight: 800;">${suffPct.toFixed(0)}%</span>
+                                <span style="font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Suff.</span>
+                            </div>
+                        </div>
+
+                        <div class="donut-bars">
+                            <div>
+                                <div class="mini-bar-header">
+                                    <span style="color: var(--emerald-dark);">Sufficienti (&ge; 6.00)</span>
+                                    <span style="font-family: var(--font-mono);">${stats.numVotiSufficienti} (${suffPct.toFixed(1)}%)</span>
+                                </div>
+                                <div class="mini-bar-track">
+                                    <div style="width: ${suffPct}%; height: 100%; background-color: var(--emerald);"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="mini-bar-header">
+                                    <span style="color: var(--coral-dark);">Insufficienti (&lt; 6.00)</span>
+                                    <span style="font-family: var(--font-mono);">${stats.numVotiInsufficienti} (${insuffPct.toFixed(1)}%)</span>
+                                </div>
+                                <div class="mini-bar-track">
+                                    <div style="width: ${insuffPct}%; height: 100%; background-color: var(--coral);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Render Simulatore What-If
+            function renderWhatIf(currentStats) {
+                const hyp = parseFloat(whatifSlider.value);
+                whatifValBadge.textContent = hyp.toFixed(2);
+
+                const simStats = computeStats([...voti, hyp]);
+                const dMedia = simStats.mediaVoti - currentStats.mediaVoti;
+                const dMediana = simStats.medianaVoti - currentStats.medianaVoti;
+
+                const formatDiff = (d) => {
+                    if (Math.abs(d) < 0.005) return `<span style="color: var(--text-muted);">(=)</span>`;
+                    return d > 0
+                        ? `<span style="color: var(--emerald-dark);">+${d.toFixed(2)}</span>`
+                        : `<span style="color: var(--coral-dark);">${d.toFixed(2)}</span>`;
+                };
+
+                const simMediaColor = simStats.mediaVoti >= 6 ? "var(--emerald-dark)" : "var(--coral-dark)";
+                const simStatusText = simStats.mediaVoti >= 6 ? "Sufficiente" : "Insufficiente";
+
+                whatifResults.innerHTML = `
+                    <div class="whatif-cell">
+                        <small>Nuova Media</small>
+                        <strong style="color: ${simMediaColor};">${simStats.mediaVoti.toFixed(2)}</strong>
+                        <span class="whatif-delta">${formatDiff(dMedia)}</span>
+                    </div>
+                    <div class="whatif-cell" style="border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color);">
+                        <small>Nuova Mediana</small>
+                        <strong style="color: var(--indigo);">${simStats.medianaVoti.toFixed(2)}</strong>
+                        <span class="whatif-delta">${formatDiff(dMediana)}</span>
+                    </div>
+                    <div class="whatif-cell">
+                        <small>Esito</small>
+                        <strong style="font-size: 0.85rem; color: ${simMediaColor};">${simStatusText}</strong>
+                        <span class="whatif-delta" style="color: var(--text-muted);">con ${hyp.toFixed(2)}</span>
+                    </div>
+                `;
+            }
+
+            // Pipeline principale di rendering
+            function renderAll() {
+                const stats = computeStats(voti);
+                renderGradesList();
+                renderVerdict(stats);
+
+                if (stats.isEmpty) {
+                    analyticsSection.classList.add("hidden");
+                } else {
+                    analyticsSection.classList.remove("hidden");
+                    renderStatsGrid(stats);
+                    renderTrendChart(stats);
+                    renderMedianSequence(stats);
+                    renderDonut(stats);
+                    renderWhatIf(stats);
+                }
+            }
+
+            // Carica esempio rapido su richiesta utente
+            function loadExampleGrades() {
+                voti = [5.5, 6.0, 5.0, 7.0, 5.75];
+                setFeedback("Esempio di 5 voti caricato.", false);
+                renderAll();
+            }
+
+            // Genera riepilogo testuale per copia negli appunti
+            function buildSummaryText() {
+                const stats = computeStats(voti);
+                if (stats.isEmpty) {
+                    return "Non hai inserito nessun voto.";
+                }
+                return [
+                    "RIEPILOGO STATISTICHE VOTI",
+                    "--------------------------",
+                    `Voti inseriti (${stats.numVoti}): ${voti.map(v => v.toFixed(2)).join(", ")}`,
+                    `Media:               ${stats.mediaVoti.toFixed(2)}`,
+                    `Mediana:             ${stats.medianaVoti.toFixed(2)}`,
+                    `Varianza:            ${stats.varianza.toFixed(2)}`,
+                    `Deviazione standard: ${stats.deviazioneStandard.toFixed(2)}`,
+                    `Voti sufficienti:    ${stats.numVotiSufficienti} (${stats.percentualeSufficiente.toFixed(1)}%)`,
+                    `Voti insufficienti:  ${stats.numVotiInsufficienti} (${stats.percentualeInsufficiente.toFixed(1)}%)`,
+                    `Voto migliore:       ${stats.votoMax.toFixed(2)}`,
+                    `Voto peggiore:       ${stats.votoMin.toFixed(2)}`,
+                    "",
+                    stats.intro,
+                    stats.detail
+                ].join("\n");
+            }
+
+            // Event Listeners
+            gradeForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                if (addGrade(gradeInput.value)) {
+                    gradeInput.value = "";
+                    gradeInput.focus();
+                }
+            });
+
+            document.getElementById("btn-load-example").addEventListener("click", loadExampleGrades);
+
+            document.getElementById("btn-clear-all").addEventListener("click", () => {
+                voti = [];
+                feedbackMsg.textContent = "";
+                renderAll();
+                showToast("Tutti i voti sono stati rimossi.");
+            });
+
+            document.getElementById("btn-copy-summary").addEventListener("click", () => {
+                const text = buildSummaryText();
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.style.position = "fixed";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand("copy");
+                    showToast("Riepilogo copiato negli appunti!");
+                } catch (err) {
+                    showToast("Impossibile copiare il riepilogo.");
+                }
+                document.body.removeChild(ta);
+            });
+
+            whatifSlider.addEventListener("input", () => {
+                const stats = computeStats(voti);
+                if (!stats.isEmpty) {
+                    renderWhatIf(stats);
+                }
+            });
+
+            document.getElementById("btn-whatif-add").addEventListener("click", () => {
+                addGrade(whatifSlider.value);
+            });
+
+            // Avvio immediato
+            initQuickButtons();
+            renderAll();
+        })();
+    </script>
+</body>
+</html>
