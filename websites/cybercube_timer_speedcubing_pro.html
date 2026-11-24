@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CyberCube Timer | Cronometro Speedcubing WCA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#07090f',
+                            card: 'rgba(15, 21, 37, 0.65)',
+                            border: 'rgba(56, 189, 248, 0.18)',
+                            cyan: '#00f0ff',
+                            purple: '#9d4edd',
+                            emerald: '#10b981',
+                            rose: '#f43f5e',
+                            amber: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Stili Custom per Glassmorphism, Effetti Glow e Animazioni */
+        body {
+            background-color: #07090f;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(157, 78, 221, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(0, 240, 255, 0.10) 0%, transparent 40%),
+                linear-gradient(to bottom, #07090f, #0b0f19);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .glass-panel {
+            background: rgba(15, 21, 37, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .glass-panel-accent {
+            background: rgba(15, 21, 37, 0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.05);
+        }
+
+        /* Stati del Cronometro (Stackmat) */
+        .timer-idle {
+            color: #f8fafc;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.15);
+        }
+        .timer-holding {
+            color: #f43f5e;
+            text-shadow: 0 0 35px rgba(244, 63, 94, 0.65);
+            transform: scale(0.98);
+        }
+        .timer-ready {
+            color: #10b981;
+            text-shadow: 0 0 40px rgba(16, 185, 129, 0.85);
+            transform: scale(1.03);
+        }
+        .timer-running {
+            color: #00f0ff;
+            text-shadow: 0 0 35px rgba(0, 240, 255, 0.5);
+        }
+        .timer-inspection {
+            color: #f59e0b;
+            text-shadow: 0 0 35px rgba(245, 158, 11, 0.65);
+        }
+        .timer-inspection-danger {
+            color: #f43f5e;
+            text-shadow: 0 0 40px rgba(244, 63, 94, 0.85);
+            animation: pulseFast 0.5s infinite alternate;
+        }
+
+        @keyframes pulseFast {
+            from { opacity: 1; }
+            to { opacity: 0.65; }
+        }
+
+        /* Modalità Zen durante la risoluzione */
+        .zen-element {
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease;
+        }
+        body.zen-active .zen-element {
+            opacity: 0.06;
+            pointer-events: none;
+            filter: blur(4px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 240, 255, 0.6);
+        }
+
+        /* Badge PB Glow */
+        .pb-glow {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+            border-color: rgba(16, 185, 129, 0.6);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative">
+
+    <!-- Canvas per Celebrazione Particellare (Coriandoli Neon PB) -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- HEADER / BARRA SUPERIORE -->
+    <header class="zen-element w-full px-4 py-3 md:px-8 border-b border-white/10 bg-slate-950/60 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Logo & Titolo -->
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 p-[1px] shadow-lg shadow-cyan-500/20">
+                    <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+                        <!-- Icona Cubo SVG -->
+                        <svg class="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-cyan-300 via-white to-purple-400 bg-clip-text text-transparent">
+                        CyberCube <span class="font-mono text-xs px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 ml-1">WCA</span>
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Controlli Centrali: Tipo Cubo & Impostazioni -->
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <!-- Selettore Evento / Cubo -->
+                <div class="relative">
+                    <select id="cube-type" aria-label="Seleziona tipo di cubo" class="appearance-none bg-slate-900/90 hover:bg-slate-800 text-cyan-300 font-mono text-xs sm:text-sm font-semibold pl-3 pr-8 py-2 rounded-xl border border-cyan-500/30 focus:outline-none focus:border-cyan-400 transition cursor-pointer">
+                        <option value="3x3">3x3x3 Cubo</option>
+                        <option value="2x2">2x2x2 Cubo</option>
+                        <option value="4x4">4x4x4 Cubo</option>
+                        <option value="pyraminx">Pyraminx</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-cyan-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Toggle Ispezione WCA (15s) -->
+                <button id="toggle-inspection" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border transition cursor-pointer bg-slate-900/80 border-white/10 text-slate-400 hover:text-white" title="Attiva/Disattiva 15 secondi di ispezione WCA">
+                    <span id="inspection-dot" class="w-2 h-2 rounded-full bg-slate-600 transition-colors"></span>
+                    <span>Ispezione 15s</span>
+                </button>
+
+                <!-- Toggle Audio -->
+                <button id="toggle-sound" class="p-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 transition cursor-pointer" title="Attiva/Disattiva effetti sonori">
+                    <svg id="icon-sound-on" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                    </svg>
+                    <svg id="icon-sound-off" class="w-4 h-4 sm:w-5 sm:h-5 hidden text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- AREA SCRAMBLE (MESCOLAMENTO) -->
+    <section class="zen-element w-full max-w-5xl mx-auto px-4 pt-4 md:pt-6 z-20">
+        <div class="glass-panel-accent rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex-1 text-center sm:text-left">
+                <div class="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                    <span class="text-[11px] uppercase tracking-widest font-semibold text-cyan-400">Scramble WCA</span>
+                    <span id="scramble-length-badge" class="text-[10px] font-mono px-1.5 py-0.2 bg-white/5 rounded text-slate-400">20 mosse</span>
+                </div>
+                <p id="scramble-text" class="font-mono text-base sm:text-xl md:text-2xl font-semibold text-white tracking-wide leading-relaxed">
+                    Caricamento scramble...
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <button id="copy-scramble-btn" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-300 border border-white/10 transition cursor-pointer" title="Copia scramble">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
+                <button id="new-scramble-btn" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 text-cyan-300 font-medium text-sm border border-cyan-400/30 transition cursor-pointer active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Nuovo</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- AREA CENTRALE INTERATTIVA DEL CRONOMETRO -->
+    <main id="timer-touch-zone" class="flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-10 cursor-pointer relative z-10">
+        <!-- Badge Record Personale o Penalità Corrente -->
+        <div id="timer-badge" class="h-8 mb-2 flex items-center justify-center">
+            <span id="pb-alert" class="hidden px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-mono text-xs font-bold tracking-wider uppercase animate-bounce">
+                ★ Nuovo Record Personale! ★
+            </span>
+            <span id="inspection-alert" class="hidden px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 font-mono text-xs font-bold tracking-wider uppercase">
+                Ispezione in corso...
+            </span>
+        </div>
+
+        <!-- Display Principale Tempo -->
+        <div class="relative flex items-baseline justify-center select-none">
+            <div id="timer-display" class="font-mono font-extrabold text-6xl sm:text-8xl md:text-9xl tracking-tight timer-idle transition-all duration-100">
+                0.000
+            </div>
+        </div>
+
+        <!-- Barra di caricamento Stackmat (0.3s hold) -->
+        <div class="w-48 sm:w-64 h-1.5 bg-slate-800/80 rounded-full overflow-hidden mt-4 border border-white/5">
+            <div id="hold-progress" class="h-full w-0 bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 transition-none"></div>
+        </div>
+
+        <!-- Suggerimento dinamico -->
+        <p id="timer-hint" class="zen-element mt-4 text-xs sm:text-sm text-slate-400 font-medium text-center max-w-md">
+            Tieni premuta la <kbd class="px-2 py-0.5 rounded bg-slate-800 border border-slate-600 text-cyan-300 font-mono text-xs">BARRA SPAZIATRICE</kbd> (o tocca qui) finché diventa <span class="text-emerald-400 font-semibold">verde</span>, poi rilascia.
+        </p>
+
+        <!-- Azioni Rapide Post-Risoluzione (+2, DNF, Elimina ultimo) -->
+        <div id="quick-actions" class="zen-element mt-5 flex items-center gap-2 opacity-0 pointer-events-none transition-opacity duration-200">
+            <button onclick="applyPenaltyToLast('OK')" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-xs font-mono font-semibold text-slate-300 border border-white/10 transition cursor-pointer">OK</button>
+            <button onclick="applyPenaltyToLast('+2')" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-xs font-mono font-semibold text-amber-300 border border-amber-500/30 transition cursor-pointer">+2s</button>
+            <button onclick="applyPenaltyToLast('DNF')" class="px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-xs font-mono font-semibold text-rose-300 border border-rose-500/30 transition cursor-pointer">DNF</button>
+            <button onclick="deleteLastSolve()" class="px-3 py-1.5 rounded-lg bg-slate-800/90 hover:bg-rose-950/60 text-xs font-mono font-semibold text-rose-400 border border-white/10 transition cursor-pointer" title="Elimina ultimo tempo">✕</button>
+        </div>
+    </main>
+
+    <!-- DASHBOARD INFERIORE: STATISTICHE, GRAFICO, CRONOLOGIA E NET 2D -->
+    <section class="zen-element w-full max-w-7xl mx-auto px-4 pb-6 z-20">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- COLONNA 1 (4 col): Statistiche + Anteprima Cubo 2D -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                <!-- Card Statistiche WCA -->
+                <div class="glass-panel rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-cyan-400"></span> Statistiche Sessione
+                        </h2>
+                        <span id="solve-count-badge" class="font-mono text-xs text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">0 risoluzioni</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <!-- PB -->
+                        <div id="card-pb" class="bg-slate-900/70 rounded-xl p-3 border border-white/5 transition-all">
+                            <div class="text-[11px] text-slate-400 font-medium">Miglior Tempo (PB)</div>
+                            <div id="stat-pb" class="font-mono text-lg sm:text-xl font-bold text-emerald-400 mt-0.5">-</div>
+                        </div>
+                        <!-- Media Totale -->
+                        <div class="bg-slate-900/70 rounded-xl p-3 border border-white/5">
+                            <div class="text-[11px] text-slate-400 font-medium">Media Sessione</div>
+                            <div id="stat-mean" class="font-mono text-lg sm:text-xl font-bold text-white mt-0.5">-</div>
+                        </div>
+                        <!-- Ao5 -->
+                        <div class="bg-slate-900/70 rounded-xl p-3 border border-purple-500/20">
+                            <div class="text-[11px] text-purple-300 font-medium">Ao5 Corrente</div>
+                            <div id="stat-ao5" class="font-mono text-lg sm:text-xl font-bold text-purple-400 mt-0.5">-</div>
+                            <div class="text-[10px] text-slate-500 font-mono mt-0.5">Best: <span id="stat-best-ao5" class="text-slate-300">-</span></div>
+                        </div>
+                        <!-- Ao12 -->
+                        <div class="bg-slate-900/70 rounded-xl p-3 border border-cyan-500/20">
+                            <div class="text-[11px] text-cyan-300 font-medium">Ao12 Corrente</div>
+                            <div id="stat-ao12" class="font-mono text-lg sm:text-xl font-bold text-cyan-400 mt-0.5">-</div>
+                            <div class="text-[10px] text-slate-500 font-mono mt-0.5">Best: <span id="stat-best-ao12" class="text-slate-300">-</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Anteprima 2D Cubo Mescolato -->
+                <div class="glass-panel rounded-2xl p-4 flex-1 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-purple-400"></span> Anteprima 2D
+                        </h2>
+                        <span class="text-[10px] text-slate-500 font-mono">Orientamento WCA (Bianco Alto / Verde Fronte)</span>
+                    </div>
+                    <div id="cube-net-container" class="w-full flex items-center justify-center py-2 min-h-[155px]">
+                        <!-- Render SVG dinamico del cubo mescolato -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNA 2 (4 col): Grafico Andamento Interattivo -->
+            <div class="lg:col-span-4 glass-panel rounded-2xl p-4 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Andamento Tempi
+                    </h2>
+                    <div class="flex items-center gap-3 text-[11px] font-mono">
+                        <span class="flex items-center gap-1 text-cyan-300"><span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span>Singolo</span>
+                        <span class="flex items-center gap-1 text-purple-300"><span class="w-2 h-2 rounded-full bg-purple-400 inline-block"></span>Ao5</span>
+                    </div>
+                </div>
+                <div id="chart-wrapper" class="relative w-full flex-1 min-h-[220px] bg-slate-950/50 rounded-xl border border-white/5 overflow-hidden">
+                    <canvas id="trend-chart" class="w-full h-full block"></canvas>
+                    <!-- Tooltip hover grafico -->
+                    <div id="chart-tooltip" class="hidden absolute pointer-events-none bg-slate-900/95 border border-cyan-400/40 rounded-lg px-2.5 py-1.5 text-xs font-mono shadow-xl z-10">
+                        <div id="tooltip-title" class="text-slate-400 text-[10px]">Risoluzione #1</div>
+                        <div id="tooltip-time" class="text-cyan-300 font-bold">12.450s</div>
+                        <div id="tooltip-ao5" class="text-purple-300 text-[11px]">Ao5: -</div>
+                    </div>
+                    <div id="chart-empty-msg" class="absolute inset-0 flex items-center justify-center text-xs text-slate-500 font-medium text-center px-4">
+                        Completa almeno 2 risoluzioni per visualizzare il grafico delle prestazioni
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNA 3 (4 col): Cronologia Risoluzioni -->
+            <div class="lg:col-span-4 glass-panel rounded-2xl p-4 flex flex-col max-h-[380px] lg:max-h-[410px]">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xs uppercase tracking-widest font-bold text-slate-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span> Cronologia
+                    </h2>
+                    <button id="clear-session-btn" class="text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/20 transition cursor-pointer">
+                        Resetta Sessione
+                    </button>
+                </div>
+
+                <!-- Intestazione Tabella -->
+                <div class="grid grid-cols-12 text-[11px] font-mono text-slate-500 pb-2 border-b border-white/10 px-2">
+                    <div class="col-span-2">#</div>
+                    <div class="col-span-4">Tempo</div>
+                    <div class="col-span-3">Ao5</div>
+                    <div class="col-span-3 text-right">Azioni</div>
+                </div>
+
+                <!-- Lista Scrollabile Tempi -->
+                <div id="solves-list" class="flex-1 overflow-y-auto divide-y divide-white/5 pr-1 mt-1">
+                    <div class="py-10 text-center text-xs text-slate-500">
+                        Nessun tempo registrato.<br>Premi la barra spaziatrice per iniziare!
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- MODALE DETTAGLI RISOLUZIONE (Scramble & Penalità) -->
+    <div id="solve-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="glass-panel-accent rounded-2xl max-w-md w-full p-6 shadow-2xl border border-cyan-500/30 transform transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="modal-title" class="font-mono font-bold text-lg text-cyan-300">Dettagli Risoluzione #1</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="bg-slate-950/80 rounded-xl p-4 border border-white/5 mb-4 text-center">
+                <div id="modal-time" class="font-mono text-4xl font-extrabold text-white">14.283</div>
+                <div id="modal-date" class="text-xs text-slate-400 mt-1">24 Nov 2026, 15:10</div>
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-1.5">Scramble Utilizzato</label>
+                <div id="modal-scramble" class="font-mono text-sm bg-slate-900/90 p-3 rounded-xl border border-white/10 text-cyan-100 break-words">
+                    R U R' U'
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-white/10">
+                <div class="flex items-center gap-2">
+                    <button id="modal-btn-ok" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono font-semibold text-white border border-white/10 cursor-pointer">OK</button>
+                    <button id="modal-btn-plus2" class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-xs font-mono font-semibold text-amber-300 border border-amber-500/30 cursor-pointer">+2s</button>
+                    <button id="modal-btn-dnf" class="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-mono font-semibold text-rose-300 border border-rose-500/30 cursor-pointer">DNF</button>
+                </div>
+                <button id="modal-btn-delete" class="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-xs font-medium text-rose-300 border border-rose-500/40 cursor-pointer">
+                    Elimina
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE CONFERMA RESET SESSIONE (Sostituisce window.confirm) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-sm w-full p-6 border border-rose-500/30 shadow-2xl">
+            <h3 class="text-lg font-bold text-white mb-2">Resettare la sessione?</h3>
+            <p class="text-sm text-slate-300 mb-5">Tutti i tempi salvati per <span id="confirm-cube-label" class="font-mono text-cyan-300 font-bold">3x3</span> verranno eliminati definitivamente.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-medium text-slate-300 transition cursor-pointer">Annulla</button>
+                <button id="confirm-reset-action" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-sm font-semibold text-white shadow-lg shadow-rose-600/30 transition cursor-pointer">Sì, elimina tutto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICHE RAPIDE -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-300 bg-slate-900/95 border border-cyan-400/40 text-cyan-200 px-4 py-2.5 rounded-xl shadow-xl font-medium text-xs sm:text-sm flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <span id="toast-msg">Scramble copiato!</span>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * CYBERCUBE TIMER - MOTORE COMPLETO SPEEDCUBING WCA
+         * ============================================================================
+         */
+
+        // --- STATO GLOBALE DELL'APPLICAZIONE ---
+        const APP_STATE = {
+            cubeType: '3x3',
+            inspectionEnabled: false,
+            soundEnabled: true,
+            solves: {
+                '3x3': [],
+                '2x2': [],
+                '4x4': [],
+                'pyraminx': []
+            },
+            currentScramble: '',
+            // Macchina a stati del timer: 'IDLE' | 'HOLDING' | 'READY' | 'INSPECTION' | 'RUNNING' | 'STOPPED'
+            timerState: 'IDLE',
+            holdStartTime: 0,
+            holdDurationRequired: 300, // 0.3 secondi (300ms) stile Stackmat
+            holdAnimFrame: null,
+            startTime: 0,
+            elapsedTime: 0,
+            timerAnimFrame: null,
+            inspectionStartTime: 0,
+            inspectionInterval: null,
+            inspectionPenalty: 'OK', // 'OK' | '+2' | 'DNF'
+            warned8s: false,
+            warned12s: false,
+            chartPoints: [] // Per tooltip interattivo
+        };
+
+        // --- WEB AUDIO API (Sintetizzatore Effetti Sonori senza file esterni) ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15, delay = 0) {
+                if (!APP_STATE.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime + delay;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.exponentialRampToValueAtTime(gainVal, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + duration + 0.02);
+            }
+            playReady() {
+                this.playTone(880, 'sine', 0.09, 0.12);
+            }
+            playStart() {
+                this.playTone(523.25, 'triangle', 0.08, 0.15, 0);
+                this.playTone(1046.5, 'triangle', 0.14, 0.15, 0.05);
+            }
+            playStop() {
+                this.playTone(659.25, 'sine', 0.12, 0.15);
+            }
+            playWarning(high = false) {
+                this.playTone(high ? 987.77 : 783.99, 'sawtooth', 0.18, 0.14);
+                if (high) this.playTone(987.77, 'sawtooth', 0.18, 0.14, 0.22);
+            }
+            playPB() {
+                // Arpeggio celebrativo cyber
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                notes.forEach((n, idx) => {
+                    this.playTone(n, 'triangle', 0.25, 0.18, idx * 0.08);
+                });
+            }
+        }
+        const sound = new SoundEngine();
+
+        // --- GENERATORE SCRAMBLE WCA ---
+        const ScrambleGenerator = {
+            generate(type) {
+                if (type === '3x3') return this.genNxN(3, 20);
+                if (type === '2x2') return this.gen2x2(9);
+                if (type === '4x4') return this.gen4x4(42);
+                if (type === 'pyraminx') return this.genPyraminx(10);
+                return this.genNxN(3, 20);
+            },
+            genNxN(size, length) {
+                const faces = ['U', 'D', 'L', 'R', 'F', 'B'];
+                const axes = { U: 0, D: 0, L: 1, R: 1, F: 2, B: 2 };
+                const modifiers = ['', "'", '2'];
+                const moves = [];
+                let lastFace = -1;
+                let secondLastFace = -1;
+
+                while (moves.length < length) {
+                    const faceIdx = Math.floor(Math.random() * faces.length);
+                    const face = faces[faceIdx];
+                    // Evita stessa faccia consecutiva e sequenze ridondanti sullo stesso asse (es. R L R)
+                    if (faceIdx === lastFace) continue;
+                    if (secondLastFace !== -1 && axes[face] === axes[faces[lastFace]] && axes[face] === axes[faces[secondLastFace]]) {
+                        continue;
+                    }
+                    const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+                    moves.push(face + mod);
+                    secondLastFace = lastFace;
+                    lastFace = faceIdx;
+                }
+                return moves.join(' ');
+            },
+            gen2x2(length) {
+                const faces = ['U', 'R', 'F'];
+                const modifiers = ['', "'", '2'];
+                const moves = [];
+                let last = '';
+                while (moves.length < length) {
+                    const f = faces[Math.floor(Math.random() * faces.length)];
+                    if (f === last) continue;
+                    const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+                    moves.push(f + mod);
+                    last = f;
+                }
+                return moves.join(' ');
+            },
+            gen4x4(length) {
+                const faces = ['U', 'D', 'L', 'R', 'F', 'B', 'Uw', 'Rw', 'Fw'];
+                const modifiers = ['', "'", '2'];
+                const moves = [];
+                let last = '';
+                while (moves.length < length) {
+                    const f = faces[Math.floor(Math.random() * faces.length)];
+                    if (f === last) continue;
+                    const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+                    moves.push(f + mod);
+                    last = f;
+                }
+                return moves.join(' ');
+            },
+            genPyraminx(length) {
+                const faces = ['U', 'L', 'R', 'B'];
+                const modifiers = ['', "'"];
+                const moves = [];
+                let last = '';
+                while (moves.length < length) {
+                    const f = faces[Math.floor(Math.random() * faces.length)];
+                    if (f === last) continue;
+                    const mod = modifiers[Math.floor(Math.random() * modifiers.length)];
+                    moves.push(f + mod);
+                    last = f;
+                }
+                // Aggiunta punte (tips) casuali
+                const tips = ['u', 'l', 'r', 'b'];
+                tips.forEach(t => {
+                    const r = Math.floor(Math.random() * 3);
+                    if (r === 1) moves.push(t);
+                    else if (r === 2) moves.push(t + "'");
+                });
+                return moves.join(' ');
+            }
+        };
+
+        // --- SIMULATORE & VISUALIZZATORE 2D DEL CUBO (Net WCA) ---
+        class CubeVisualizer {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.colors = {
+                    U: '#f8fafc', // Bianco
+                    D: '#facc15', // Giallo
+                    F: '#10b981', // Verde
+                    B: '#3b82f6', // Blu
+                    R: '#ef4444', // Rosso
+                    L: '#f97316'  // Arancione
+                };
+            }
+
+            render(type, scramble) {
+                if (type === 'pyraminx') {
+                    this.renderPyraminx(scramble);
+                    return;
+                }
+                const n = type === '2x2' ? 2 : (type === '4x4' ? 4 : 3);
+                const state = this.simulateNxN(n, scramble);
+                this.drawNxNSVG(n, state);
+            }
+
+            // Crea stato risolto NxN
+            createSolvedState(n) {
+                const faces = ['U', 'D', 'F', 'B', 'R', 'L'];
+                const state = {};
+                faces.forEach(f => {
+                    state[f] = Array.from({ length: n }, () => Array(n).fill(f));
+                });
+                return state;
+            }
+
+            // Ruota una matrice NxN di 90 gradi in senso orario
+            rotateMatrixCW(mat) {
+                const n = mat.length;
+                const res = Array.from({ length: n }, () => Array(n));
+                for (let r = 0; r < n; r++) {
+                    for (let c = 0; c < n; c++) {
+                        res[c][n - 1 - r] = mat[r][c];
+                    }
+                }
+                return res;
+            }
+
+            // Applica una singola mossa sul cubo NxN
+            applyMoveNxN(state, n, moveStr) {
+                const isWide = moveStr.includes('w');
+                const face = moveStr[0];
+                const isPrime = moveStr.includes("'");
+                const isDouble = moveStr.includes('2');
+                const turns = isDouble ? 2 : (isPrime ? 3 : 1);
+                const layers = isWide ? 2 : 1;
+
+                for (let t = 0; t < turns; t++) {
+                    state[face] = this.rotateMatrixCW(state[face]);
+                    for (let l = 0; l < layers; l++) {
+                        this.cycleEdges(state, n, face, l);
+                    }
+                }
+            }
+
+            cycleEdges(s, n, face, layer) {
+                const inv = n - 1 - layer;
+                let temp = [];
+                if (face === 'U') {
+                    for (let i = 0; i < n; i++) temp.push(s.F[layer][i]);
+                    for (let i = 0; i < n; i++) {
+                        s.F[layer][i] = s.R[layer][i];
+                        s.R[layer][i] = s.B[layer][i];
+                        s.B[layer][i] = s.L[layer][i];
+                        s.L[layer][i] = temp[i];
+                    }
+                } else if (face === 'D') {
+                    for (let i = 0; i < n; i++) temp.push(s.F[inv][i]);
+                    for (let i = 0; i < n; i++) {
+                        s.F[inv][i] = s.L[inv][i];
+                        s.L[inv][i] = s.B[inv][i];
+                        s.B[inv][i] = s.R[inv][i];
+                        s.R[inv][i] = temp[i];
+                    }
+                } else if (face === 'R') {
+                    for (let i = 0; i < n; i++) temp.push(s.U[i][inv]);
+                    for (let i = 0; i < n; i++) {
+                        s.U[i][inv] = s.F[i][inv];
+                        s.F[i][inv] = s.D[i][inv];
+                        s.D[i][inv] = s.B[n - 1 - i][layer];
+                        s.B[n - 1 - i][layer] = temp[i];
+                    }
+                } else if (face === 'L') {
+                    for (let i = 0; i < n; i++) temp.push(s.U[i][layer]);
+                    for (let i = 0; i < n; i++) {
+                        s.U[i][layer] = s.B[n - 1 - i][inv];
+                        s.B[n - 1 - i][inv] = s.D[i][layer];
+                        s.D[i][layer] = s.F[i][layer];
+                        s.F[i][layer] = temp[i];
+                    }
+                } else if (face === 'F') {
+                    for (let i = 0; i < n; i++) temp.push(s.U[inv][i]);
+                    for (let i = 0; i < n; i++) {
+                        s.U[inv][i] = s.L[n - 1 - i][inv];
+                        s.L[n - 1 - i][inv] = s.D[layer][n - 1 - i];
+                        s.D[layer][n - 1 - i] = s.R[i][layer];
+                        s.R[i][layer] = temp[i];
+                    }
+                } else if (face === 'B') {
+                    for (let i = 0; i < n; i++) temp.push(s.U[layer][i]);
+                    for (let i = 0; i < n; i++) {
+                        s.U[layer][i] = s.R[i][inv];
+                        s.R[i][inv] = s.D[inv][n - 1 - i];
+                        s.D[inv][n - 1 - i] = s.L[n - 1 - i][layer];
+                        s.L[n - 1 - i][layer] = temp[i];
+                    }
+                }
+            }
+
+            simulateNxN(n, scramble) {
+                const state = this.createSolvedState(n);
+                if (!scramble) return state;
+                const tokens = scramble.trim().split(/\s+/);
+                tokens.forEach(tok => {
+                    if (tok) this.applyMoveNxN(state, n, tok);
+                });
+                return state;
+            }
+
+            drawNxNSVG(n, state) {
+                // Layout a croce standard WCA:
+                //       [U]
+                //   [L] [F] [R] [B]
+                //       [D]
+                const cellSize = n === 4 ? 10 : (n === 2 ? 18 : 13);
+                const gap = 1.5;
+                const faceGap = 5;
+                const faceSize = n * cellSize + (n - 1) * gap;
+
+                const positions = {
+                    U: { x: faceSize + faceGap, y: 0 },
+                    L: { x: 0, y: faceSize + faceGap },
+                    F: { x: faceSize + faceGap, y: faceSize + faceGap },
+                    R: { x: (faceSize + faceGap) * 2, y: faceSize + faceGap },
+                    B: { x: (faceSize + faceGap) * 3, y: faceSize + faceGap },
+                    D: { x: faceSize + faceGap, y: (faceSize + faceGap) * 2 }
+                };
+
+                const totalW = faceSize * 4 + faceGap * 3;
+                const totalH = faceSize * 3 + faceGap * 2;
+
+                let rects = '';
+                Object.keys(positions).forEach(face => {
+                    const pos = positions[face];
+                    for (let r = 0; r < n; r++) {
+                        for (let c = 0; c < n; c++) {
+                            const stickerColor = this.colors[state[face][r][c]];
+                            const rx = pos.x + c * (cellSize + gap);
+                            const ry = pos.y + r * (cellSize + gap);
+                            rects += `<rect x="${rx}" y="${ry}" width="${cellSize}" height="${cellSize}" rx="2" fill="${stickerColor}" stroke="#090d16" stroke-width="0.8" />`;
+                        }
+                    }
+                });
+
+                this.container.innerHTML = `
+                    <svg viewBox="0 0 ${totalW} ${totalH}" class="w-full max-w-[270px] h-auto drop-shadow-md">
+                        ${rects}
+                    </svg>
+                `;
+            }
+
+            renderPyraminx(scramble) {
+                // Rappresentazione stilizzata a 4 facce triangolari per Pyraminx con permutazione deterministica dallo scramble
+                const palette = ['#10b981', '#ef4444', '#3b82f6', '#facc15']; // Verde (F), Rosso (R), Blu (L), Giallo (D)
+                let hash = 0;
+                for (let i = 0; i < scramble.length; i++) {
+                    hash = ((hash << 5) - hash) + scramble.charCodeAt(i);
+                    hash |= 0;
+                }
+                const pick = (idx) => palette[Math.abs(hash + idx * 7) % palette.length];
+
+                this.container.innerHTML = `
+                    <svg viewBox="0 0 220 130" class="w-full max-w-[240px] h-auto">
+                        <!-- Triangolo Centrale (Fronte) -->
+                        <polygon points="110,15 65,92 155,92" fill="${pick(1)}" stroke="#07090f" stroke-width="2" />
+                        <!-- Triangolo Sinistro -->
+                        <polygon points="65,92 20,15 110,15" fill="${pick(2)}" stroke="#07090f" stroke-width="2" />
+                        <!-- Triangolo Destro -->
+                        <polygon points="155,92 200,15 110,15" fill="${pick(3)}" stroke="#07090f" stroke-width="2" />
+                        <!-- Triangolo Inferiore -->
+                        <polygon points="65,92 155,92 110,125" fill="${pick(4)}" stroke="#07090f" stroke-width="2" />
+                        <!-- Suddivisioni interne Pyraminx -->
+                        <line x1="87.5" y1="53.5" x2="132.5" y2="53.5" stroke="#07090f" stroke-width="1.5"/>
+                        <line x1="87.5" y1="53.5" x2="110" y2="92" stroke="#07090f" stroke-width="1.5"/>
+                        <line x1="132.5" y1="53.5" x2="110" y2="92" stroke="#07090f" stroke-width="1.5"/>
+                    </svg>
+                `;
+            }
+        }
+        const cubeVis = new CubeVisualizer('cube-net-container');
+
+        // --- SISTEMA DI CELEBRAZIONE PARTICELLARE (PB CONFETTI NEON) ---
+        class ConfettiEngine {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.running = false;
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            burst() {
+                const colors = ['#00f0ff', '#10b981', '#9d4edd', '#facc15', '#f43f5e'];
+                for (let i = 0; i < 110; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 4 + Math.random() * 11;
+                    this.particles.push({
+                        x: this.canvas.width / 2,
+                        y: this.canvas.height * 0.42,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 4,
+                        size: 4 + Math.random() * 5,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        alpha: 1,
+                        rot: Math.random() * 360,
+                        vRot: (Math.random() - 0.5) * 12
+                    });
+                }
+                if (!this.running) {
+                    this.running = true;
+                    this.loop();
+                }
+            }
+            loop() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.25; // gravità
+                    p.vx *= 0.985;
+                    p.alpha -= 0.013;
+                    p.rot += p.vRot;
+
+                    if (p.alpha <= 0) {
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    this.ctx.save();
+                    this.ctx.globalAlpha = p.alpha;
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate((p.rot * Math.PI) / 180);
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.shadowBlur = 10;
+                    this.ctx.shadowColor = p.color;
+                    this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                    this.ctx.restore();
+                }
+
+                if (this.particles.length > 0) {
+                    requestAnimationFrame(() => this.loop());
+                } else {
+                    this.running = false;
+                }
+            }
+        }
+        const confetti = new ConfettiEngine('confetti-canvas');
+
+        // --- FORMATTAZIONE TEMPI & CALCOLO STATISTICHE WCA ---
+        function formatTime(ms, penalty = 'OK') {
+            if (penalty === 'DNF') return 'DNF';
+            if (ms === null || ms === undefined || isNaN(ms)) return '-';
+            const totalMs = Math.round(ms + (penalty === '+2' ? 2000 : 0));
+            const minutes = Math.floor(totalMs / 60000);
+            const seconds = Math.floor((totalMs % 60000) / 1000);
+            const millis = totalMs % 1000;
+
+            const padMillis = millis.toString().padStart(3, '0');
+            if (minutes > 0) {
+                const padSec = seconds.toString().padStart(2, '0');
+                return `${minutes}:${padSec}.${padMillis}${penalty === '+2' ? '+' : ''}`;
+            }
+            return `${seconds}.${padMillis}${penalty === '+2' ? '+' : ''}`;
+        }
+
+        function getEffectiveTime(solve) {
+            if (solve.penalty === 'DNF') return Infinity;
+            return solve.time + (solve.penalty === '+2' ? 2000 : 0);
+        }
+
+        // Calcolo Average of N (regola ufficiale WCA: esclude miglior 5% e peggior 5%, per 5 e 12 esclude 1 migliore e 1 peggiore)
+        function calculateAoN(solvesSlice) {
+            const n = solvesSlice.length;
+            if (n < 3) return null;
+            const effectiveTimes = solvesSlice.map(getEffectiveTime);
+            const dnfCount = effectiveTimes.filter(t => t === Infinity).length;
+            if (dnfCount >= 2) return Infinity; // Più di 1 DNF = DNF
+
+            const sorted = [...effectiveTimes].sort((a, b) => a - b);
+            // Rimuove il migliore (index 0) e il peggiore (index n - 1)
+            const trimmed = sorted.slice(1, n - 1);
+            const sum = trimmed.reduce((acc, val) => acc + val, 0);
+            return sum / trimmed.length;
+        }
+
+        function computeStats(solvesList) {
+            if (!solvesList || solvesList.length === 0) {
+                return { pb: null, mean: null, ao5: null, bestAo5: null, ao12: null, bestAo12: null, ao5History: [] };
+            }
+
+            let pb = Infinity;
+            let validSum = 0;
+            let validCount = 0;
+
+            solvesList.forEach(s => {
+                const eff = getEffectiveTime(s);
+                if (eff < Infinity) {
+                    if (eff < pb) pb = eff;
+                    validSum += eff;
+                    validCount++;
+                }
+            });
+
+            const mean = validCount > 0 ? validSum / validCount : Infinity;
+
+            // Calcolo Ao5 e Ao12 storici e correnti
+            let bestAo5 = Infinity;
+            let currentAo5 = null;
+            const ao5History = [];
+
+            for (let i = 0; i < solvesList.length; i++) {
+                if (i >= 4) {
+                    const slice5 = solvesList.slice(i - 4, i + 1);
+                    const avg5 = calculateAoN(slice5);
+                    ao5History.push(avg5);
+                    if (avg5 < bestAo5) bestAo5 = avg5;
+                    if (i === solvesList.length - 1) currentAo5 = avg5;
+                } else {
+                    ao5History.push(null);
+                }
+            }
+
+            let bestAo12 = Infinity;
+            let currentAo12 = null;
+            for (let i = 11; i < solvesList.length; i++) {
+                const slice12 = solvesList.slice(i - 11, i + 1);
+                const avg12 = calculateAoN(slice12);
+                if (avg12 < bestAo12) bestAo12 = avg12;
+                if (i === solvesList.length - 1) currentAo12 = avg12;
+            }
+
+            return {
+                pb: pb === Infinity ? null : pb,
+                mean: validCount > 0 ? mean : null,
+                ao5: currentAo5,
+                bestAo5: bestAo5 === Infinity ? null : bestAo5,
+                ao12: currentAo12,
+                bestAo12: bestAo12 === Infinity ? null : bestAo12,
+                ao5History
+            };
+        }
+
+        // --- LOGICA DEL CRONOMETRO (STACKMAT & ISPEZIONE WCA) ---
+        const timerDisplay = document.getElementById('timer-display');
+        const holdProgress = document.getElementById('hold-progress');
+        const pbAlert = document.getElementById('pb-alert');
+        const inspectionAlert = document.getElementById('inspection-alert');
+        const quickActions = document.getElementById('quick-actions');
+
+        function setTimerVisualState(state) {
+            timerDisplay.classList.remove('timer-idle', 'timer-holding', 'timer-ready', 'timer-running', 'timer-inspection', 'timer-inspection-danger');
+            switch (state) {
+                case 'IDLE':
+                case 'STOPPED':
+                    timerDisplay.classList.add('timer-idle');
+                    break;
+                case 'HOLDING':
+                    timerDisplay.classList.add('timer-holding');
+                    break;
+                case 'READY':
+                    timerDisplay.classList.add('timer-ready');
+                    break;
+                case 'INSPECTION':
+                    timerDisplay.classList.add('timer-inspection');
+                    break;
+                case 'RUNNING':
+                    timerDisplay.classList.add('timer-running');
+                    break;
+            }
+        }
+
+        function startInspection() {
+            APP_STATE.timerState = 'INSPECTION';
+            APP_STATE.inspectionStartTime = performance.now();
+            APP_STATE.inspectionPenalty = 'OK';
+            APP_STATE.warned8s = false;
+            APP_STATE.warned12s = false;
+
+            document.body.classList.add('zen-active');
+            pbAlert.classList.add('hidden');
+            inspectionAlert.classList.remove('hidden');
+            quickActions.classList.add('opacity-0', 'pointer-events-none');
+            setTimerVisualState('INSPECTION');
+
+            clearInterval(APP_STATE.inspectionInterval);
+            APP_STATE.inspectionInterval = setInterval(() => {
+                const elapsedSec = (performance.now() - APP_STATE.inspectionStartTime) / 1000;
+                const remaining = 15 - elapsedSec;
+
+                if (elapsedSec >= 8 && !APP_STATE.warned8s) {
+                    APP_STATE.warned8s = true;
+                    sound.playWarning(false);
+                }
+                if (elapsedSec >= 12 && !APP_STATE.warned12s) {
+                    APP_STATE.warned12s = true;
+                    sound.playWarning(true);
+                    timerDisplay.classList.remove('timer-inspection');
+                    timerDisplay.classList.add('timer-inspection-danger');
+                }
+
+                if (remaining > 0) {
+                    timerDisplay.textContent = Math.ceil(remaining).toString();
+                } else if (elapsedSec < 17) {
+                    timerDisplay.textContent = '+2';
+                    APP_STATE.inspectionPenalty = '+2';
+                } else {
+                    timerDisplay.textContent = 'DNF';
+                    APP_STATE.inspectionPenalty = 'DNF';
+                }
+            }, 50);
+        }
+
+        function beginHold() {
+            if (APP_STATE.timerState === 'RUNNING') return;
+            if (APP_STATE.timerState === 'HOLDING' || APP_STATE.timerState === 'READY') return;
+
+            // Se ispezione attiva e siamo in IDLE/STOPPED, il primo tocco/spazio avvia i 15s di ispezione
+            if (APP_STATE.inspectionEnabled && (APP_STATE.timerState === 'IDLE' || APP_STATE.timerState === 'STOPPED')) {
+                startInspection();
+                return;
+            }
+
+            APP_STATE.timerState = 'HOLDING';
+            APP_STATE.holdStartTime = performance.now();
+            pbAlert.classList.add('hidden');
+            setTimerVisualState('HOLDING');
+
+            const updateHold = () => {
+                if (APP_STATE.timerState !== 'HOLDING') return;
+                const held = performance.now() - APP_STATE.holdStartTime;
+                const pct = Math.min(100, (held / APP_STATE.holdDurationRequired) * 100);
+                holdProgress.style.width = `${pct}%`;
+
+                if (held >= APP_STATE.holdDurationRequired) {
+                    APP_STATE.timerState = 'READY';
+                    setTimerVisualState('READY');
+                    sound.playReady();
+                } else {
+                    APP_STATE.holdAnimFrame = requestAnimationFrame(updateHold);
+                }
+            };
+            APP_STATE.holdAnimFrame = requestAnimationFrame(updateHold);
+        }
+
+        function releaseHold() {
+            cancelAnimationFrame(APP_STATE.holdAnimFrame);
+            holdProgress.style.width = '0%';
+
+            if (APP_STATE.timerState === 'HOLDING') {
+                // Rilasciato troppo presto (< 0.3s)
+                if (APP_STATE.inspectionInterval) {
+                    APP_STATE.timerState = 'INSPECTION';
+                    setTimerVisualState('INSPECTION');
+                } else {
+                    APP_STATE.timerState = 'IDLE';
+                    setTimerVisualState('IDLE');
+                }
+                return;
+            }
+
+            if (APP_STATE.timerState === 'READY') {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(APP_STATE.inspectionInterval);
+            APP_STATE.inspectionInterval = null;
+            inspectionAlert.classList.add('hidden');
+
+            APP_STATE.timerState = 'RUNNING';
+            APP_STATE.startTime = performance.now();
+            document.body.classList.add('zen-active');
+            quickActions.classList.add('opacity-0', 'pointer-events-none');
+            setTimerVisualState('RUNNING');
+            sound.playStart();
+
+            const tick = () => {
+                if (APP_STATE.timerState !== 'RUNNING') return;
+                APP_STATE.elapsedTime = performance.now() - APP_STATE.startTime;
+                timerDisplay.textContent = formatTime(APP_STATE.elapsedTime);
+                APP_STATE.timerAnimFrame = requestAnimationFrame(tick);
+            };
+            APP_STATE.timerAnimFrame = requestAnimationFrame(tick);
+        }
+
+        function stopTimer() {
+            if (APP_STATE.timerState !== 'RUNNING') return;
+            cancelAnimationFrame(APP_STATE.timerAnimFrame);
+            const finalTime = performance.now() - APP_STATE.startTime;
+            APP_STATE.elapsedTime = finalTime;
+            APP_STATE.timerState = 'STOPPED';
+
+            document.body.classList.remove('zen-active');
+            setTimerVisualState('STOPPED');
+
+            const penalty = APP_STATE.inspectionEnabled ? APP_STATE.inspectionPenalty : 'OK';
+            APP_STATE.inspectionPenalty = 'OK';
+            timerDisplay.textContent = formatTime(finalTime, penalty);
+
+            // Registra risoluzione e controlla PB
+            recordSolve(finalTime, penalty);
+
+            // Mostra azioni rapide (+2, DNF, elimina)
+            quickActions.classList.remove('opacity-0', 'pointer-events-none');
+
+            // Genera automaticamente un nuovo scramble per il tentativo successivo
+            generateNewScramble();
+        }
+
+        function recordSolve(timeMs, penalty = 'OK') {
+            const currentList = APP_STATE.solves[APP_STATE.cubeType];
+            const prevStats = computeStats(currentList);
+
+            const newSolve = {
+                id: Date.now(),
+                time: timeMs,
+                penalty: penalty,
+                scramble: APP_STATE.currentScramble,
+                date: new Date().toLocaleString('it-IT', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            };
+
+            currentList.push(newSolve);
+            saveToLocalStorage();
+            updateUI();
+
+            // Controllo Record Personale (PB)
+            const newEff = getEffectiveTime(newSolve);
+            if (newEff < Infinity && (prevStats.pb === null || newEff < prevStats.pb)) {
+                pbAlert.classList.remove('hidden');
+                confetti.burst();
+                sound.playPB();
+            } else {
+                sound.playStop();
+            }
+        }
+
+        // --- GESTIONE EVENTI TASTIERA & TOUCH ---
+        let spaceDown = false;
+
+        window.addEventListener('keydown', (e) => {
+            // Ignora se un modale è aperto
+            if (!document.getElementById('solve-modal').classList.contains('hidden') ||
+                !document.getElementById('confirm-modal').classList.contains('hidden')) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closeConfirmModal();
+                }
+                return;
+            }
+
+            // Se il cronometro sta correndo, QUALSIASI tasto lo ferma istantaneamente!
+            if (APP_STATE.timerState === 'RUNNING') {
+                e.preventDefault();
+                stopTimer();
+                return;
+            }
+
+            // Avvio / Caricamento con Barra Spaziatrice
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (spaceDown) return; // Evita auto-repeat della tastiera
+                spaceDown = true;
+                beginHold();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                spaceDown = false;
+                if (APP_STATE.timerState === 'HOLDING' || APP_STATE.timerState === 'READY') {
+                    releaseHold();
+                }
+            }
+        });
+
+        // Supporto Touch & Mouse sull'area centrale per dispositivi mobili/tablet
+        const touchZone = document.getElementById('timer-touch-zone');
+        touchZone.addEventListener('pointerdown', (e) => {
+            // Non attivare se si clicca sui bottoni delle azioni rapide
+            if (e.target.closest('button')) return;
+            if (APP_STATE.timerState === 'RUNNING') {
+                stopTimer();
+            } else {
+                beginHold();
+            }
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (APP_STATE.timerState === 'HOLDING' || APP_STATE.timerState === 'READY') {
+                releaseHold();
+            }
+        });
+
+        // --- GESTIONE PENALITÀ E CRONOLOGIA ---
+        function applyPenaltyToLast(penalty) {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            if (list.length === 0) return;
+            const last = list[list.length - 1];
+            last.penalty = penalty;
+            timerDisplay.textContent = formatTime(last.time, last.penalty);
+            saveToLocalStorage();
+            updateUI();
+            showToast(`Penalità aggiornata: ${penalty}`);
+        }
+
+        function deleteLastSolve() {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            if (list.length === 0) return;
+            list.pop();
+            timerDisplay.textContent = '0.000';
+            pbAlert.classList.add('hidden');
+            quickActions.classList.add('opacity-0', 'pointer-events-none');
+            saveToLocalStorage();
+            updateUI();
+            showToast('Ultima risoluzione eliminata');
+        }
+
+        function togglePenaltyByIndex(idx, penalty) {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            if (!list[idx]) return;
+            list[idx].penalty = list[idx].penalty === penalty ? 'OK' : penalty;
+            if (idx === list.length - 1) {
+                timerDisplay.textContent = formatTime(list[idx].time, list[idx].penalty);
+            }
+            saveToLocalStorage();
+            updateUI();
+        }
+
+        function deleteSolveByIndex(idx) {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            list.splice(idx, 1);
+            saveToLocalStorage();
+            updateUI();
+            closeModal();
+            showToast('Tempo eliminato');
+        }
+
+        // --- MODALE DETTAGLI SOLVE ---
+        function openSolveModal(idx) {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            const solve = list[idx];
+            if (!solve) return;
+
+            document.getElementById('modal-title').textContent = `Risoluzione #${idx + 1} (${APP_STATE.cubeType})`;
+            document.getElementById('modal-time').textContent = formatTime(solve.time, solve.penalty);
+            document.getElementById('modal-date').textContent = solve.date;
+            document.getElementById('modal-scramble').textContent = solve.scramble;
+
+            document.getElementById('modal-btn-ok').onclick = () => {
+                solve.penalty = 'OK';
+                saveToLocalStorage(); updateUI(); openSolveModal(idx);
+            };
+            document.getElementById('modal-btn-plus2').onclick = () => {
+                solve.penalty = '+2';
+                saveToLocalStorage(); updateUI(); openSolveModal(idx);
+            };
+            document.getElementById('modal-btn-dnf').onclick = () => {
+                solve.penalty = 'DNF';
+                saveToLocalStorage(); updateUI(); openSolveModal(idx);
+            };
+            document.getElementById('modal-btn-delete').onclick = () => deleteSolveByIndex(idx);
+
+            const modal = document.getElementById('solve-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('solve-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // --- MODALE RESET SESSIONE ---
+        document.getElementById('clear-session-btn').addEventListener('click', () => {
+            if (APP_STATE.solves[APP_STATE.cubeType].length === 0) {
+                showToast('La sessione è già vuota');
+                return;
+            }
+            document.getElementById('confirm-cube-label').textContent = APP_STATE.cubeType;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('confirm-reset-action').addEventListener('click', () => {
+            APP_STATE.solves[APP_STATE.cubeType] = [];
+            timerDisplay.textContent = '0.000';
+            pbAlert.classList.add('hidden');
+            quickActions.classList.add('opacity-0', 'pointer-events-none');
+            saveToLocalStorage();
+            updateUI();
+            closeConfirmModal();
+            showToast(`Sessione ${APP_STATE.cubeType} resettata`);
+        });
+
+        // --- RENDERING GRAFICO INTERATTIVO (CANVAS) ---
+        function renderTrendChart(solvesList, ao5History) {
+            const canvas = document.getElementById('trend-chart');
+            const wrapper = document.getElementById('chart-wrapper');
+            const emptyMsg = document.getElementById('chart-empty-msg');
+            const ctx = canvas.getContext('2d');
+
+            const dpr = window.devicePixelRatio || 1;
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            const width = rect.width;
+            const height = rect.height;
+            ctx.clearRect(0, 0, width, height);
+
+            // Filtra i punti validi per il grafico
+            const validPoints = [];
+            solvesList.forEach((s, i) => {
+                const eff = getEffectiveTime(s);
+                if (eff < Infinity) {
+                    validPoints.push({
+                        index: i + 1,
+                        time: eff,
+                        ao5: (ao5History[i] && ao5History[i] < Infinity) ? ao5History[i] : null
+                    });
+                }
+            });
+
+            APP_STATE.chartPoints = [];
+
+            if (validPoints.length < 2) {
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+            emptyMsg.classList.add('hidden');
+
+            const pad = { top: 24, right: 20, bottom: 26, left: 44 };
+            const plotW = width - pad.left - pad.right;
+            const plotH = height - pad.top - pad.bottom;
+
+            const allVals = validPoints.flatMap(p => p.ao5 ? [p.time, p.ao5] : [p.time]);
+            let minVal = Math.min(...allVals);
+            let maxVal = Math.max(...allVals);
+            if (minVal === maxVal) {
+                minVal = Math.max(0, minVal - 1000);
+                maxVal += 1000;
+            } else {
+                const margin = (maxVal - minVal) * 0.12;
+                minVal = Math.max(0, minVal - margin);
+                maxVal += margin;
+            }
+
+            const getX = (idx) => pad.left + (idx / (validPoints.length - 1)) * plotW;
+            const getY = (val) => pad.top + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+
+            // Griglia orizzontale
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+            ctx.lineWidth = 1;
+            ctx.font = '10px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#64748b';
+            ctx.textAlign = 'right';
+
+            const gridLines = 4;
+            for (let g = 0; g <= gridLines; g++) {
+                const val = minVal + (g / gridLines) * (maxVal - minVal);
+                const y = getY(val);
+                ctx.beginPath();
+                ctx.moveTo(pad.left, y);
+                ctx.lineTo(width - pad.right, y);
+                ctx.stroke();
+                ctx.fillText((val / 1000).toFixed(1) + 's', pad.left - 6, y + 3);
+            }
+
+            // Area sfumata sotto la curva principale
+            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+            grad.addColorStop(0, 'rgba(0, 240, 255, 0.25)');
+            grad.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+            ctx.beginPath();
+            validPoints.forEach((p, i) => {
+                const x = getX(i);
+                const y = getY(p.time);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(getX(validPoints.length - 1), pad.top + plotH);
+            ctx.lineTo(getX(0), pad.top + plotH);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Linea Singoli Tempi (Ciano Neon)
+            ctx.beginPath();
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgba(0, 240, 255, 0.6)';
+            validPoints.forEach((p, i) => {
+                const x = getX(i);
+                const y = getY(p.time);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Linea Ao5 Mobile (Viola Neon)
+            ctx.beginPath();
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 2.2;
+            let startedAo5 = false;
+            validPoints.forEach((p, i) => {
+                if (p.ao5 !== null) {
+                    const x = getX(i);
+                    const y = getY(p.ao5);
+                    if (!startedAo5) {
+                        ctx.moveTo(x, y);
+                        startedAo5 = true;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            });
+            ctx.stroke();
+
+            // Punti interattivi
+            validPoints.forEach((p, i) => {
+                const x = getX(i);
+                const y = getY(p.time);
+                APP_STATE.chartPoints.push({ x, y, data: p });
+
+                if (validPoints.length <= 45) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#07090f';
+                    ctx.fill();
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+            });
+        }
+
+        // Interazione Tooltip sul Grafico
+        const chartCanvas = document.getElementById('trend-chart');
+        const chartTooltip = document.getElementById('chart-tooltip');
+
+        chartCanvas.addEventListener('mousemove', (e) => {
+            if (APP_STATE.chartPoints.length === 0) return;
+            const rect = chartCanvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+
+            let closest = null;
+            let minDist = 25;
+            APP_STATE.chartPoints.forEach(pt => {
+                const d = Math.hypot(pt.x - mx, pt.y - my);
+                if (d < minDist) {
+                    minDist = d;
+                    closest = pt;
+                }
+            });
+
+            if (closest) {
+                chartTooltip.classList.remove('hidden');
+                document.getElementById('tooltip-title').textContent = `Risoluzione #${closest.data.index}`;
+                document.getElementById('tooltip-time').textContent = formatTime(closest.data.time);
+                document.getElementById('tooltip-ao5').textContent = closest.data.ao5 ? `Ao5: ${formatTime(closest.data.ao5)}` : 'Ao5: -';
+
+                const leftPos = Math.min(rect.width - 115, Math.max(8, closest.x - 50));
+                const topPos = Math.max(8, closest.y - 58);
+                chartTooltip.style.left = `${leftPos}px`;
+                chartTooltip.style.top = `${topPos}px`;
+            } else {
+                chartTooltip.classList.add('hidden');
+            }
+        });
+
+        chartCanvas.addEventListener('mouseleave', () => {
+            chartTooltip.classList.add('hidden');
+        });
+
+        // --- AGGIORNAMENTO COMPLETO INTERFACCIA (UI) ---
+        function updateUI() {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            const stats = computeStats(list);
+
+            // Badge Conteggio
+            document.getElementById('solve-count-badge').textContent = `${list.length} ${list.length === 1 ? 'risoluzione' : 'risoluzioni'}`;
+
+            // Statistiche
+            document.getElementById('stat-pb').textContent = stats.pb !== null ? formatTime(stats.pb) : '-';
+            document.getElementById('stat-mean').textContent = stats.mean !== null ? formatTime(stats.mean) : '-';
+            document.getElementById('stat-ao5').textContent = stats.ao5 !== null ? (stats.ao5 === Infinity ? 'DNF' : formatTime(stats.ao5)) : '-';
+            document.getElementById('stat-best-ao5').textContent = stats.bestAo5 !== null ? formatTime(stats.bestAo5) : '-';
+            document.getElementById('stat-ao12').textContent = stats.ao12 !== null ? (stats.ao12 === Infinity ? 'DNF' : formatTime(stats.ao12)) : '-';
+            document.getElementById('stat-best-ao12').textContent = stats.bestAo12 !== null ? formatTime(stats.bestAo12) : '-';
+
+            // Highlight card PB se esiste
+            const cardPb = document.getElementById('card-pb');
+            if (stats.pb !== null) cardPb.classList.add('pb-glow');
+            else cardPb.classList.remove('pb-glow');
+
+            // Render Cronologia (ordine inverso: più recente in alto)
+            const solvesContainer = document.getElementById('solves-list');
+            if (list.length === 0) {
+                solvesContainer.innerHTML = `
+                    <div class="py-10 text-center text-xs text-slate-500">
+                        Nessun tempo registrato per ${APP_STATE.cubeType}.<br>Premi la barra spaziatrice per iniziare!
+                    </div>
+                `;
+            } else {
+                let html = '';
+                for (let i = list.length - 1; i >= 0; i--) {
+                    const s = list[i];
+                    const eff = getEffectiveTime(s);
+                    const isPB = stats.pb !== null && eff === stats.pb;
+                    const ao5Val = stats.ao5History[i];
+                    const ao5Str = ao5Val !== null ? (ao5Val === Infinity ? 'DNF' : formatTime(ao5Val)) : '-';
+
+                    html += `
+                        <div class="grid grid-cols-12 items-center py-2 px-2 hover:bg-white/5 rounded-lg transition text-xs font-mono group">
+                            <div class="col-span-2 text-slate-500">${i + 1}</div>
+                            <div onclick="openSolveModal(${i})" class="col-span-4 font-bold cursor-pointer hover:underline ${isPB ? 'text-emerald-400' : (s.penalty === 'DNF' ? 'text-rose-400' : (s.penalty === '+2' ? 'text-amber-300' : 'text-white'))}">
+                                ${formatTime(s.time, s.penalty)} ${isPB ? '★' : ''}
+                            </div>
+                            <div class="col-span-3 text-purple-300/90">${ao5Str}</div>
+                            <div class="col-span-3 flex items-center justify-end gap-1">
+                                <button onclick="togglePenaltyByIndex(${i}, '+2')" class="px-1.5 py-0.5 rounded text-[10px] ${s.penalty === '+2' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-white/5 text-slate-400 hover:text-amber-300'} transition cursor-pointer" title="Penalità +2">+2</button>
+                                <button onclick="togglePenaltyByIndex(${i}, 'DNF')" class="px-1.5 py-0.5 rounded text-[10px] ${s.penalty === 'DNF' ? 'bg-rose-500 text-white font-bold' : 'bg-white/5 text-slate-400 hover:text-rose-300'} transition cursor-pointer" title="Did Not Finish">DNF</button>
+                                <button onclick="deleteSolveByIndex(${i})" class="px-1.5 py-0.5 rounded text-[10px] bg-white/5 text-slate-500 hover:text-rose-400 transition cursor-pointer" title="Elimina">✕</button>
+                            </div>
+                        </div>
+                    `;
+                }
+                solvesContainer.innerHTML = html;
+            }
+
+            // Aggiorna Grafico
+            renderTrendChart(list, stats.ao5History);
+        }
+
+        // --- CONTROLLI SCRAMBLE, EVENTO E IMPOSTAZIONI ---
+        function generateNewScramble() {
+            const scramble = ScrambleGenerator.generate(APP_STATE.cubeType);
+            APP_STATE.currentScramble = scramble;
+            document.getElementById('scramble-text').textContent = scramble;
+            const moveCount = scramble.split(' ').length;
+            document.getElementById('scramble-length-badge').textContent = `${moveCount} mosse`;
+            cubeVis.render(APP_STATE.cubeType, scramble);
+        }
+
+        document.getElementById('new-scramble-btn').addEventListener('click', () => {
+            generateNewScramble();
+            sound.playTone(600, 'sine', 0.05, 0.08);
+        });
+
+        document.getElementById('copy-scramble-btn').addEventListener('click', () => {
+            const textArea = document.createElement('textarea');
+            textArea.value = APP_STATE.currentScramble;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Scramble copiato negli appunti!');
+            } catch (err) {
+                showToast('Impossibile copiare lo scramble');
+            }
+            document.body.removeChild(textArea);
+        });
+
+        document.getElementById('cube-type').addEventListener('change', (e) => {
+            APP_STATE.cubeType = e.target.value;
+            timerDisplay.textContent = '0.000';
+            pbAlert.classList.add('hidden');
+            quickActions.classList.add('opacity-0', 'pointer-events-none');
+            saveToLocalStorage();
+            generateNewScramble();
+            updateUI();
+        });
+
+        // Toggle Ispezione 15s
+        const inspectionBtn = document.getElementById('toggle-inspection');
+        const inspectionDot = document.getElementById('inspection-dot');
+        inspectionBtn.addEventListener('click', () => {
+            APP_STATE.inspectionEnabled = !APP_STATE.inspectionEnabled;
+            updateInspectionButtonUI();
+            saveToLocalStorage();
+            showToast(APP_STATE.inspectionEnabled ? 'Ispezione WCA (15s) attivata' : 'Ispezione WCA disattivata');
+        });
+
+        function updateInspectionButtonUI() {
+            if (APP_STATE.inspectionEnabled) {
+                inspectionBtn.classList.remove('border-white/10', 'text-slate-400');
+                inspectionBtn.classList.add('border-amber-400/50', 'bg-amber-500/15', 'text-amber-300');
+                inspectionDot.classList.remove('bg-slate-600');
+                inspectionDot.classList.add('bg-amber-400', 'shadow-[0_0_8px_#fbbf24]');
+            } else {
+                inspectionBtn.classList.add('border-white/10', 'text-slate-400');
+                inspectionBtn.classList.remove('border-amber-400/50', 'bg-amber-500/15', 'text-amber-300');
+                inspectionDot.classList.add('bg-slate-600');
+                inspectionDot.classList.remove('bg-amber-400', 'shadow-[0_0_8px_#fbbf24]');
+            }
+        }
+
+        // Toggle Audio
+        document.getElementById('toggle-sound').addEventListener('click', () => {
+            APP_STATE.soundEnabled = !APP_STATE.soundEnabled;
+            updateSoundButtonUI();
+            saveToLocalStorage();
+            if (APP_STATE.soundEnabled) sound.playReady();
+        });
+
+        function updateSoundButtonUI() {
+            const onIcon = document.getElementById('icon-sound-on');
+            const offIcon = document.getElementById('icon-sound-off');
+            const btn = document.getElementById('toggle-sound');
+            if (APP_STATE.soundEnabled) {
+                onIcon.classList.remove('hidden');
+                offIcon.classList.add('hidden');
+                btn.classList.add('border-cyan-500/30', 'bg-cyan-500/10', 'text-cyan-300');
+                btn.classList.remove('border-white/10', 'bg-slate-900/80');
+            } else {
+                onIcon.classList.add('hidden');
+                offIcon.classList.remove('hidden');
+                btn.classList.remove('border-cyan-500/30', 'bg-cyan-500/10', 'text-cyan-300');
+                btn.classList.add('border-white/10', 'bg-slate-900/80');
+            }
+        }
+
+        // --- PERSISTENZA LOCALSTORAGE ---
+        const STORAGE_KEY = 'cybercube_timer_data_v1';
+
+        function saveToLocalStorage() {
+            try {
+                const payload = {
+                    cubeType: APP_STATE.cubeType,
+                    inspectionEnabled: APP_STATE.inspectionEnabled,
+                    soundEnabled: APP_STATE.soundEnabled,
+                    solves: APP_STATE.solves
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (e) {
+                console.warn('Salvataggio localStorage non disponibile', e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed.cubeType) APP_STATE.cubeType = parsed.cubeType;
+                if (typeof parsed.inspectionEnabled === 'boolean') APP_STATE.inspectionEnabled = parsed.inspectionEnabled;
+                if (typeof parsed.soundEnabled === 'boolean') APP_STATE.soundEnabled = parsed.soundEnabled;
+                if (parsed.solves) {
+                    APP_STATE.solves = { ...APP_STATE.solves, ...parsed.solves };
+                }
+            } catch (e) {
+                console.warn('Errore caricamento localStorage', e);
+            }
+        }
+
+        // --- TOAST NOTIFICHE ---
+        let toastTimeout = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-3');
+            }, 2400);
+        }
+
+        // --- INIZIALIZZAZIONE AL CARICAMENTO ---
+        window.addEventListener('resize', () => {
+            const list = APP_STATE.solves[APP_STATE.cubeType];
+            const stats = computeStats(list);
+            renderTrendChart(list, stats.ao5History);
+        });
+
+        window.onload = function () {
+            loadFromLocalStorage();
+            document.getElementById('cube-type').value = APP_STATE.cubeType;
+            updateInspectionButtonUI();
+            updateSoundButtonUI();
+            generateNewScramble();
+            updateUI();
+        };
+    </script>
+</body>
+</html>
